@@ -2,9 +2,12 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	http.Handle("/", http.FileServer(http.Dir("./public")))
+	route := gin.Default()
+	route.StaticFS("/", http.Dir("./public"))
 	_ = http.ListenAndServe(":3001", nil)
 }
