@@ -1,0 +1,12 @@
+; 账户定义
+include "./account/assets.bean"
+include "./account/equity.bean"
+include "./account/expenses.bean"
+include "./account/income.bean"
+include "./account/liabilities.bean"
+; 多币种配置
+include "./price/prices.bean"
+; 历史数据（用于 导入 之前的数据）
+include "./history.bean"
+; 新的数据（按月拆分）
+include "./month/months.bean"

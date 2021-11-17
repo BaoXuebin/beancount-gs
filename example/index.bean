@@ -1,0 +1,11 @@
+option "title" "我的账本"
+option "operating_currency" "%operatingCurrency%"
+option "render_commas" "TRUE"
+
+; fava 配置
+1970-01-01 custom "fava-option" "interval" "day"
+1970-01-01 custom "fava-option" "language" "zh_CN"
+
+include "./includes.bean"
+
+

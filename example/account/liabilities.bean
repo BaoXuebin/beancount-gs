@@ -1,0 +1,4 @@
+%startDate% open Liabilities:Cycle:ICBC:房贷 %operatingCurrency%
+%startDate% open Liabilities:Life:JD:京东白条 %operatingCurrency%
+%startDate% open Liabilities:Life:Huabei:花呗 %operatingCurrency%
+%startDate% open Liabilities:Life:CreditCard:信用卡 %operatingCurrency%

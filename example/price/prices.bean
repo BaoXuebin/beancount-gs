@@ -1,0 +1,3 @@
+include "./commodities.bean"
+
+%startDate% price SHR  2.00 %operatingCurrency%

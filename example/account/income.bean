@@ -1,0 +1,6 @@
+%startDate% open Income:Work:Salary:工作收入 %operatingCurrency%
+%startDate% open Income:Work:Bonus:奖金 %operatingCurrency%
+%startDate% open Income:Work:HouseFund:单位公积金 %operatingCurrency%
+%startDate% open Income:Gov:退税 %operatingCurrency%
+%startDate% open Income:Gov:政府补贴 %operatingCurrency%
+%startDate% open Income:Invest:投资收益 %operatingCurrency%
