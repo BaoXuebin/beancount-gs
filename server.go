@@ -20,9 +20,29 @@ func LoadServerCache() error {
 	return script.LoadLedgerConfigMap()
 }
 
+func AuthorizedHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ledgerId := c.GetHeader("ledgerId")
+		ledgerConfig := script.GetLedgerConfig(ledgerId)
+		if ledgerConfig != nil {
+			c.Set("LedgerConfig", &ledgerConfig)
+			c.Next()
+		} else {
+			service.Unauthorized(c)
+			c.Abort()
+		}
+	}
+}
+
 func RegisterRouter(router *gin.Engine) {
 	router.StaticFS("/", http.Dir("./public"))
 	router.POST("/api/ledger", service.OpenOrCreateLedger)
+	authorized := router.Group("/api/auth/")
+	authorized.Use(AuthorizedHandler())
+	{
+		// need authorized
+		//authorized.POST("/tags")
+	}
 }
 
 func main() {

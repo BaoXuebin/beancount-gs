@@ -28,8 +28,13 @@ func GetLedgerConfigMap() map[string]Config {
 	return ledgerConfigMap
 }
 
-func GetLedgerConfig(ledgerId string) Config {
-	return ledgerConfigMap[ledgerId]
+func GetLedgerConfig(ledgerId string) *Config {
+	for k, v := range ledgerConfigMap {
+		if k == ledgerId {
+			return &v
+		}
+	}
+	return nil
 }
 
 func GetLedgerConfigByMail(mail string) *Config {

@@ -10,11 +10,15 @@ func OK(c *gin.Context, data string) {
 }
 
 func BadRequest(c *gin.Context, message string) {
-	c.JSON(http.StatusBadRequest, gin.H{"code": 400, "message": message})
+	c.JSON(http.StatusOK, gin.H{"code": 400, "message": message})
+}
+
+func Unauthorized(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"code": 401})
 }
 
 func InternalError(c *gin.Context, message string) {
-	c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "message": message})
+	c.JSON(http.StatusOK, gin.H{"code": 500, "message": message})
 }
 
 func LedgerIsNotExist(c *gin.Context) {
