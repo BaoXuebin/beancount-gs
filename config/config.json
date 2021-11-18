@@ -1,6 +1,6 @@
 {
   "title": "我的账本",
-  "dataPath": "/beancount",
+  "dataPath": "D:\\beancount",
   "operatingCurrency": "CNY",
   "startDate": "1970-01-01",
   "isBak": true
