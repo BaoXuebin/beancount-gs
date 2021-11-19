@@ -2,6 +2,7 @@ package script
 
 import (
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 )
 
 var serverConfig Config
@@ -44,6 +45,12 @@ func GetLedgerConfigByMail(mail string) *Config {
 		}
 	}
 	return nil
+}
+
+func GetLedgerConfigFromContext(c *gin.Context) *Config {
+	ledgerConfig, _ := c.Get("LedgerConfig")
+	t, _ := ledgerConfig.(*Config)
+	return t
 }
 
 func IsInWhiteList(ledgerId string) bool {

@@ -25,7 +25,7 @@ func AuthorizedHandler() gin.HandlerFunc {
 		ledgerId := c.GetHeader("ledgerId")
 		ledgerConfig := script.GetLedgerConfig(ledgerId)
 		if ledgerConfig != nil {
-			c.Set("LedgerConfig", &ledgerConfig)
+			c.Set("LedgerConfig", ledgerConfig)
 			c.Next()
 		} else {
 			service.Unauthorized(c)
@@ -35,13 +35,17 @@ func AuthorizedHandler() gin.HandlerFunc {
 }
 
 func RegisterRouter(router *gin.Engine) {
-	router.StaticFS("/", http.Dir("./public"))
+	// fix wildcard and static file router conflict, https://github.com/gin-gonic/gin/issues/360
+	router.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/web")
+	})
+	router.StaticFS("/web", http.Dir("./public"))
 	router.POST("/api/ledger", service.OpenOrCreateLedger)
 	authorized := router.Group("/api/auth/")
 	authorized.Use(AuthorizedHandler())
 	{
 		// need authorized
-		//authorized.POST("/tags")
+		authorized.GET("/stats/months", service.MonthsList)
 	}
 }
 

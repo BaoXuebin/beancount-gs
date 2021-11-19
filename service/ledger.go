@@ -57,7 +57,7 @@ func OpenOrCreateLedger(c *gin.Context) {
 		IsBak:             serverConfig.IsBak,
 	}
 	// init ledger files
-	err = initLedgerFiles(script.GetExampleLedgerConfigDirPath(), ledgerConfig.DataPath, ledgerConfig.StartDate)
+	err = initLedgerFiles(script.GetExampleLedgerConfigDirPath(), ledgerConfig.DataPath, ledgerConfig)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
@@ -72,11 +72,11 @@ func OpenOrCreateLedger(c *gin.Context) {
 	OK(c, ledgerId)
 }
 
-func initLedgerFiles(sourceFilePath string, targetFilePath string, startDate string) error {
-	return copyFile(sourceFilePath, targetFilePath, startDate)
+func initLedgerFiles(sourceFilePath string, targetFilePath string, ledgerConfig script.Config) error {
+	return copyFile(sourceFilePath, targetFilePath, ledgerConfig)
 }
 
-func copyFile(sourceFilePath string, targetFilePath string, startDate string) error {
+func copyFile(sourceFilePath string, targetFilePath string, ledgerConfig script.Config) error {
 	rd, err := ioutil.ReadDir(sourceFilePath)
 	if err != nil {
 		return err
@@ -86,13 +86,13 @@ func copyFile(sourceFilePath string, targetFilePath string, startDate string) er
 		newTargetFilePath := targetFilePath + "/" + fi.Name()
 		if fi.IsDir() {
 			err = script.MkDir(newTargetFilePath)
-			err = copyFile(newSourceFilePath, newTargetFilePath, startDate)
+			err = copyFile(newSourceFilePath, newTargetFilePath, ledgerConfig)
 		} else {
 			fileContent, err := script.ReadFile(newSourceFilePath)
 			if err != nil {
 				return err
 			}
-			err = script.WriteFile(newTargetFilePath, strings.Replace(string(fileContent), "%startDate%", startDate, -1))
+			err = script.WriteFile(newTargetFilePath, strings.ReplaceAll(strings.ReplaceAll(string(fileContent), "%startDate%", ledgerConfig.StartDate), "%operatingCurrency%", ledgerConfig.OperatingCurrency))
 		}
 		if err != nil {
 			return err
