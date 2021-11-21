@@ -1,25 +1,17 @@
 package tests
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 type Student struct {
-	name string
+	Name string
 }
 
-func say(student Student) *Student {
-	return &student
-}
-
-func say2(student Student) Student {
-	return student
-}
-
-func Test() {
-	str := "Hello~"
-	fmt.Println(str)
-	fmt.Println(&str)
-
-	student := Student{name: "Bao"}
-	fmt.Println(student)
-	fmt.Println(&student)
+func Test(i interface{}) {
+	t := reflect.TypeOf(i)
+	k := t.Kind()
+	v := reflect.ValueOf(i)
+	fmt.Printf("type: %s, kind: %s, value: %s", t, k, v)
 }

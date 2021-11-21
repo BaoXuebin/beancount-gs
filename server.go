@@ -46,6 +46,10 @@ func RegisterRouter(router *gin.Engine) {
 	{
 		// need authorized
 		authorized.GET("/stats/months", service.MonthsList)
+		authorized.GET("/transactions", service.QueryTransactions)
+
+		// 兼容旧版本
+		authorized.GET("/entry", service.QueryTransactions)
 	}
 }
 
@@ -53,19 +57,19 @@ func main() {
 	// 读取配置文件
 	err := script.LoadServerConfig()
 	if err != nil {
-		script.LogError("Failed to load server config, " + err.Error())
+		script.LogSystemError("Failed to load server config, " + err.Error())
 		return
 	}
 	// 初始化账本文件结构
 	err = InitServerFiles()
 	if err != nil {
-		script.LogError("Failed to init server files, " + err.Error())
+		script.LogSystemError("Failed to init server files, " + err.Error())
 		return
 	}
 	// 加载缓存
 	err = LoadServerCache()
 	if err != nil {
-		script.LogError("Failed to load server cache, " + err.Error())
+		script.LogSystemError("Failed to load server cache, " + err.Error())
 		return
 	}
 	router := gin.Default()
@@ -75,6 +79,6 @@ func main() {
 	var port = ":3001"
 	err = router.Run(port)
 	if err != nil {
-		script.LogError("Failed to start server, " + err.Error())
+		script.LogSystemError("Failed to start server, " + err.Error())
 	}
 }

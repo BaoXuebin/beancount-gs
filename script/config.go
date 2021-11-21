@@ -73,10 +73,10 @@ func LoadServerConfig() error {
 	}
 	err = json.Unmarshal(fileContent, &serverConfig)
 	if err != nil {
-		LogError("Failed unmarshall config file (/config/config.json)")
+		LogSystemError("Failed unmarshall config file (/config/config.json)")
 		return err
 	}
-	LogInfo("Success load config file (/config/config.json)")
+	LogSystemInfo("Success load config file (/config/config.json)")
 	// load white list
 	fileContent, err = ReadFile("./config/white_list.json")
 	if err != nil {
@@ -84,10 +84,10 @@ func LoadServerConfig() error {
 	}
 	err = json.Unmarshal(fileContent, &whiteList)
 	if err != nil {
-		LogError("Failed unmarshal whitelist file (/config/white_list.json)")
+		LogSystemError("Failed unmarshal whitelist file (/config/white_list.json)")
 		return err
 	}
-	LogInfo("Success load whitelist file (/config/white_list.json)")
+	LogSystemInfo("Success load whitelist file (/config/white_list.json)")
 	return nil
 }
 
@@ -99,10 +99,10 @@ func LoadLedgerConfigMap() error {
 	}
 	err = json.Unmarshal(fileContent, &ledgerConfigMap)
 	if err != nil {
-		LogError("Failed unmarshal config file (" + path + ")")
+		LogSystemError("Failed unmarshal config file (" + path + ")")
 		return err
 	}
-	LogInfo("Success load ledger_config file (" + path + ")")
+	LogSystemInfo("Success load ledger_config file (" + path + ")")
 	return nil
 }
 
@@ -110,11 +110,11 @@ func WriteLedgerConfigMap(newLedgerConfigMap ConfigMap) error {
 	path := GetServerLedgerConfigFilePath()
 	mapBytes, err := json.Marshal(ledgerConfigMap)
 	if err != nil {
-		LogError("Failed marshal ConfigMap")
+		LogSystemError("Failed marshal ConfigMap")
 		return err
 	}
 	err = WriteFile(path, string(mapBytes))
 	ledgerConfigMap = newLedgerConfigMap
-	LogInfo("Success write ledger_config file (" + path + ")")
+	LogSystemInfo("Success write ledger_config file (" + path + ")")
 	return err
 }
