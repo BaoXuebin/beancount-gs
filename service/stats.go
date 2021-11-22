@@ -3,29 +3,24 @@ package service
 import (
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
-	"os/exec"
-	"strings"
 )
 
-func MonthsList(c *gin.Context) {
-	months := make([]string, 0)
+type YearMonth struct {
+	Year  string `bql:"distinct year(date)" json:"year"`
+	Month string `bql:"month(date)" json:"month"`
+}
 
+func MonthsList(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	beanFilePath := ledgerConfig.DataPath + "/index.bean"
-	bql := "SELECT distinct year(date), month(date)"
-	cmd := exec.Command("bean-query", beanFilePath, bql)
-	output, err := cmd.Output()
+	yearMonthList := make([]YearMonth, 0)
+	err := script.BQLQueryList(ledgerConfig, nil, &yearMonthList)
 	if err != nil {
-		InternalError(c, "Failed to exec bql")
+		InternalError(c, err.Error())
 		return
 	}
-	execResult := string(output)
-	months = make([]string, 0)
-	for _, line := range strings.Split(execResult, "\n")[2:] {
-		if line != "" {
-			yearMonth := strings.Fields(line)
-			months = append(months, yearMonth[0]+"-"+yearMonth[1])
-		}
+	months := make([]string, 0)
+	for _, yearMonth := range yearMonthList {
+		months = append(months, yearMonth.Year+"-"+yearMonth.Month)
 	}
 	OK(c, months)
 }

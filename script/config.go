@@ -118,3 +118,13 @@ func WriteLedgerConfigMap(newLedgerConfigMap ConfigMap) error {
 	LogSystemInfo("Success write ledger_config file (" + path + ")")
 	return err
 }
+
+func GetCommoditySymbol(commodity string) string {
+	switch commodity {
+	case "CNY":
+		return "￥"
+	case "USD":
+		return "$"
+	}
+	return ""
+}
