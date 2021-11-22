@@ -6,7 +6,8 @@ import (
 )
 
 var serverConfig Config
-var ledgerConfigMap ConfigMap
+var ledgerConfigMap map[string]Config
+var ledgerAccountsMap map[string][]Account
 var whiteList []string
 
 type Config struct {
@@ -19,7 +20,17 @@ type Config struct {
 	IsBak             bool   `json:"isBak"`
 }
 
-type ConfigMap map[string]Config
+type Account struct {
+	Acc       string      `json:"account"`
+	Commodity string      `json:"commodity"`
+	StartDate string      `json:"startDate"`
+	Type      accountType `json:"type"`
+}
+
+type accountType struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
 
 func GetServerConfig() Config {
 	return serverConfig
@@ -51,6 +62,10 @@ func GetLedgerConfigFromContext(c *gin.Context) *Config {
 	ledgerConfig, _ := c.Get("LedgerConfig")
 	t, _ := ledgerConfig.(*Config)
 	return t
+}
+
+func GetLedgerAccounts(ledgerId string) []Account {
+	return ledgerAccountsMap[ledgerId]
 }
 
 func IsInWhiteList(ledgerId string) bool {
@@ -106,7 +121,19 @@ func LoadLedgerConfigMap() error {
 	return nil
 }
 
-func WriteLedgerConfigMap(newLedgerConfigMap ConfigMap) error {
+func LoadLedgerAccountsMap() error {
+	for _, config := range ledgerConfigMap {
+		accounts := make([]Account, 0)
+		err := BQLReport(&config, &accounts)
+		if err != nil {
+			return err
+		}
+		//ledgerAccountsMap[ledgerId] = accounts
+	}
+	return nil
+}
+
+func WriteLedgerConfigMap(newLedgerConfigMap map[string]Config) error {
 	path := GetServerLedgerConfigFilePath()
 	mapBytes, err := json.Marshal(ledgerConfigMap)
 	if err != nil {

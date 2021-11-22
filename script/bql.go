@@ -3,8 +3,10 @@ package script
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"os/exec"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -17,9 +19,48 @@ type QueryParams struct {
 	Limit       int    `bql:"limit"`
 }
 
+func GetQueryParams(c *gin.Context) QueryParams {
+	var queryParams QueryParams
+	var hasWhere bool
+	if c.Query("year") != "" {
+		val, err := strconv.Atoi(c.Query("year"))
+		if err == nil {
+			queryParams.Year = val
+			hasWhere = true
+		}
+	}
+	if c.Query("month") != "" {
+		val, err := strconv.Atoi(c.Query("month"))
+		if err == nil {
+			queryParams.Month = val
+			hasWhere = true
+		}
+	}
+	if c.Query("type") != "" {
+		queryParams.AccountType = c.Query("type")
+		hasWhere = true
+	}
+	queryParams.Where = hasWhere
+	return queryParams
+}
+
+func BQLReport(ledgerConfig *Config, ledgerAccounts *[]Account) error {
+	beanFilePath := ledgerConfig.DataPath + "/index.bean"
+	cmd := exec.Command("bean-report", beanFilePath, "accounts")
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+
+	//json.Unmarshal(ledgerAccounts)
+
+	return nil
+}
+
 func BQLQueryOne(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
 	assertQueryResultIsPointer(queryResultPtr)
-	output, err := bqlRawQuery(ledgerConfig, queryParams, queryResultPtr)
+	output, err := bqlRawQuery(ledgerConfig, "", queryParams, queryResultPtr)
 	if err != nil {
 		return err
 	}
@@ -32,7 +73,7 @@ func BQLQueryOne(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr 
 
 func BQLQueryList(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
 	assertQueryResultIsPointer(queryResultPtr)
-	output, err := bqlRawQuery(ledgerConfig, queryParams, queryResultPtr)
+	output, err := bqlRawQuery(ledgerConfig, "", queryParams, queryResultPtr)
 	if err != nil {
 		return err
 	}
@@ -43,29 +84,48 @@ func BQLQueryList(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr
 	return nil
 }
 
-func bqlRawQuery(ledgerConfig *Config, queryParamsPtr *QueryParams, queryResultPtr interface{}) (string, error) {
-	bql := "SELECT"
-	queryResultPtrType := reflect.TypeOf(queryResultPtr)
-	queryResultType := queryResultPtrType.Elem()
-
-	if queryResultType.Kind() == reflect.Slice {
-		queryResultType = queryResultType.Elem()
+func BQLQueryListByCustomSelect(ledgerConfig *Config, selectBql string, queryParams *QueryParams, queryResultPtr interface{}) error {
+	assertQueryResultIsPointer(queryResultPtr)
+	output, err := bqlRawQuery(ledgerConfig, selectBql, queryParams, queryResultPtr)
+	if err != nil {
+		return err
 	}
+	err = parseResult(output, queryResultPtr, false)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	for i := 0; i < queryResultType.NumField(); i++ {
-		typeField := queryResultType.Field(i)
-		// 字段的 tag 不带 bql 的不进行拼接
-		b := typeField.Tag.Get("bql")
-		if b != "" {
-			if strings.Contains(b, "distinct") {
-				b = strings.ReplaceAll(b, "distinct", "")
-				bql = fmt.Sprintf("%s distinct '\\', %s, ", bql, b)
-			} else {
-				bql = fmt.Sprintf("%s '\\', %s, ", bql, typeField.Tag.Get("bql"))
+func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryParams, queryResultPtr interface{}) (string, error) {
+	bql := ""
+	if selectBql == "" {
+		bql = "SELECT"
+		queryResultPtrType := reflect.TypeOf(queryResultPtr)
+		queryResultType := queryResultPtrType.Elem()
+
+		if queryResultType.Kind() == reflect.Slice {
+			queryResultType = queryResultType.Elem()
+		}
+
+		for i := 0; i < queryResultType.NumField(); i++ {
+			typeField := queryResultType.Field(i)
+			// 字段的 tag 不带 bql 的不进行拼接
+			b := typeField.Tag.Get("bql")
+			if b != "" {
+				if strings.Contains(b, "distinct") {
+					b = strings.ReplaceAll(b, "distinct", "")
+					bql = fmt.Sprintf("%s distinct '\\', %s, ", bql, b)
+				} else {
+					bql = fmt.Sprintf("%s '\\', %s, ", bql, typeField.Tag.Get("bql"))
+				}
 			}
 		}
+		bql += " '\\'"
+	} else {
+		bql = selectBql
 	}
-	bql += " '\\'"
+
 	// 查询条件不为空时，拼接查询条件
 	if queryParamsPtr != nil {
 		queryParamsType := reflect.TypeOf(queryParamsPtr).Elem()
@@ -132,7 +192,8 @@ func parseResult(output string, queryResultPtr interface{}, selectOne bool) erro
 					jsonName = field.Name
 				}
 				switch field.Type.Kind() {
-				case reflect.String:
+				// decimal
+				case reflect.String, reflect.Struct:
 					v := strings.Trim(val, " ")
 					if v != "" {
 						temp[jsonName] = v

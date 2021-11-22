@@ -2,36 +2,10 @@ package service
 
 import (
 	"encoding/json"
-	script "github.com/beancount-gs/script"
+	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
-	"strconv"
 	"strings"
 )
-
-func getQueryModel(c *gin.Context) script.QueryParams {
-	var queryParams script.QueryParams
-	var hasWhere bool
-	if c.Query("year") != "" {
-		val, err := strconv.Atoi(c.Query("year"))
-		if err == nil {
-			queryParams.Year = val
-			hasWhere = true
-		}
-	}
-	if c.Query("month") != "" {
-		val, err := strconv.Atoi(c.Query("month"))
-		if err == nil {
-			queryParams.Month = val
-			hasWhere = true
-		}
-	}
-	if c.Query("type") != "" {
-		queryParams.AccountType = c.Query("type")
-		hasWhere = true
-	}
-	queryParams.Where = hasWhere
-	return queryParams
-}
 
 type Transactions struct {
 	Id              string   `bql:"id" json:"id"`
@@ -48,7 +22,7 @@ type Transactions struct {
 
 func QueryTransactions(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	queryParams := getQueryModel(c)
+	queryParams := script.GetQueryParams(c)
 	// 倒序查询
 	queryParams.OrderBy = "date desc"
 	transactions := make([]Transactions, 0)

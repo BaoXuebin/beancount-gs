@@ -17,7 +17,11 @@ func InitServerFiles() error {
 }
 
 func LoadServerCache() error {
-	return script.LoadLedgerConfigMap()
+	err := script.LoadLedgerConfigMap()
+	if err != nil {
+		return err
+	}
+	return script.LoadLedgerAccountsMap()
 }
 
 func AuthorizedHandler() gin.HandlerFunc {
@@ -46,6 +50,7 @@ func RegisterRouter(router *gin.Engine) {
 	{
 		// need authorized
 		authorized.GET("/stats/months", service.MonthsList)
+		authorized.GET("/stats/total", service.StatsTotal)
 		authorized.GET("/transactions", service.QueryTransactions)
 		authorized.GET("/transactions/payee", service.QueryTransactionsPayee)
 		authorized.GET("/transactions/template", service.QueryTransactionsTemplate)
