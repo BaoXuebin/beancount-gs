@@ -9,9 +9,12 @@ import (
 )
 
 type QueryParams struct {
+	Where       bool   `bql:"where"`
 	Year        int    `bql:"year ="`
 	Month       int    `bql:"month ="`
 	AccountType string `bql:"account ~"`
+	OrderBy     string `bql:"order by"`
+	Limit       int    `bql:"limit"`
 }
 
 func BQLQueryOne(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
@@ -62,9 +65,9 @@ func bqlRawQuery(ledgerConfig *Config, queryParamsPtr *QueryParams, queryResultP
 			}
 		}
 	}
+	bql += " '\\'"
 	// 查询条件不为空时，拼接查询条件
 	if queryParamsPtr != nil {
-		bql += " '\\' WHERE"
 		queryParamsType := reflect.TypeOf(queryParamsPtr).Elem()
 		queryParamsValue := reflect.ValueOf(queryParamsPtr).Elem()
 		for i := 0; i < queryParamsType.NumField(); i++ {
@@ -74,7 +77,13 @@ func bqlRawQuery(ledgerConfig *Config, queryParamsPtr *QueryParams, queryResultP
 			case reflect.String:
 				val := valueField.String()
 				if val != "" {
-					bql = fmt.Sprintf("%s %s '%s' AND", bql, typeField.Tag.Get("bql"), val)
+					if typeField.Name == "OrderBy" {
+						// 去除上一个条件后缀的 AND 关键字
+						bql = strings.Trim(bql, " AND")
+						bql = fmt.Sprintf("%s %s %s", bql, typeField.Tag.Get("bql"), val)
+					} else {
+						bql = fmt.Sprintf("%s %s '%s' AND", bql, typeField.Tag.Get("bql"), val)
+					}
 				}
 				break
 			case reflect.Int:
@@ -83,11 +92,15 @@ func bqlRawQuery(ledgerConfig *Config, queryParamsPtr *QueryParams, queryResultP
 					bql = fmt.Sprintf("%s %s %d AND", bql, typeField.Tag.Get("bql"), val)
 				}
 				break
+			case reflect.Bool:
+				val := valueField.Bool()
+				if val {
+					bql = fmt.Sprintf("%s %s ", bql, typeField.Tag.Get("bql"))
+				}
+				break
 			}
 		}
 		bql = strings.TrimRight(bql, " AND")
-	} else {
-		bql += " '\\'"
 	}
 	return queryByBQL(ledgerConfig, bql)
 }
@@ -120,7 +133,10 @@ func parseResult(output string, queryResultPtr interface{}, selectOne bool) erro
 				}
 				switch field.Type.Kind() {
 				case reflect.String:
-					temp[jsonName] = strings.Trim(val, " ")
+					v := strings.Trim(val, " ")
+					if v != "" {
+						temp[jsonName] = v
+					}
 					break
 				case reflect.Array, reflect.Slice:
 					// 去除空格

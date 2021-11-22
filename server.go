@@ -47,9 +47,14 @@ func RegisterRouter(router *gin.Engine) {
 		// need authorized
 		authorized.GET("/stats/months", service.MonthsList)
 		authorized.GET("/transactions", service.QueryTransactions)
+		authorized.GET("/transactions/payee", service.QueryTransactionsPayee)
+		authorized.GET("/transactions/template", service.QueryTransactionsTemplate)
+		authorized.GET("/tags", service.QueryTags)
 
 		// 兼容旧版本
 		authorized.GET("/entry", service.QueryTransactions)
+		authorized.GET("/payee", service.QueryTransactionsPayee)
+		authorized.GET("/transaction/template", service.QueryTransactionsTemplate)
 	}
 }
 
