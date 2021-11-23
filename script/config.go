@@ -3,11 +3,15 @@ package script
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"os"
+	"sort"
+	"strings"
 )
 
 var serverConfig Config
 var ledgerConfigMap map[string]Config
 var ledgerAccountsMap map[string][]Account
+var ledgerAccountTypesMap map[string]map[string]string
 var whiteList []string
 
 type Config struct {
@@ -21,13 +25,13 @@ type Config struct {
 }
 
 type Account struct {
-	Acc       string      `json:"account"`
-	Commodity string      `json:"commodity"`
-	StartDate string      `json:"startDate"`
-	Type      accountType `json:"type"`
+	Acc       string `json:"account"`
+	Commodity string `json:"commodity"`
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
 }
 
-type accountType struct {
+type AccountType struct {
 	Key  string `json:"key"`
 	Name string `json:"name"`
 }
@@ -66,6 +70,10 @@ func GetLedgerConfigFromContext(c *gin.Context) *Config {
 
 func GetLedgerAccounts(ledgerId string) []Account {
 	return ledgerAccountsMap[ledgerId]
+}
+
+func GetLedgerAccountTypes(ledgerId string) map[string]string {
+	return ledgerAccountTypesMap[ledgerId]
 }
 
 func IsInWhiteList(ledgerId string) bool {
@@ -122,14 +130,84 @@ func LoadLedgerConfigMap() error {
 }
 
 func LoadLedgerAccountsMap() error {
+	if ledgerAccountsMap == nil {
+		ledgerAccountsMap = make(map[string][]Account)
+	}
 	for _, config := range ledgerConfigMap {
-		accounts := make([]Account, 0)
-		err := BQLReport(&config, &accounts)
+		// 加载 account_type.json 到缓存（内存）
+		loadErr := LoadLedgerAccountTypesMap(config)
+		if loadErr != nil {
+			LogSystemError("Failed to load account types")
+			return loadErr
+		}
+		accountDirPath := config.DataPath + "/account"
+		dirs, err := os.ReadDir(accountDirPath)
 		if err != nil {
 			return err
 		}
-		//ledgerAccountsMap[ledgerId] = accounts
+		accountMap := make(map[string]Account)
+		for _, dir := range dirs {
+			bytes, err := ReadFile(accountDirPath + "/" + dir.Name())
+			if err != nil {
+				return err
+			}
+			lines := strings.Split(string(bytes), "\n")
+			var temp Account
+			for _, line := range lines {
+				if line != "" {
+					words := strings.Fields(line)
+					if len(words) >= 3 {
+						key := words[2]
+						temp = accountMap[key]
+						account := Account{Acc: key}
+						// 货币单位
+						if len(words) >= 4 {
+							account.Commodity = words[3]
+						}
+						if words[1] == "open" {
+							account.StartDate = words[0]
+						} else if words[1] == "close" {
+							account.EndDate = words[0]
+						}
+						if temp.StartDate != "" {
+							account.StartDate = temp.StartDate
+						}
+						if temp.EndDate != "" {
+							account.EndDate = temp.EndDate
+						}
+						accountMap[key] = account
+					}
+				}
+			}
+		}
+		accounts := make([]Account, 0)
+		for _, account := range accountMap {
+			accounts = append(accounts, account)
+		}
+		// 账户按字母排序
+		sort.Sort(AccountSort(accounts))
+		ledgerAccountsMap[config.Id] = accounts
 	}
+	return nil
+}
+
+func LoadLedgerAccountTypesMap(config Config) error {
+	path := GetLedgerAccountTypeFilePath(config.DataPath)
+	fileContent, err := ReadFile(path)
+	if err != nil {
+		return err
+	}
+	accountTypes := make(map[string]string)
+	err = json.Unmarshal(fileContent, &accountTypes)
+	if err != nil {
+		LogSystemError("Failed unmarshal config file (" + path + ")")
+		return err
+	}
+	if ledgerAccountTypesMap == nil {
+		ledgerAccountTypesMap = make(map[string]map[string]string)
+	}
+	ledgerAccountTypesMap[config.Id] = accountTypes
+	LogSystemInfo("Success load ledger_config file (" + path + ")")
 	return nil
 }
 

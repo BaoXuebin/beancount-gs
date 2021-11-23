@@ -17,3 +17,7 @@ func GetExampleLedgerConfigDirPath() string {
 func GetLedgerTransactionsTemplateFilePath(dataPath string) string {
 	return dataPath + "/.beancount-ns/transaction_template.json"
 }
+
+func GetLedgerAccountTypeFilePath(dataPath string) string {
+	return dataPath + "/.beancount-ns/account_type.json"
+}

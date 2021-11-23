@@ -44,20 +44,6 @@ func GetQueryParams(c *gin.Context) QueryParams {
 	return queryParams
 }
 
-func BQLReport(ledgerConfig *Config, ledgerAccounts *[]Account) error {
-	beanFilePath := ledgerConfig.DataPath + "/index.bean"
-	cmd := exec.Command("bean-report", beanFilePath, "accounts")
-	output, err := cmd.Output()
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(output))
-
-	//json.Unmarshal(ledgerAccounts)
-
-	return nil
-}
-
 func BQLQueryOne(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
 	assertQueryResultIsPointer(queryResultPtr)
 	output, err := bqlRawQuery(ledgerConfig, "", queryParams, queryResultPtr)
