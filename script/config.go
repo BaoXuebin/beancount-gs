@@ -2,6 +2,7 @@ package script
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"os"
 	"sort"
@@ -187,6 +188,7 @@ func LoadLedgerAccountsMap() error {
 		// 账户按字母排序
 		sort.Sort(AccountSort(accounts))
 		ledgerAccountsMap[config.Id] = accounts
+		LogSystemInfo(fmt.Sprintf("Success load [%s] accounts cache", config.Mail))
 	}
 	return nil
 }
@@ -207,7 +209,7 @@ func LoadLedgerAccountTypesMap(config Config) error {
 		ledgerAccountTypesMap = make(map[string]map[string]string)
 	}
 	ledgerAccountTypesMap[config.Id] = accountTypes
-	LogSystemInfo("Success load ledger_config file (" + path + ")")
+	LogSystemInfo(fmt.Sprintf("Success load [%s] account type cache", config.Mail))
 	return nil
 }
 

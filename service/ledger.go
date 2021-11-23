@@ -87,12 +87,13 @@ func copyFile(sourceFilePath string, targetFilePath string, ledgerConfig script.
 		if fi.IsDir() {
 			err = script.MkDir(newTargetFilePath)
 			err = copyFile(newSourceFilePath, newTargetFilePath, ledgerConfig)
-		} else {
+		} else if !script.FileIfExist(newTargetFilePath) {
 			fileContent, err := script.ReadFile(newSourceFilePath)
 			if err != nil {
 				return err
 			}
 			err = script.WriteFile(newTargetFilePath, strings.ReplaceAll(strings.ReplaceAll(string(fileContent), "%startDate%", ledgerConfig.StartDate), "%operatingCurrency%", ledgerConfig.OperatingCurrency))
+			script.LogInfo(ledgerConfig.Mail, "Success create file " + newTargetFilePath)
 		}
 		if err != nil {
 			return err
