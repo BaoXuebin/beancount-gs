@@ -1,1 +1,1 @@
-使用 golang 重构 [beancount-node-server](https://github.com/BaoXuebin/beancount-node-server) 项目
+# beancount-gs
