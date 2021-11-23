@@ -26,10 +26,14 @@ type Config struct {
 }
 
 type Account struct {
-	Acc       string `json:"account"`
-	Commodity string `json:"commodity"`
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
+	Acc                  string       `json:"account"`
+	StartDate            string       `json:"startDate"`
+	Commodity            string       `json:"commodity,omitempty"`
+	PriceAmount          string       `json:"priceAmount,omitempty"`
+	PriceCommodity       string       `json:"priceCommodity,omitempty"`
+	PriceCommoditySymbol string       `json:"priceCommoditySymbol,omitempty"`
+	EndDate              string       `json:"endDate,omitempty"`
+	Type                 *AccountType `json:"type,omitempty"`
 }
 
 type AccountType struct {
@@ -75,6 +79,24 @@ func GetLedgerAccounts(ledgerId string) []Account {
 
 func GetLedgerAccountTypes(ledgerId string) map[string]string {
 	return ledgerAccountTypesMap[ledgerId]
+}
+
+func GetAccountType(ledgerId string, acc string) AccountType {
+	accountTypes := ledgerAccountTypesMap[ledgerId]
+	accNodes := strings.Split(acc, ":")
+	accountType := AccountType{
+		Key: acc,
+		// 默认取最后一个节点
+		Name: accNodes[len(accNodes)-1],
+	}
+	var matchKey string = ""
+	for key, name := range accountTypes {
+		if strings.Contains(acc, key) && len(matchKey) < len(key) {
+			matchKey = key
+			accountType = AccountType{Key: key, Name: name}
+		}
+	}
+	return accountType
 }
 
 func IsInWhiteList(ledgerId string) bool {
@@ -160,7 +182,7 @@ func LoadLedgerAccountsMap() error {
 					if len(words) >= 3 {
 						key := words[2]
 						temp = accountMap[key]
-						account := Account{Acc: key}
+						account := Account{Acc: key, Type: nil}
 						// 货币单位
 						if len(words) >= 4 {
 							account.Commodity = words[3]
@@ -233,5 +255,5 @@ func GetCommoditySymbol(commodity string) string {
 	case "USD":
 		return "$"
 	}
-	return ""
+	return commodity
 }
