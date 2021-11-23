@@ -58,6 +58,9 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/transactions/payee", service.QueryTransactionsPayee)
 		authorized.GET("/transactions/template", service.QueryTransactionsTemplate)
 		authorized.GET("/tags", service.QueryTags)
+		authorized.GET("/file/dir", service.QueryLedgerSourceFileDir)
+		authorized.GET("/file/content", service.QueryLedgerSourceFileContent)
+		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
 
 		// 兼容旧版本
 		authorized.GET("/entry", service.QueryTransactions)

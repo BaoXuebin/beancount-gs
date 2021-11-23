@@ -47,6 +47,27 @@ func CreateFile(filePath string) error {
 	return nil
 }
 
+func CopyFile(sourceFilePath string, targetFilePath string) error {
+	if !FileIfExist(sourceFilePath) {
+		panic("File is not found, " + sourceFilePath)
+	}
+	if !FileIfExist(targetFilePath) {
+		err := CreateFile(targetFilePath)
+		if err != nil {
+			return err
+		}
+	}
+	bytes, err := ReadFile(sourceFilePath)
+	if err != nil {
+		return err
+	}
+	err = WriteFile(targetFilePath, string(bytes))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func MkDir(dirPath string) error {
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if nil != err {

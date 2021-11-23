@@ -17,6 +17,7 @@ type QueryParams struct {
 	AccountType string `bql:"account ~"`
 	OrderBy     string `bql:"order by"`
 	Limit       int    `bql:"limit"`
+	Path        string
 }
 
 func GetQueryParams(c *gin.Context) QueryParams {
@@ -41,6 +42,9 @@ func GetQueryParams(c *gin.Context) QueryParams {
 		hasWhere = true
 	}
 	queryParams.Where = hasWhere
+	if c.Query("path") != "" {
+		queryParams.Path = c.Query("path")
+	}
 	return queryParams
 }
 
