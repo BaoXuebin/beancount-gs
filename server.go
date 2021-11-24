@@ -54,9 +54,9 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/account/type", service.QueryAccountType)
 		authorized.GET("/stats/months", service.MonthsList)
 		authorized.GET("/stats/total", service.StatsTotal)
-		authorized.GET("/transactions", service.QueryTransactions)
-		authorized.GET("/transactions/payee", service.QueryTransactionsPayee)
-		authorized.GET("/transactions/template", service.QueryTransactionsTemplate)
+		authorized.GET("/transaction", service.QueryTransactions)
+		authorized.GET("/transaction/payee", service.QueryTransactionPayees)
+		authorized.GET("/transaction/template", service.QueryTransactionTemplates)
 		authorized.GET("/tags", service.QueryTags)
 		authorized.GET("/file/dir", service.QueryLedgerSourceFileDir)
 		authorized.GET("/file/content", service.QueryLedgerSourceFileContent)
@@ -64,8 +64,7 @@ func RegisterRouter(router *gin.Engine) {
 
 		// 兼容旧版本
 		authorized.GET("/entry", service.QueryTransactions)
-		authorized.GET("/payee", service.QueryTransactionsPayee)
-		authorized.GET("/transaction/template", service.QueryTransactionsTemplate)
+		authorized.GET("/payee", service.QueryTransactionPayees)
 	}
 }
 

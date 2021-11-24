@@ -14,6 +14,7 @@ type QueryParams struct {
 	Where       bool   `bql:"where"`
 	Year        int    `bql:"year ="`
 	Month       int    `bql:"month ="`
+	Account     string `bql:"account ="`
 	AccountType string `bql:"account ~"`
 	OrderBy     string `bql:"order by"`
 	Limit       int    `bql:"limit"`
@@ -39,6 +40,11 @@ func GetQueryParams(c *gin.Context) QueryParams {
 	}
 	if c.Query("type") != "" {
 		queryParams.AccountType = c.Query("type")
+		hasWhere = true
+	}
+	if c.Query("account") != "" {
+		queryParams.Account = c.Query("account")
+		queryParams.Limit = 100
 		hasWhere = true
 	}
 	queryParams.Where = hasWhere

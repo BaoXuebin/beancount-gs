@@ -255,5 +255,5 @@ func GetCommoditySymbol(commodity string) string {
 	case "USD":
 		return "$"
 	}
-	return commodity
+	return ""
 }
