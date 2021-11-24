@@ -14,6 +14,7 @@ type QueryParams struct {
 	Where       bool   `bql:"where"`
 	Year        int    `bql:"year ="`
 	Month       int    `bql:"month ="`
+	Tag         string `bql:"in tags"`
 	Account     string `bql:"account ="`
 	AccountType string `bql:"account ~"`
 	OrderBy     string `bql:"order by"`
@@ -37,6 +38,10 @@ func GetQueryParams(c *gin.Context) QueryParams {
 			queryParams.Month = val
 			hasWhere = true
 		}
+	}
+	if c.Query("tag") != "" {
+		queryParams.Tag = c.Query("tag")
+		hasWhere = true
 	}
 	if c.Query("type") != "" {
 		queryParams.AccountType = c.Query("type")
@@ -137,6 +142,8 @@ func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryPa
 						// 去除上一个条件后缀的 AND 关键字
 						bql = strings.Trim(bql, " AND")
 						bql = fmt.Sprintf("%s %s %s", bql, typeField.Tag.Get("bql"), val)
+					} else if typeField.Name == "Tag" {
+						bql = fmt.Sprintf("%s '%s' %s", bql, strings.Trim(val, " "), typeField.Tag.Get("bql"))
 					} else {
 						bql = fmt.Sprintf("%s %s '%s' AND", bql, typeField.Tag.Get("bql"), val)
 					}
