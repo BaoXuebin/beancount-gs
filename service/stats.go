@@ -151,3 +151,82 @@ func StatsAccountTrend(c *gin.Context) {
 	}
 	OK(c, result)
 }
+
+type MonthTotalBQLResult struct {
+	Year  int
+	Month int
+	Value string
+}
+
+type MonthTotal struct {
+	Type              string  `json:"type"`
+	Month             string  `json:"month"`
+	Amount            float64 `json:"amount"`
+	OperatingCurrency string  `json:"operatingCurrency"`
+}
+
+func StatsMonthTotal(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+
+	monthSet := make(map[string]bool)
+	queryParams := script.QueryParams{
+		AccountLike: "Income",
+		Where:       true,
+		OrderBy:     "year, month",
+	}
+	// 按月查询收入
+	queryIncomeBql := fmt.Sprintf("select '\\', year, '\\', month, '\\', neg(sum(convert(value(position), '%s'))), '\\'", ledgerConfig.OperatingCurrency)
+	monthIncomeTotalResultList := make([]MonthTotalBQLResult, 0)
+	err := script.BQLQueryListByCustomSelect(ledgerConfig, queryIncomeBql, &queryParams, &monthIncomeTotalResultList)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	monthIncomeMap := make(map[string]MonthTotalBQLResult)
+	for _, income := range monthIncomeTotalResultList {
+		month := fmt.Sprintf("%d-%d", income.Year, income.Month)
+		monthSet[month] = true
+		monthIncomeMap[month] = income
+	}
+
+	// 按月查询支出
+	queryParams.AccountLike = "Expenses"
+	queryExpensesBql := fmt.Sprintf("select '\\', year, '\\', month, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	monthExpensesTotalResultList := make([]MonthTotalBQLResult, 0)
+	err = script.BQLQueryListByCustomSelect(ledgerConfig, queryExpensesBql, &queryParams, &monthExpensesTotalResultList)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	monthExpensesMap := make(map[string]MonthTotalBQLResult)
+	for _, expenses := range monthExpensesTotalResultList {
+		month := fmt.Sprintf("%d-%d", expenses.Year, expenses.Month)
+		monthSet[month] = true
+		monthExpensesMap[month] = expenses
+	}
+
+	monthTotalResult := make([]MonthTotal, 0)
+	// 合并结果
+	var monthIncome, monthExpenses MonthTotal
+	for month := range monthSet {
+		if monthIncomeMap[month].Value != "" {
+			fields := strings.Fields(monthIncomeMap[month].Value)
+			amount, _ := strconv.ParseFloat(fields[0], 64)
+			monthIncome = MonthTotal{Type: "收入", Month: month, Amount: amount, OperatingCurrency: fields[1]}
+		} else {
+			monthIncome = MonthTotal{Type: "收入", Month: month, Amount: 0, OperatingCurrency: ledgerConfig.OperatingCurrency}
+		}
+		monthTotalResult = append(monthTotalResult, monthIncome)
+
+		if monthExpensesMap[month].Value != "" {
+			fields := strings.Fields(monthExpensesMap[month].Value)
+			amount, _ := strconv.ParseFloat(fields[0], 64)
+			monthExpenses = MonthTotal{Type: "支出", Month: month, Amount: amount, OperatingCurrency: fields[1]}
+		} else {
+			monthExpenses = MonthTotal{Type: "支出", Month: month, Amount: 0, OperatingCurrency: ledgerConfig.OperatingCurrency}
+		}
+		monthTotalResult = append(monthTotalResult, monthExpenses)
+		monthTotalResult = append(monthTotalResult, MonthTotal{Type: "结余", Month: month, Amount: monthIncome.Amount - monthExpenses.Amount, OperatingCurrency: ledgerConfig.OperatingCurrency})
+	}
+	OK(c, monthTotalResult)
+}

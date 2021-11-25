@@ -100,9 +100,9 @@ func BQLQueryListByCustomSelect(ledgerConfig *Config, selectBql string, queryPar
 }
 
 func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryParams, queryResultPtr interface{}) (string, error) {
-	bql := ""
+	var bql string
 	if selectBql == "" {
-		bql = "SELECT"
+		bql = "select"
 		queryResultPtrType := reflect.TypeOf(queryResultPtr)
 		queryResultType := queryResultPtrType.Elem()
 
@@ -196,6 +196,13 @@ func parseResult(output string, queryResultPtr interface{}, selectOne bool) erro
 					jsonName = field.Name
 				}
 				switch field.Type.Kind() {
+				case reflect.Int:
+					i, err := strconv.Atoi(strings.Trim(val, " "))
+					if err != nil {
+						panic(err)
+					}
+					temp[jsonName] = i
+					break
 				// decimal
 				case reflect.String, reflect.Struct:
 					v := strings.Trim(val, " ")
