@@ -1,7 +1,6 @@
 package script
 
 type AccountTypeSort []AccountType
-type AccountSort []Account
 
 func (s AccountTypeSort) Len() int {
 	return len(s)
@@ -14,6 +13,8 @@ func (s AccountTypeSort) Swap(i, j int) {
 func (s AccountTypeSort) Less(i, j int) bool {
 	return s[i].Key <= s[j].Key
 }
+
+type AccountSort []Account
 
 func (s AccountSort) Len() int {
 	return len(s)

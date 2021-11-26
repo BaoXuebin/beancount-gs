@@ -12,6 +12,7 @@ import (
 
 type QueryParams struct {
 	Where       bool   `bql:"where"`
+	Currency    string `bql:"currency ="`
 	Year        int    `bql:"year ="`
 	Month       int    `bql:"month ="`
 	Tag         string `bql:"in tags"`
@@ -196,7 +197,7 @@ func parseResult(output string, queryResultPtr interface{}, selectOne bool) erro
 					jsonName = field.Name
 				}
 				switch field.Type.Kind() {
-				case reflect.Int:
+				case reflect.Int, reflect.Int32:
 					i, err := strconv.Atoi(strings.Trim(val, " "))
 					if err != nil {
 						panic(err)

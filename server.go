@@ -54,6 +54,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/account/type", service.QueryAccountType)
 		authorized.GET("/stats/months", service.MonthsList)
 		authorized.GET("/stats/total", service.StatsTotal)
+		authorized.GET("/stats/payee", service.StatsPayee)
 		authorized.GET("/stats/account/percent", service.StatsAccountPercent)
 		authorized.GET("/stats/account/trend", service.StatsAccountTrend)
 		authorized.GET("/stats/month/total", service.StatsMonthTotal)
