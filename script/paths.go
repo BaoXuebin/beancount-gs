@@ -21,3 +21,11 @@ func GetLedgerTransactionsTemplateFilePath(dataPath string) string {
 func GetLedgerAccountTypeFilePath(dataPath string) string {
 	return dataPath + "/.beancount-ns/account_type.json"
 }
+
+func GetLedgerPriceFilePath(dataPath string) string {
+	return dataPath + "/price/prices.bean"
+}
+
+func GetLedgerMonthsFilePath(dataPath string) string {
+	return dataPath + "/month/months.bean"
+}

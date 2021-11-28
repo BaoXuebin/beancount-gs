@@ -23,15 +23,16 @@ type Config struct {
 	OperatingCurrency string `json:"operatingCurrency"`
 	StartDate         string `json:"startDate"`
 	IsBak             bool   `json:"isBak"`
+	OpeningBalances   string `json:"openingBalances"`
 }
 
 type Account struct {
 	Acc                  string       `json:"account"`
 	StartDate            string       `json:"startDate"`
-	Commodity            string       `json:"commodity,omitempty"`
-	PriceAmount          string       `json:"priceAmount,omitempty"`
-	PriceCommodity       string       `json:"priceCommodity,omitempty"`
-	PriceCommoditySymbol string       `json:"priceCommoditySymbol,omitempty"`
+	Currency             string       `json:"currency,omitempty"`
+	MarketNumber         string       `json:"marketNumber,omitempty"`
+	MarketCurrency       string       `json:"marketCurrency,omitempty"`
+	MarketCurrencySymbol string       `json:"marketCurrencySymbol,omitempty"`
 	EndDate              string       `json:"endDate,omitempty"`
 	Type                 *AccountType `json:"type,omitempty"`
 }
@@ -77,8 +78,26 @@ func GetLedgerAccounts(ledgerId string) []Account {
 	return ledgerAccountsMap[ledgerId]
 }
 
+func GetLedgerAccount(ledgerId string, account string) Account {
+	accounts := ledgerAccountsMap[ledgerId]
+	for _, acc := range accounts {
+		if acc.Acc == account {
+			return acc
+		}
+	}
+	panic("Invalid account")
+}
+
+func UpdateLedgerAccounts(ledgerId string, accounts []Account) {
+	ledgerAccountsMap[ledgerId] = accounts
+}
+
 func GetLedgerAccountTypes(ledgerId string) map[string]string {
 	return ledgerAccountTypesMap[ledgerId]
+}
+
+func UpdateLedgerAccountTypes(ledgerId string, accountTypesMap map[string]string) {
+	ledgerAccountTypesMap[ledgerId] = accountTypesMap
 }
 
 func GetAccountType(ledgerId string, acc string) AccountType {
@@ -122,6 +141,10 @@ func LoadServerConfig() error {
 		LogSystemError("Failed unmarshall config file (/config/config.json)")
 		return err
 	}
+	// 兼容旧版本数据，设置默认平衡账户
+	if serverConfig.OpeningBalances == "" {
+		serverConfig.OpeningBalances = "Equity:OpeningBalances"
+	}
 	LogSystemInfo("Success load config file (/config/config.json)")
 	// load white list
 	fileContent, err = ReadFile("./config/white_list.json")
@@ -148,6 +171,15 @@ func LoadLedgerConfigMap() error {
 		LogSystemError("Failed unmarshal config file (" + path + ")")
 		return err
 	}
+	// 兼容旧数据，初始化 平衡账户
+	temp := make(map[string]Config)
+	for key, val := range ledgerConfigMap {
+		if val.OpeningBalances == "" {
+			val.OpeningBalances = serverConfig.OpeningBalances
+		}
+		temp[key] = val
+	}
+	ledgerConfigMap = temp
 	LogSystemInfo("Success load ledger_config file (" + path + ")")
 	return nil
 }
@@ -185,7 +217,7 @@ func LoadLedgerAccountsMap() error {
 						account := Account{Acc: key, Type: nil}
 						// 货币单位
 						if len(words) >= 4 {
-							account.Commodity = words[3]
+							account.Currency = words[3]
 						}
 						if words[1] == "open" {
 							account.StartDate = words[0]
@@ -256,4 +288,9 @@ func GetCommoditySymbol(commodity string) string {
 		return "$"
 	}
 	return ""
+}
+
+func GetAccountPrefix(account string) string {
+	nodes := strings.Split(account, ":")
+	return nodes[0]
 }

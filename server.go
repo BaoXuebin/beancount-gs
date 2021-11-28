@@ -52,6 +52,12 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/account/valid", service.QueryValidAccount)
 		authorized.GET("/account/all", service.QueryAllAccount)
 		authorized.GET("/account/type", service.QueryAccountType)
+		authorized.POST("/account", service.AddAccount)
+		authorized.POST("/account/type", service.AddAccountType)
+		authorized.POST("/account/close", service.CloseAccount)
+		authorized.POST("/account/icon", service.ChangeAccountIcon)
+		authorized.POST("/account/balance", service.BalanceAccount)
+		authorized.POST("/commodity/price", service.SyncCommodityPrice)
 		authorized.GET("/stats/months", service.MonthsList)
 		authorized.GET("/stats/total", service.StatsTotal)
 		authorized.GET("/stats/payee", service.StatsPayee)
@@ -59,17 +65,13 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/stats/account/trend", service.StatsAccountTrend)
 		authorized.GET("/stats/month/total", service.StatsMonthTotal)
 		authorized.GET("/transaction", service.QueryTransactions)
+		authorized.POST("/transaction", service.AddTransactions)
 		authorized.GET("/transaction/payee", service.QueryTransactionPayees)
 		authorized.GET("/transaction/template", service.QueryTransactionTemplates)
 		authorized.GET("/tags", service.QueryTags)
 		authorized.GET("/file/dir", service.QueryLedgerSourceFileDir)
 		authorized.GET("/file/content", service.QueryLedgerSourceFileContent)
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
-
-		// 兼容旧版本
-		authorized.GET("/entry", service.QueryTransactions)
-		authorized.GET("/payee", service.QueryTransactionPayees)
-		authorized.GET("/stats/month/incomeExpenses", service.StatsMonthTotal)
 	}
 }
 

@@ -27,12 +27,32 @@ func ReadFile(filePath string) ([]byte, error) {
 }
 
 func WriteFile(filePath string, content string) error {
-	err := ioutil.WriteFile(filePath, []byte(content), os.ModePerm)
-	if err != nil {
-		LogSystemError("Failed to write file (" + filePath + ")")
-		return err
+	content = "\r\n" + content
+	file, err := os.OpenFile(filePath, os.O_CREATE, 0644)
+	if err == nil {
+		_, err = file.WriteString(content)
+		if err != nil {
+			LogSystemError("Failed to write file (" + filePath + ")")
+			return err
+		}
 	}
+	defer file.Close()
 	LogSystemInfo("Success write file (" + filePath + ")")
+	return nil
+}
+
+func AppendFileInNewLine(filePath string, content string) error {
+	content = "\r\n" + content
+	file, err := os.OpenFile(filePath, os.O_APPEND, 0644)
+	if err == nil {
+		_, err = file.WriteString(content)
+		if err != nil {
+			LogSystemError("Failed to append file (" + filePath + ")")
+			return err
+		}
+	}
+	defer file.Close()
+	LogSystemInfo("Success append file (" + filePath + ")")
 	return nil
 }
 

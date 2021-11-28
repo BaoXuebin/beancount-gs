@@ -1,16 +1,25 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
 	"sort"
 	"strings"
+	"time"
 )
 
 func QueryValidAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	OK(c, script.GetLedgerAccounts(ledgerConfig.Id))
+	allAccounts := script.GetLedgerAccounts(ledgerConfig.Id)
+	result := make([]script.Account, 0)
+	for _, account := range allAccounts {
+		if account.EndDate == "" {
+			result = append(result, account)
+		}
+	}
+	OK(c, result)
 }
 
 type accountPosition struct {
@@ -37,21 +46,22 @@ func QueryAllAccount(c *gin.Context) {
 	accounts := script.GetLedgerAccounts(ledgerConfig.Id)
 	result := make([]script.Account, 0, len(accounts))
 	for i := 0; i < len(accounts); i++ {
+		account := accounts[i]
 		// 过滤已结束的账户
-		if accounts[i].EndDate != "" {
+		if account.EndDate != "" {
 			continue
 		}
-		key := accounts[i].Acc
+		key := account.Acc
 		typ := script.GetAccountType(ledgerConfig.Id, key)
-		accounts[i].Type = &typ
+		account.Type = &typ
 		position := strings.Trim(accountPositionMap[key].Position, " ")
 		if position != "" {
 			fields := strings.Fields(position)
-			accounts[i].PriceAmount = fields[0]
-			accounts[i].PriceCommodity = fields[1]
-			accounts[i].PriceCommoditySymbol = script.GetCommoditySymbol(fields[1])
+			account.MarketNumber = fields[0]
+			account.MarketCurrency = fields[1]
+			account.MarketCurrencySymbol = script.GetCommoditySymbol(fields[1])
 		}
-		result = append(result, accounts[i])
+		result = append(result, account)
 	}
 	OK(c, result)
 }
@@ -65,5 +75,167 @@ func QueryAccountType(c *gin.Context) {
 		result = append(result, script.AccountType{Key: k, Name: v})
 	}
 	sort.Sort(script.AccountTypeSort(result))
+	OK(c, result)
+}
+
+type AddAccountForm struct {
+	Date    string `form:"date" binding:"required"`
+	Account string `form:"account" binding:"required"`
+	// 账户计量单位可以为空
+	Currency string `form:"currency"`
+}
+
+func AddAccount(c *gin.Context) {
+	var accountForm AddAccountForm
+	if err := c.ShouldBindJSON(&accountForm); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	// 判断账户是否已存在
+	accounts := script.GetLedgerAccounts(ledgerConfig.Id)
+	for _, acc := range accounts {
+		if acc.Acc == accountForm.Account {
+			DuplicateAccount(c)
+			return
+		}
+	}
+	line := fmt.Sprintf("%s open %s %s", accountForm.Date, accountForm.Account, accountForm.Currency)
+	if accountForm.Currency != "" && accountForm.Currency != ledgerConfig.OperatingCurrency {
+		line += " \"FIFO\""
+	}
+	// 写入文件
+	filePath := ledgerConfig.DataPath + "/account/" + script.GetAccountPrefix(accountForm.Account) + ".bean"
+	err := script.AppendFileInNewLine(filePath, line)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	// 更新缓存
+	typ := script.GetAccountType(ledgerConfig.Id, accountForm.Account)
+	account := script.Account{Acc: accountForm.Account, StartDate: accountForm.Date, Currency: accountForm.Currency, Type: &typ}
+	accounts = append(accounts, account)
+	script.UpdateLedgerAccounts(ledgerConfig.Id, accounts)
+	OK(c, account)
+}
+
+type AddAccountTypeForm struct {
+	Type string `form:"type" binding:"required"`
+	Name string `form:"name" binding:"required"`
+}
+
+func AddAccountType(c *gin.Context) {
+	var addAccountTypeForm AddAccountTypeForm
+	if err := c.ShouldBindJSON(&addAccountTypeForm); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	accountTypesMap := script.GetLedgerAccountTypes(ledgerConfig.Id)
+	typ := addAccountTypeForm.Type
+	accountTypesMap[typ] = addAccountTypeForm.Name
+	// 更新文件
+	pathFile := script.GetLedgerAccountTypeFilePath(ledgerConfig.DataPath)
+	bytes, err := json.Marshal(accountTypesMap)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	err = script.WriteFile(pathFile, string(bytes))
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	// 更新缓存
+	script.UpdateLedgerAccountTypes(ledgerConfig.Id, accountTypesMap)
+	OK(c, script.AccountType{
+		Key:  addAccountTypeForm.Type,
+		Name: addAccountTypeForm.Name,
+	})
+}
+
+type CloseAccountForm struct {
+	Date    string `form:"date" binding:"required"`
+	Account string `form:"account" binding:"required"`
+}
+
+func CloseAccount(c *gin.Context) {
+	var accountForm CloseAccountForm
+	if err := c.ShouldBindJSON(&accountForm); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	line := fmt.Sprintf("%s close %s", accountForm.Date, accountForm.Account)
+	// 写入文件
+	filePath := ledgerConfig.DataPath + "/account/" + script.GetAccountPrefix(accountForm.Account) + ".bean"
+	err := script.AppendFileInNewLine(filePath, line)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	// 更新缓存
+	accounts := script.GetLedgerAccounts(ledgerConfig.Id)
+	for i := 0; i < len(accounts); i++ {
+		if accounts[i].Acc == accountForm.Account {
+			accounts[i].EndDate = accountForm.Date
+		}
+	}
+	script.UpdateLedgerAccounts(ledgerConfig.Id, accounts)
+	OK(c, script.Account{
+		Acc: accountForm.Account, EndDate: accountForm.Date,
+	})
+}
+
+func ChangeAccountIcon(c *gin.Context) {
+
+}
+
+type BalanceAccountForm struct {
+	Date    string `form:"date" binding:"required" json:"date"`
+	Account string `form:"account" binding:"required" json:"account"`
+	Number  string `form:"number" binding:"required" json:"number"`
+}
+
+func BalanceAccount(c *gin.Context) {
+	var accountForm BalanceAccountForm
+	if err := c.ShouldBindJSON(&accountForm); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+
+	// 获取当前账户信息
+	var acc script.Account
+	accounts := script.GetLedgerAccounts(ledgerConfig.Id)
+	for _, account := range accounts {
+		if account.Acc == accountForm.Account {
+			acc = account
+		}
+	}
+
+	today, err := time.Parse("2006-01-02", accountForm.Date)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	todayStr := today.Format("2006-01-02")
+	yesterdayStr := today.AddDate(0, 0, -1).Format("2006-01-02")
+	month := today.Format("2006-01")
+	line := fmt.Sprintf("\r\n%s pad %s Equity:OpeningBalances", yesterdayStr, accountForm.Account)
+	line += fmt.Sprintf("\r\n%s balance %s %s %s", todayStr, accountForm.Account, accountForm.Number, acc.Currency)
+
+	filePath := fmt.Sprintf("%s/month/%s.bean", ledgerConfig.DataPath, month)
+	err = script.AppendFileInNewLine(filePath, line)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	result := make(map[string]string)
+	result["account"] = accountForm.Account
+	result["date"] = accountForm.Date
+	result["marketNumber"] = accountForm.Number
+	result["marketCurrency"] = ledgerConfig.OperatingCurrency
+	result["marketCurrencySymbol"] = script.GetCommoditySymbol(ledgerConfig.OperatingCurrency)
 	OK(c, result)
 }

@@ -21,10 +21,18 @@ func InternalError(c *gin.Context, message string) {
 	c.JSON(http.StatusOK, gin.H{"code": 500, "message": message})
 }
 
+func TransactionNotBalance(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"code": 1001})
+}
+
 func LedgerIsNotExist(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"code": 1006, "message": "ledger is not exist"})
+	c.JSON(http.StatusOK, gin.H{"code": 1006})
 }
 
 func LedgerIsNotAllowAccess(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"code": 1006, "message": "ledger is not allow access"})
+	c.JSON(http.StatusOK, gin.H{"code": 1006})
+}
+
+func DuplicateAccount(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"code": 1007})
 }
