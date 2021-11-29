@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -292,5 +293,17 @@ func GetCommoditySymbol(commodity string) string {
 
 func GetAccountPrefix(account string) string {
 	nodes := strings.Split(account, ":")
+	return nodes[0]
+}
+
+func GetAccountIconName(account string) string {
+	nodes := strings.Split(account, ":")
+	for i := len(nodes) - 1; i > 0; i-- {
+		reg := regexp.MustCompile(`^[a-zA-Z]`)
+		result := reg.FindAllStringSubmatch(nodes[i], -1)
+		if result != nil {
+			return nodes[i]
+		}
+	}
 	return nodes[0]
 }

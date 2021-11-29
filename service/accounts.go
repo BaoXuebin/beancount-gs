@@ -188,7 +188,21 @@ func CloseAccount(c *gin.Context) {
 }
 
 func ChangeAccountIcon(c *gin.Context) {
-
+	account := c.Query("account")
+	if account == "" {
+		BadRequest(c, "account is not blank")
+		return
+	}
+	file, _ := c.FormFile("file")
+	filePath := "./public/icons/" + script.GetAccountIconName(account) + ".png"
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		InternalError(c, err.Error())
+		//自己完成信息提示
+		return
+	}
+	var result = make(map[string]string)
+	result["filename"] = filePath
+	OK(c, result)
 }
 
 type BalanceAccountForm struct {
