@@ -34,10 +34,10 @@ go build
 
 将打包获得的文件与项目的 `config/`, `public/`, `example/` 三个文件夹放置同一目录，然后执行
 
-# 项目负责人
+## 项目负责人
 
 [@BaoXuebin](https://github.com/BaoXuebin)
 
-# 开源协议
+## 开源协议
 
 [MIT](https://github.com/BaoXuebin/beancount-gs/blob/main/License) @BaoXuebin
