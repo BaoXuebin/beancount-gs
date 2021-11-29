@@ -8,8 +8,27 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
+	"os/exec"
 	"strings"
 )
+
+func CheckBeancount(c *gin.Context) {
+	cmd := exec.Command("bean-query", "--version")
+	output, err := cmd.Output()
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	OK(c, string(output))
+}
+
+func QueryServerConfig(c *gin.Context) {
+	OK(c, script.GetServerConfig())
+}
+
+func UpdateServerConfig(c *gin.Context) {
+
+}
 
 type LoginForm struct {
 	Mail   string `form:"mail" binding:"required"`
@@ -93,7 +112,7 @@ func copyFile(sourceFilePath string, targetFilePath string, ledgerConfig script.
 				return err
 			}
 			err = script.WriteFile(newTargetFilePath, strings.ReplaceAll(strings.ReplaceAll(string(fileContent), "%startDate%", ledgerConfig.StartDate), "%operatingCurrency%", ledgerConfig.OperatingCurrency))
-			script.LogInfo(ledgerConfig.Mail, "Success create file " + newTargetFilePath)
+			script.LogInfo(ledgerConfig.Mail, "Success create file "+newTargetFilePath)
 		}
 		if err != nil {
 			return err
