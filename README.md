@@ -31,4 +31,4 @@
 [@BaoXuebin](https://github.com/BaoXuebin)
 # 开源协议
 
-[MIT](https://github.com/BaoXuebin/beancount-gs/blob/main/LICENSE) @BaoXuebin
+[MIT](https://github.com/BaoXuebin/beancount-gs/blob/main/License) @BaoXuebin
