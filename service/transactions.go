@@ -1,11 +1,14 @@
 package service
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
+	"io"
 	"strings"
 	"time"
 )
@@ -59,18 +62,18 @@ type AddTransactionForm struct {
 }
 
 type AddTransactionEntryForm struct {
-	Account string          `form:"account" binding:"required"`
-	Number  decimal.Decimal `form:"number"`
-	//Currency      string          `form:"currency"`
-	Price decimal.Decimal `form:"price"`
-	//PriceCurrency string          `form:"priceCurrency"`
+	Account       string          `form:"account" binding:"required" json:"account"`
+	Number        decimal.Decimal `form:"number" json:"number"`
+	Currency      string          `form:"currency" json:"currency"`
+	Price         decimal.Decimal `form:"price" json:"price"`
+	PriceCurrency string          `form:"priceCurrency" json:"priceCurrency"`
 }
 
 func sum(entries []AddTransactionEntryForm, openingBalances string) decimal.Decimal {
 	sumVal := decimal.NewFromInt(0)
 	for _, entry := range entries {
 		if entry.Account == openingBalances {
-			return sumVal
+			return decimal.NewFromInt(0)
 		}
 		if entry.Price.IntPart() == 0 {
 			sumVal = entry.Number.Add(sumVal)
@@ -190,38 +193,120 @@ func QueryTransactionPayees(c *gin.Context) {
 	OK(c, result)
 }
 
-type transactionTemplate struct {
-	Id           string                      `json:"id"`
-	Date         string                      `json:"date"`
-	TemplateName string                      `json:"templateName"`
-	Payee        string                      `json:"payee"`
-	Desc         string                      `json:"desc"`
-	Entries      []transactionTemplateEntity `json:"entries"`
-}
-
-type transactionTemplateEntity struct {
-	Account   string `json:"account"`
-	Commodity string `json:"commodity"`
-	Amount    string `json:"amount"`
+type TransactionTemplate struct {
+	Id           string                    `json:"id"`
+	Date         string                    `form:"date" binding:"required" json:"date"`
+	TemplateName string                    `form:"templateName" binding:"required" json:"templateName"`
+	Payee        string                    `form:"payee" json:"payee"`
+	Desc         string                    `form:"desc" binding:"required" json:"desc"`
+	Entries      []AddTransactionEntryForm `form:"entries" json:"entries"`
 }
 
 func QueryTransactionTemplates(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	filePath := script.GetLedgerTransactionsTemplateFilePath(ledgerConfig.DataPath)
+	templates, err := getLedgerTransactionTemplates(filePath)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	OK(c, templates)
+}
+
+func AddTransactionTemplate(c *gin.Context) {
+	var transactionTemplate TransactionTemplate
+	if err := c.ShouldBindJSON(&transactionTemplate); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	filePath := script.GetLedgerTransactionsTemplateFilePath(ledgerConfig.DataPath)
+	templates, err := getLedgerTransactionTemplates(filePath)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	t := sha1.New()
+	_, err = io.WriteString(t, time.Now().String())
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	transactionTemplate.Id = hex.EncodeToString(t.Sum(nil))
+	templates = append(templates, transactionTemplate)
+
+	err = writeLedgerTransactionTemplates(filePath, templates)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	OK(c, transactionTemplate)
+}
+
+func DeleteTransactionTemplate(c *gin.Context) {
+	templateId := c.Query("id")
+	if templateId == "" {
+		BadRequest(c, "templateId is not blank")
+		return
+	}
+
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	filePath := script.GetLedgerTransactionsTemplateFilePath(ledgerConfig.DataPath)
+
+	oldTemplates, err := getLedgerTransactionTemplates(filePath)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	newTemplates := make([]TransactionTemplate, 0)
+	for _, template := range oldTemplates {
+		if template.Id != templateId {
+			newTemplates = append(newTemplates, template)
+		}
+	}
+
+	err = writeLedgerTransactionTemplates(filePath, newTemplates)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	OK(c, templateId)
+}
+
+func getLedgerTransactionTemplates(filePath string) ([]TransactionTemplate, error) {
+	result := make([]TransactionTemplate, 0)
 	if script.FileIfExist(filePath) {
 		bytes, err := script.ReadFile(filePath)
 		if err != nil {
-			InternalError(c, err.Error())
-			return
+			return nil, err
 		}
-		result := make([]transactionTemplate, 0)
 		err = json.Unmarshal(bytes, &result)
 		if err != nil {
-			InternalError(c, err.Error())
-			return
+			return nil, err
 		}
-		OK(c, result)
-	} else {
-		OK(c, new([]string))
 	}
+	return result, nil
+}
+
+func writeLedgerTransactionTemplates(filePath string, templates []TransactionTemplate) error {
+	if !script.FileIfExist(filePath) {
+		err := script.CreateFile(filePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	bytes, err := json.Marshal(templates)
+	if err != nil {
+		return err
+	}
+	err = script.WriteFile(filePath, string(bytes))
+	if err != nil {
+		return err
+	}
+	return nil
 }

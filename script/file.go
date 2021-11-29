@@ -27,16 +27,11 @@ func ReadFile(filePath string) ([]byte, error) {
 }
 
 func WriteFile(filePath string, content string) error {
-	content = "\r\n" + content
-	file, err := os.OpenFile(filePath, os.O_CREATE, 0644)
-	if err == nil {
-		_, err = file.WriteString(content)
-		if err != nil {
-			LogSystemError("Failed to write file (" + filePath + ")")
-			return err
-		}
+	err := ioutil.WriteFile(filePath, []byte(content), 0777)
+	if err != nil {
+		LogSystemError("Failed to write file (" + filePath + ")")
+		return err
 	}
-	defer file.Close()
 	LogSystemInfo("Success write file (" + filePath + ")")
 	return nil
 }
