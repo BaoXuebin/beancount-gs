@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -17,10 +16,10 @@ var ledgerAccountTypesMap map[string]map[string]string
 var whiteList []string
 
 type Config struct {
-	Id                string `json:"id"`
-	Mail              string `json:"mail"`
-	Title             string `json:"title"`
-	DataPath          string `json:"dataPath"`
+	Id                string `json:"id,omitempty"`
+	Mail              string `json:"mail,omitempty"`
+	Title             string `json:"title,omitempty"`
+	DataPath          string `json:"dataPath,omitempty"`
 	OperatingCurrency string `json:"operatingCurrency"`
 	StartDate         string `json:"startDate"`
 	IsBak             bool   `json:"isBak"`
@@ -45,6 +44,55 @@ type AccountType struct {
 
 func GetServerConfig() Config {
 	return serverConfig
+}
+
+func LoadServerConfig() error {
+	filePath := GetServerConfigFilePath()
+	if !FileIfExist(filePath) {
+		serverConfig = Config{
+			OpeningBalances:   "Equity:OpeningBalances",
+			OperatingCurrency: "CNY",
+			StartDate:         "1970-01-01",
+			IsBak:             true,
+		}
+		return nil
+	}
+	fileContent, err := ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(fileContent, &serverConfig)
+	if err != nil {
+		LogSystemError("Failed unmarshall config file (" + filePath + ")")
+		return err
+	}
+	LogSystemInfo("Success load config file (" + filePath + ")")
+	// load white list
+	whiteListFilePath := GetServerWhiteListFilePath()
+	fileContent, err = ReadFile(whiteListFilePath)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(fileContent, &whiteList)
+	if err != nil {
+		LogSystemError("Failed unmarshal whitelist file (" + whiteListFilePath + ")")
+		return err
+	}
+	LogSystemInfo("Success load whitelist file (" + whiteListFilePath + ")")
+	return nil
+}
+
+func UpdateServerConfig(config Config) error {
+	bytes, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	err = WriteFile(GetServerConfigFilePath(), string(bytes))
+	if err != nil {
+		return err
+	}
+	serverConfig = config
+	return nil
 }
 
 func GetLedgerConfigMap() map[string]Config {
@@ -132,56 +180,28 @@ func IsInWhiteList(ledgerId string) bool {
 	return false
 }
 
-func LoadServerConfig() error {
-	fileContent, err := ReadFile("./config/config.json")
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(fileContent, &serverConfig)
-	if err != nil {
-		LogSystemError("Failed unmarshall config file (/config/config.json)")
-		return err
-	}
-	// 兼容旧版本数据，设置默认平衡账户
-	if serverConfig.OpeningBalances == "" {
-		serverConfig.OpeningBalances = "Equity:OpeningBalances"
-	}
-	LogSystemInfo("Success load config file (/config/config.json)")
-	// load white list
-	fileContent, err = ReadFile("./config/white_list.json")
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(fileContent, &whiteList)
-	if err != nil {
-		LogSystemError("Failed unmarshal whitelist file (/config/white_list.json)")
-		return err
-	}
-	LogSystemInfo("Success load whitelist file (/config/white_list.json)")
-	return nil
-}
-
 func LoadLedgerConfigMap() error {
 	path := GetServerLedgerConfigFilePath()
-	fileContent, err := ReadFile(path)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(fileContent, &ledgerConfigMap)
-	if err != nil {
-		LogSystemError("Failed unmarshal config file (" + path + ")")
-		return err
-	}
-	// 兼容旧数据，初始化 平衡账户
-	temp := make(map[string]Config)
-	for key, val := range ledgerConfigMap {
-		if val.OpeningBalances == "" {
-			val.OpeningBalances = serverConfig.OpeningBalances
+	// 文件不存在，则创建 ledger_config.json
+	if !FileIfExist(path) {
+		err := CreateFile(path)
+		if err != nil {
+			return err
 		}
-		temp[key] = val
+		ledgerConfigMap = make(map[string]Config)
+	} else {
+		// 文件存在，将文件内容加载到缓存
+		fileContent, err := ReadFile(path)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(fileContent, &ledgerConfigMap)
+		if err != nil {
+			LogSystemError("Failed unmarshal config file (" + path + ")")
+			return err
+		}
+		LogSystemInfo("Success load ledger_config file (" + path + ")")
 	}
-	ledgerConfigMap = temp
-	LogSystemInfo("Success load ledger_config file (" + path + ")")
 	return nil
 }
 
@@ -190,61 +210,70 @@ func LoadLedgerAccountsMap() error {
 		ledgerAccountsMap = make(map[string][]Account)
 	}
 	for _, config := range ledgerConfigMap {
-		// 加载 account_type.json 到缓存（内存）
-		loadErr := LoadLedgerAccountTypesMap(config)
-		if loadErr != nil {
-			LogSystemError("Failed to load account types")
-			return loadErr
-		}
-		accountDirPath := config.DataPath + "/account"
-		dirs, err := os.ReadDir(accountDirPath)
+		err := LoadLedgerAccounts(config.Id)
 		if err != nil {
 			return err
 		}
-		accountMap := make(map[string]Account)
-		for _, dir := range dirs {
-			bytes, err := ReadFile(accountDirPath + "/" + dir.Name())
-			if err != nil {
-				return err
-			}
-			lines := strings.Split(string(bytes), "\n")
-			var temp Account
-			for _, line := range lines {
-				if line != "" {
-					words := strings.Fields(line)
-					if len(words) >= 3 {
-						key := words[2]
-						temp = accountMap[key]
-						account := Account{Acc: key, Type: nil}
-						// 货币单位
-						if len(words) >= 4 {
-							account.Currency = words[3]
-						}
-						if words[1] == "open" {
-							account.StartDate = words[0]
-						} else if words[1] == "close" {
-							account.EndDate = words[0]
-						}
-						if temp.StartDate != "" {
-							account.StartDate = temp.StartDate
-						}
-						if temp.EndDate != "" {
-							account.EndDate = temp.EndDate
-						}
-						accountMap[key] = account
+	}
+	return nil
+}
+
+func LoadLedgerAccounts(ledgerId string) error {
+	config := ledgerConfigMap[ledgerId]
+	// 加载 account_type.json 到缓存（内存）
+	loadErr := LoadLedgerAccountTypesMap(config)
+	if loadErr != nil {
+		LogSystemError("Failed to load account types")
+		return loadErr
+	}
+	accountDirPath := config.DataPath + "/account"
+	dirs, err := os.ReadDir(accountDirPath)
+	if err != nil {
+		return err
+	}
+	accountMap := make(map[string]Account)
+	for _, dir := range dirs {
+		bytes, err := ReadFile(accountDirPath + "/" + dir.Name())
+		if err != nil {
+			return err
+		}
+		lines := strings.Split(string(bytes), "\n")
+		var temp Account
+		for _, line := range lines {
+			if line != "" {
+				words := strings.Fields(line)
+				if len(words) >= 3 {
+					key := words[2]
+					temp = accountMap[key]
+					account := Account{Acc: key, Type: nil}
+					// 货币单位
+					if len(words) >= 4 {
+						account.Currency = words[3]
 					}
+					if words[1] == "open" {
+						account.StartDate = words[0]
+					} else if words[1] == "close" {
+						account.EndDate = words[0]
+					}
+					if temp.StartDate != "" {
+						account.StartDate = temp.StartDate
+					}
+					if temp.EndDate != "" {
+						account.EndDate = temp.EndDate
+					}
+					accountMap[key] = account
 				}
 			}
 		}
-		accounts := make([]Account, 0)
-		for _, account := range accountMap {
-			accounts = append(accounts, account)
-		}
-		// 账户按字母排序
-		sort.Sort(AccountSort(accounts))
-		ledgerAccountsMap[config.Id] = accounts
-		LogSystemInfo(fmt.Sprintf("Success load [%s] accounts cache", config.Mail))
 	}
+	accounts := make([]Account, 0)
+	for _, account := range accountMap {
+		accounts = append(accounts, account)
+	}
+	// 账户按字母排序
+	sort.Sort(AccountSort(accounts))
+	ledgerAccountsMap[config.Id] = accounts
+	LogSystemInfo(fmt.Sprintf("Success load [%s] accounts cache", config.Mail))
 	return nil
 }
 
@@ -298,12 +327,5 @@ func GetAccountPrefix(account string) string {
 
 func GetAccountIconName(account string) string {
 	nodes := strings.Split(account, ":")
-	for i := len(nodes) - 1; i > 0; i-- {
-		reg := regexp.MustCompile(`^[a-zA-Z]`)
-		result := reg.FindAllStringSubmatch(nodes[i], -1)
-		if result != nil {
-			return nodes[i]
-		}
-	}
-	return nodes[0]
+	return strings.Join(nodes, "_")
 }

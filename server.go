@@ -10,7 +10,7 @@ import (
 func InitServerFiles() error {
 	dataPath := script.GetServerConfig().DataPath
 	// 账本目录不存在，则创建
-	if !script.FileIfExist(dataPath) {
+	if dataPath != "" && !script.FileIfExist(dataPath) {
 		return script.MkDir(dataPath)
 	}
 	return nil
@@ -87,17 +87,21 @@ func main() {
 		script.LogSystemError("Failed to load server config, " + err.Error())
 		return
 	}
-	// 初始化账本文件结构
-	err = InitServerFiles()
-	if err != nil {
-		script.LogSystemError("Failed to init server files, " + err.Error())
-		return
-	}
-	// 加载缓存
-	err = LoadServerCache()
-	if err != nil {
-		script.LogSystemError("Failed to load server cache, " + err.Error())
-		return
+	serverConfig := script.GetServerConfig()
+	// 若 DataPath == "" 则配置未初始化
+	if serverConfig.DataPath != "" {
+		// 初始化账本文件结构
+		err = InitServerFiles()
+		if err != nil {
+			script.LogSystemError("Failed to init server files, " + err.Error())
+			return
+		}
+		// 加载缓存
+		err = LoadServerCache()
+		if err != nil {
+			script.LogSystemError("Failed to load server cache, " + err.Error())
+			return
+		}
 	}
 	router := gin.Default()
 	// 注册路由

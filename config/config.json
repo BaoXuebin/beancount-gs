@@ -1,8 +1,1 @@
-{
-  "title": "我的账本",
-  "dataPath": "E:\\beancount",
-  "operatingCurrency": "CNY",
-  "startDate": "1970-01-01",
-  "isBak": true,
-  "openingBalances": "Equity:OpeningBalances"
-}
+{"dataPath":"C:\\Users\\BaoXuebin\\Desktop\\beancount","operatingCurrency":"CNY","startDate":"1970-01-01","isBak":true,"openingBalances":"Equity:OpeningBalances"}

@@ -2,16 +2,24 @@ package script
 
 import "os"
 
+func GetServerConfigFilePath() string {
+	return "./config/config.json"
+}
+
+func GetServerWhiteListFilePath() string {
+	return "./config/white_list.json"
+}
+
 func GetServerLedgerConfigFilePath() string {
 	return GetServerConfig().DataPath + "/ledger_config.json"
 }
 
-func GetExampleLedgerConfigDirPath() string {
+func GetTemplateLedgerConfigDirPath() string {
 	currentPath, err := os.Getwd()
 	if err != nil {
 		return ""
 	}
-	return currentPath + "/example"
+	return currentPath + "/template"
 }
 
 func GetLedgerTransactionsTemplateFilePath(dataPath string) string {
