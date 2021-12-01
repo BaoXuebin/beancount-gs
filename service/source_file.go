@@ -76,7 +76,7 @@ func UpdateLedgerSourceFileContent(c *gin.Context) {
 	}
 
 	sourceFilePath := ledgerConfig.DataPath + "/" + updateSourceFileForm.Path
-	targetFilePath := ledgerConfig.DataPath + "/bak/" + time.Now().Format("20060102150405") + "_" + updateSourceFileForm.Path
+	targetFilePath := ledgerConfig.DataPath + "/bak/" + time.Now().Format("20060102150405") + "_" + strings.ReplaceAll(updateSourceFileForm.Path, "/", "_")
 	// 备份数据
 	if ledgerConfig.IsBak {
 		err := script.CopyFile(sourceFilePath, targetFilePath)
