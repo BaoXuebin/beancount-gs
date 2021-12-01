@@ -2,3 +2,4 @@
 .git
 bindata.go
 *.exe
+config/config.json
