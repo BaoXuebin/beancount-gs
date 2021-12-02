@@ -11,6 +11,9 @@ import (
 )
 
 type QueryParams struct {
+	From        bool   `bql:"From"`
+	FromYear    int    `bql:"year ="`
+	FromMonth   int    `bql:"month ="`
 	Where       bool   `bql:"where"`
 	Currency    string `bql:"currency ="`
 	Year        int    `bql:"year ="`
@@ -159,6 +162,10 @@ func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryPa
 				break
 			case reflect.Bool:
 				val := valueField.Bool()
+				// where 前的 from 可能会带有 and
+				if typeField.Name == "Where" {
+					bql = strings.Trim(bql, " AND")
+				}
 				if val {
 					bql = fmt.Sprintf("%s %s ", bql, typeField.Tag.Get("bql"))
 				}

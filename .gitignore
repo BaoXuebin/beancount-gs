@@ -2,4 +2,5 @@
 .git
 bindata.go
 *.exe
+gin.log
 config/config.json

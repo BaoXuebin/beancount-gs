@@ -4,7 +4,9 @@ import (
 	"github.com/beancount-gs/script"
 	"github.com/beancount-gs/service"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
+	"os"
 )
 
 func InitServerFiles() error {
@@ -66,6 +68,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/stats/payee", service.StatsPayee)
 		authorized.GET("/stats/account/percent", service.StatsAccountPercent)
 		authorized.GET("/stats/account/trend", service.StatsAccountTrend)
+		authorized.GET("/stats/account/balance", service.StatsAccountBalance)
 		authorized.GET("/stats/month/total", service.StatsMonthTotal)
 		authorized.GET("/transaction", service.QueryTransactions)
 		authorized.POST("/transaction", service.AddTransactions)
@@ -103,11 +106,17 @@ func main() {
 			return
 		}
 	}
+	// gin 日志设置
+	gin.DisableConsoleColor()
+	fs, _ := os.Create("gin.log")
+	gin.DefaultWriter = io.MultiWriter(fs)
 	router := gin.Default()
 	// 注册路由
 	RegisterRouter(router)
 	// 启动服务
 	var port = ":3001"
+	url := "http://localhost" + port
+	script.LogSystemInfo("Server start at " + url)
 	err = router.Run(port)
 	if err != nil {
 		script.LogSystemError("Failed to start server, " + err.Error())

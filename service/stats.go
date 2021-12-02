@@ -161,6 +161,55 @@ func StatsAccountTrend(c *gin.Context) {
 	OK(c, result)
 }
 
+type AccountBalanceBQLResult struct {
+	Year    string `bql:"year" json:"year"`
+	Month   string `bql:"month" json:"month"`
+	Day     string `bql:"day" json:"day"`
+	Balance string `bql:"balance" json:"balance"`
+}
+
+type AccountBalanceResult struct {
+	Date              string      `json:"date"`
+	Amount            json.Number `json:"amount"`
+	OperatingCurrency string      `json:"operatingCurrency"`
+}
+
+func StatsAccountBalance(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	var statsQuery StatsQuery
+	if err := c.ShouldBindQuery(&statsQuery); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+
+	queryParams := script.QueryParams{
+		AccountLike: statsQuery.Prefix,
+		Where:       true,
+	}
+
+	balResultList := make([]AccountBalanceBQLResult, 0)
+	bql := fmt.Sprintf("select '\\', year, '\\', month, '\\', day, '\\', last(convert(balance, '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, &queryParams, &balResultList)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	resultList := make([]AccountBalanceResult, 0)
+	for _, bqlResult := range balResultList {
+		if bqlResult.Balance != "" {
+			fields := strings.Fields(bqlResult.Balance)
+			amount, _ := decimal.NewFromString(fields[0])
+			resultList = append(resultList, AccountBalanceResult{
+				Date:              bqlResult.Year + "-" + bqlResult.Month + "-" + bqlResult.Day,
+				Amount:            json.Number(amount.Round(2).String()),
+				OperatingCurrency: fields[1],
+			})
+		}
+	}
+	OK(c, resultList)
+}
+
 type MonthTotalBQLResult struct {
 	Year  int
 	Month int
