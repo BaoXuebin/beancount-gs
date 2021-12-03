@@ -47,6 +47,7 @@ func RegisterRouter(router *gin.Engine) {
 		c.Redirect(http.StatusMovedPermanently, "/web")
 	})
 	router.StaticFS("/web", http.Dir("./public"))
+	router.GET("/api/version", service.QueryVersion)
 	router.POST("/api/check", service.CheckBeancount)
 	router.GET("/api/config", service.QueryServerConfig)
 	router.POST("/api/config", service.UpdateServerConfig)
