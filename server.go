@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 func InitServerFiles() error {
@@ -116,7 +117,20 @@ func main() {
 	// 启动服务
 	var port = ":3001"
 	url := "http://localhost" + port
-	script.LogSystemInfo("Server start at " + url)
+	ip := script.GetIpAddress()
+	startLog := "beancount-gs start at " + url
+	if ip != "" {
+		startLog += " or http://" + ip + port
+	}
+	script.LogSystemInfo(startLog)
+
+	// cmd /c start
+	cmd := exec.Command("cmd", "/C", "start", url)
+	err = cmd.Start()
+	if err != nil {
+		script.LogSystemError("Failed to open browser, error is " + err.Error())
+	}
+
 	err = router.Run(port)
 	if err != nil {
 		script.LogSystemError("Failed to start server, " + err.Error())
