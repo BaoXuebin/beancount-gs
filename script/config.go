@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+var serverSecret string
 var serverConfig Config
 var ledgerConfigMap map[string]Config
 var ledgerAccountsMap map[string][]Account
@@ -308,6 +309,19 @@ func WriteLedgerConfigMap(newLedgerConfigMap map[string]Config) error {
 	ledgerConfigMap = newLedgerConfigMap
 	LogSystemInfo("Success write ledger_config file (" + path + ")")
 	return err
+}
+
+func GenerateServerSecret(secret string) string {
+	if secret == "" {
+		serverSecret = RandChar(16)
+	} else {
+		serverSecret = secret
+	}
+	return serverSecret
+}
+
+func EqualServerSecret(secret string) bool {
+	return serverSecret == secret
 }
 
 func GetCommoditySymbol(commodity string) string {

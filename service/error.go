@@ -36,3 +36,7 @@ func LedgerIsNotAllowAccess(c *gin.Context) {
 func DuplicateAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"code": 1007})
 }
+
+func ServerSecretNotMatch(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"code": 1008})
+}

@@ -1,13 +1,14 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/beancount-gs/service"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 )
 
 func InitServerFiles() error {
@@ -86,6 +87,12 @@ func RegisterRouter(router *gin.Engine) {
 }
 
 func main() {
+	var secret string
+	var port int
+	flag.StringVar(&secret, "secret", "", "服务器密钥")
+	flag.IntVar(&port, "p", 3001, "端口号")
+	flag.Parse()
+
 	// 读取配置文件
 	err := script.LoadServerConfig()
 	if err != nil {
@@ -115,24 +122,21 @@ func main() {
 	router := gin.Default()
 	// 注册路由
 	RegisterRouter(router)
-	// 启动服务
-	var port = ":3001"
-	url := "http://localhost" + port
+
+	portStr := fmt.Sprintf(":%d", port)
+	url := "http://localhost" + portStr
 	ip := script.GetIpAddress()
 	startLog := "beancount-gs start at " + url
 	if ip != "" {
-		startLog += " or http://" + ip + port
+		startLog += " or http://" + ip + portStr
 	}
 	script.LogSystemInfo(startLog)
-
-	// cmd /c start
-	cmd := exec.Command("cmd", "/C", "start", url)
-	err = cmd.Start()
-	if err != nil {
-		script.LogSystemError("Failed to open browser, error is " + err.Error())
-	}
-
-	err = router.Run(port)
+	// 打开浏览器
+	script.OpenBrowser(url)
+	// 打印密钥
+	script.LogSystemInfo("Secret token is " + script.GenerateServerSecret(secret))
+	// 启动服务
+	err = router.Run(portStr)
 	if err != nil {
 		script.LogSystemError("Failed to start server, " + err.Error())
 	}

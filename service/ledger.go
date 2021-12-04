@@ -27,6 +27,7 @@ func QueryServerConfig(c *gin.Context) {
 }
 
 type UpdateConfigForm struct {
+	Secret            string `form:"secret" binding:"required"`
 	StartDate         string `form:"startDate" binding:"required"`
 	DataPath          string `form:"dataPath" binding:"required"`
 	OperatingCurrency string `form:"operatingCurrency" binding:"required"`
@@ -38,6 +39,10 @@ func UpdateServerConfig(c *gin.Context) {
 	var updateConfigForm UpdateConfigForm
 	if err := c.ShouldBindJSON(&updateConfigForm); err != nil {
 		BadRequest(c, err.Error())
+		return
+	}
+	if !script.EqualServerSecret(updateConfigForm.Secret) {
+		ServerSecretNotMatch(c)
 		return
 	}
 	var serverConfig = script.Config{
