@@ -52,6 +52,7 @@ func RegisterRouter(router *gin.Engine) {
 	router.POST("/api/check", service.CheckBeancount)
 	router.GET("/api/config", service.QueryServerConfig)
 	router.POST("/api/config", service.UpdateServerConfig)
+	router.GET("/api/ledger", service.QueryLedgerList)
 	router.POST("/api/ledger", service.OpenOrCreateLedger)
 	authorized := router.Group("/api/auth/")
 	authorized.Use(AuthorizedHandler())

@@ -25,6 +25,7 @@ type Config struct {
 	StartDate         string `json:"startDate"`
 	IsBak             bool   `json:"isBak"`
 	OpeningBalances   string `json:"openingBalances"`
+	CreateDate        string `json:"createDate,omitempty"`
 }
 
 type Account struct {

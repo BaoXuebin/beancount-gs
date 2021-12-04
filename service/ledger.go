@@ -3,13 +3,14 @@ package service
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
 	"os/exec"
+	"sort"
 	"strings"
+	"time"
 )
 
 func CheckBeancount(c *gin.Context) {
@@ -24,6 +25,41 @@ func CheckBeancount(c *gin.Context) {
 
 func QueryServerConfig(c *gin.Context) {
 	OK(c, script.GetServerConfig())
+}
+
+type QueryLedgerResult struct {
+	Mail              string `json:"mail"`
+	Title             string `json:"title"`
+	CreateDate        string `json:"createDate"`
+	OperatingCurrency string `json:"operatingCurrency"`
+}
+
+type LedgerSort []QueryLedgerResult
+
+func (s LedgerSort) Len() int {
+	return len(s)
+}
+
+func (s LedgerSort) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s LedgerSort) Less(i, j int) bool {
+	return s[i].CreateDate <= s[j].CreateDate && s[i].Mail <= s[j].Mail
+}
+
+func QueryLedgerList(c *gin.Context) {
+	result := make([]QueryLedgerResult, 0)
+	for _, config := range script.GetLedgerConfigMap() {
+		result = append(result, QueryLedgerResult{
+			Title:             config.Title,
+			Mail:              config.Mail,
+			CreateDate:        config.CreateDate,
+			OperatingCurrency: config.OperatingCurrency,
+		})
+	}
+	sort.Sort(LedgerSort(result))
+	OK(c, result)
 }
 
 type UpdateConfigForm struct {
@@ -110,7 +146,6 @@ func OpenOrCreateLedger(c *gin.Context) {
 	}
 
 	ledgerId := hex.EncodeToString(t.Sum(nil))
-	fmt.Println(ledgerId)
 	userLedger := script.GetLedgerConfigByMail(loginForm.LedgerName)
 	if userLedger != nil {
 		if ledgerId != userLedger.Id {
@@ -123,6 +158,7 @@ func OpenOrCreateLedger(c *gin.Context) {
 		resultMap["title"] = userLedger.Title
 		resultMap["currency"] = userLedger.OperatingCurrency
 		resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
+		resultMap["createDate"] = userLedger.CreateDate
 		OK(c, resultMap)
 		return
 	}
@@ -138,6 +174,7 @@ func OpenOrCreateLedger(c *gin.Context) {
 	resultMap["title"] = userLedger.Title
 	resultMap["currency"] = userLedger.OperatingCurrency
 	resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
+	resultMap["createDate"] = userLedger.CreateDate
 	OK(c, resultMap)
 }
 
@@ -168,6 +205,7 @@ func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, erro
 		StartDate:         startDate,
 		OpeningBalances:   openingBalances,
 		IsBak:             loginForm.IsBak,
+		CreateDate:        time.Now().Format("2006-01-02"),
 	}
 	// init ledger files
 	err := initLedgerFiles(script.GetTemplateLedgerConfigDirPath(), ledgerConfig.DataPath, ledgerConfig)
