@@ -2,7 +2,7 @@ version: "3.9"
 services:
   app:
     container_name: beancount-gs
-    image: xdbin/beancount-gs:0.0.1
+    image: xdbin/beancount-gs:latest
     ports:
       - "10000:80"
     # volumes 挂载目录会导 /app/public/icons 中的图标被覆盖，这里将默认图标在挂载后重新拷贝图标
