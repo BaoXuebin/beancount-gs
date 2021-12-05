@@ -3,11 +3,11 @@ package script
 import "os"
 
 func GetServerConfigFilePath() string {
-	return "./config.json"
+	return "./config/config.json"
 }
 
 func GetServerWhiteListFilePath() string {
-	return "./white_list.json"
+	return "./config/white_list.json"
 }
 
 func GetServerLedgerConfigFilePath() string {
