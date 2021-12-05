@@ -1,6 +1,7 @@
 # beancount-gs
 
-![license](https://img.shields.io/github/license/baoxuebin/beancount-gs)
+![license](https://img.shields.io/github/license/BaoXuebin/beancount-gs?style=flat-square)
+[![docker image size](https://img.shields.io/docker/image-size/xdbin/beancount-gs/latest?label=docker-image&style=flat-square)](https://hub.docker.com/repository/docker/xdbin/beancount-gs/general)
 
 [演示地址](https://beancount.xdbin.com/)
 [使用文档](https://www.yuque.com/chuyi-ble7p/beancount-ns)
