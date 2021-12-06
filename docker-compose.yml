@@ -9,6 +9,6 @@ services:
     command: >
       sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
     volumes:
-      - "${dataPath:-/data/beancount}:/beancount"
+      - "${dataPath:-/data/beancount}:${dataPath:-/data/beancount}"
       - "${dataPath:-/data/beancount}/icons:/app/public/icons"
       - "${dataPath:-/data/beancount}/config:/app/config"
