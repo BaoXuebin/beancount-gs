@@ -71,14 +71,25 @@ func LoadServerConfig() error {
 	LogSystemInfo("Success load config file (" + filePath + ")")
 	// load white list
 	whiteListFilePath := GetServerWhiteListFilePath()
-	fileContent, err = ReadFile(whiteListFilePath)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(fileContent, &whiteList)
-	if err != nil {
-		LogSystemError("Failed unmarshal whitelist file (" + whiteListFilePath + ")")
-		return err
+	if FileIfExist(whiteListFilePath) {
+		fileContent, err = ReadFile(whiteListFilePath)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(fileContent, &whiteList)
+		if err != nil {
+			LogSystemError("Failed unmarshal whitelist file (" + whiteListFilePath + ")")
+			return err
+		}
+	} else {
+		file, _ := os.OpenFile(whiteListFilePath, os.O_CREATE, 0644)
+		_, err = file.WriteString("[]")
+		if err != nil {
+			LogSystemError("Failed to create whitelist file (" + whiteListFilePath + ")")
+			return err
+		}
+		whiteList = make([]string, 0)
+		defer file.Close()
 	}
 	LogSystemInfo("Success load whitelist file (" + whiteListFilePath + ")")
 	return nil

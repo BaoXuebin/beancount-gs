@@ -29,11 +29,47 @@
 
 ## 如何使用
 
+**本地打包**
+
+1. 克隆本项目到本地
+2. 根目录执行 `go build`
+3. 执行 `./beancount-gs` (`-p` 指定端口号，`-secret` 指定配置密钥)
+
+**release**
+
+1. 下载并解压项目的 `release` 包
+2. 执行根目录下的 `./beancount-gs.exe`
+
+**docker**
+
 ```shell
-go build
+docker run --name benacount-gs -dp 10000:80 \
+-w /app \
+-v "/data/beancount:/data/beancount" \
+-v "/data/beancount/icons:/app/public/icons" \
+-v "/data/beancount/config:/app/config" \
+xdbin/beancount-gs:latest \
+sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
 ```
 
-将打包获得的文件与项目的 `config/`, `public/`, `example/` 三个文件夹放置同一目录，然后执行
+**docker-compose**
+
+```yaml
+version: "3.9"
+services:
+  app:
+    container_name: beancount-gs
+    image: xdbin/beancount-gs:latest
+    ports:
+      - "10000:80"
+    # volumes 挂载目录会导 /app/public/icons 中的图标被覆盖，这里将默认图标在挂载后重新拷贝图标
+    command: >
+      sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
+    volumes:
+      - "${dataPath:-/data/beancount}:${dataPath:-/data/beancount}"
+      - "${dataPath:-/data/beancount}/icons:/app/public/icons"
+      - "${dataPath:-/data/beancount}/config:/app/config"
+```
 
 ## 项目负责人
 
