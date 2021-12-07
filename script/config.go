@@ -82,14 +82,15 @@ func LoadServerConfig() error {
 			return err
 		}
 	} else {
-		file, _ := os.OpenFile(whiteListFilePath, os.O_CREATE, 0644)
-		_, err = file.WriteString("[]")
+		err = CreateFile(whiteListFilePath)
 		if err != nil {
-			LogSystemError("Failed to create whitelist file (" + whiteListFilePath + ")")
+			return err
+		}
+		err = WriteFile(whiteListFilePath, "[]")
+		if err != nil {
 			return err
 		}
 		whiteList = make([]string, 0)
-		defer file.Close()
 	}
 	LogSystemInfo("Success load whitelist file (" + whiteListFilePath + ")")
 	return nil
