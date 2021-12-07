@@ -38,7 +38,7 @@ func WriteFile(filePath string, content string) error {
 
 func AppendFileInNewLine(filePath string, content string) error {
 	content = "\r\n" + content
-	file, err := os.OpenFile(filePath, os.O_APPEND, 0644)
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err == nil {
 		_, err = file.WriteString(content)
 		if err != nil {
