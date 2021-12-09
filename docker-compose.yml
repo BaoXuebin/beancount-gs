@@ -12,3 +12,4 @@ services:
       - "${dataPath:-/data/beancount}:${dataPath:-/data/beancount}"
       - "${dataPath:-/data/beancount}/icons:/app/public/icons"
       - "${dataPath:-/data/beancount}/config:/app/config"
+      - "${dataPath:-/data/beancount}/bak:/app/bak"

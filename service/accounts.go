@@ -105,7 +105,7 @@ func AddAccount(c *gin.Context) {
 		line += " \"FIFO\""
 	}
 	// 写入文件
-	filePath := ledgerConfig.DataPath + "/account/" + script.GetAccountPrefix(accountForm.Account) + ".bean"
+	filePath := ledgerConfig.DataPath + "/account/" + strings.ToLower(script.GetAccountPrefix(accountForm.Account)) + ".bean"
 	err := script.AppendFileInNewLine(filePath, line)
 	if err != nil {
 		InternalError(c, err.Error())
