@@ -76,6 +76,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/stats/month/total", service.StatsMonthTotal)
 		authorized.GET("/transaction", service.QueryTransactions)
 		authorized.POST("/transaction", service.AddTransactions)
+		authorized.POST("/transaction/batch", service.AddBatchTransactions)
 		authorized.GET("/transaction/payee", service.QueryTransactionPayees)
 		authorized.GET("/transaction/template", service.QueryTransactionTemplates)
 		authorized.POST("/transaction/template", service.AddTransactionTemplate)
@@ -84,6 +85,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/file/dir", service.QueryLedgerSourceFileDir)
 		authorized.GET("/file/content", service.QueryLedgerSourceFileContent)
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
+		authorized.POST("/import/alipay", service.ImportAliPayCSV)
 	}
 }
 
