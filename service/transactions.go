@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
@@ -84,6 +85,25 @@ func sum(entries []AddTransactionEntryForm, openingBalances string) decimal.Deci
 	return sumVal
 }
 
+func AddBatchTransactions(c *gin.Context) {
+	var addTransactionForms []AddTransactionForm
+	if err := c.ShouldBindJSON(&addTransactionForms); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	result := make([]string, 0)
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	for _, form := range addTransactionForms {
+		err := saveTransaction(nil, form, ledgerConfig)
+		if err == nil {
+			result = append(result, form.Date+form.Payee+form.Desc)
+		} else {
+			script.LogError(ledgerConfig.Mail, err.Error())
+		}
+	}
+	OK(c, result)
+}
+
 func AddTransactions(c *gin.Context) {
 	var addTransactionForm AddTransactionForm
 	if err := c.ShouldBindJSON(&addTransactionForm); err != nil {
@@ -91,12 +111,22 @@ func AddTransactions(c *gin.Context) {
 		return
 	}
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	err := saveTransaction(c, addTransactionForm, ledgerConfig)
+	if err != nil {
+		return
+	}
+	OK(c, nil)
+}
+
+func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledgerConfig *script.Config) error {
 	// 账户是否平衡
 	sumVal := sum(addTransactionForm.Entries, ledgerConfig.OpeningBalances)
 	val, _ := decimal.NewFromString("0.01")
 	if sumVal.Abs().GreaterThan(val) {
-		TransactionNotBalance(c)
-		return
+		if c != nil {
+			TransactionNotBalance(c)
+		}
+		return errors.New("transaction not balance")
 	}
 
 	// 2021-09-29 * "支付宝" "黄金补仓X元" #Invest
@@ -129,8 +159,10 @@ func AddTransactions(c *gin.Context) {
 			priceLine := fmt.Sprintf("%s price %s %s %s", addTransactionForm.Date, account.Currency, entry.Price, ledgerConfig.OperatingCurrency)
 			err := script.AppendFileInNewLine(script.GetLedgerPriceFilePath(ledgerConfig.DataPath), priceLine)
 			if err != nil {
-				InternalError(c, err.Error())
-				return
+				if c != nil {
+					InternalError(c, err.Error())
+				}
+				return errors.New("internal error")
 			}
 		}
 	}
@@ -142,8 +174,10 @@ func AddTransactions(c *gin.Context) {
 	// 记账的日期
 	month, err := time.Parse("2006-01-02", addTransactionForm.Date)
 	if err != nil {
-		InternalError(c, err.Error())
-		return
+		if c != nil {
+			InternalError(c, err.Error())
+		}
+		return errors.New("internal error")
 	}
 	monthStr := month.Format("2006-01")
 	filePath := fmt.Sprintf("%s/month/%s.bean", ledgerConfig.DataPath, monthStr)
@@ -152,23 +186,29 @@ func AddTransactions(c *gin.Context) {
 	if !script.FileIfExist(filePath) {
 		err = script.CreateFile(filePath)
 		if err != nil {
-			InternalError(c, err.Error())
-			return
+			if c != nil {
+				InternalError(c, err.Error())
+			}
+			return errors.New("internal error")
 		}
 		// include ./2021-11.bean
 		err = script.AppendFileInNewLine(script.GetLedgerMonthsFilePath(ledgerConfig.DataPath), fmt.Sprintf("include \"./%s.bean\"", monthStr))
 		if err != nil {
-			InternalError(c, err.Error())
-			return
+			if c != nil {
+				InternalError(c, err.Error())
+			}
+			return errors.New("internal error")
 		}
 	}
 
 	err = script.AppendFileInNewLine(filePath, line)
 	if err != nil {
-		InternalError(c, err.Error())
-		return
+		if c != nil {
+			InternalError(c, err.Error())
+		}
+		return errors.New("internal error")
 	}
-	OK(c, nil)
+	return nil
 }
 
 type transactionPayee struct {
