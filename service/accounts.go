@@ -253,3 +253,14 @@ func BalanceAccount(c *gin.Context) {
 	result["marketCurrencySymbol"] = script.GetCommoditySymbol(ledgerConfig.OperatingCurrency)
 	OK(c, result)
 }
+
+func RefreshAccountCache(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	// 加载账户缓存
+	err := script.LoadLedgerAccounts(ledgerConfig.Id)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	OK(c, nil)
+}
