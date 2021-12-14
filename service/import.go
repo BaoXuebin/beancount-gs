@@ -58,3 +58,52 @@ func ImportAliPayCSV(c *gin.Context) {
 
 	OK(c, result)
 }
+
+func ImportWxPayCSV(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+
+	file, _ := c.FormFile("file")
+	f, _ := file.Open()
+	reader := csv.NewReader(bufio.NewReader(f))
+
+	result := make([]Transaction, 0)
+
+	currency := "CNY"
+	currencySymbol := script.GetCommoditySymbol(currency)
+
+	for {
+		lines, err := reader.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			script.LogError(ledgerConfig.Mail, err.Error())
+		}
+		if len(lines) > 8 {
+			fields := strings.Fields(lines[0])
+			status := strings.Trim(lines[4], " ")
+			account := ""
+			if status == "收入" {
+				account = "Income:"
+			} else if status == "支出" {
+				account = "Expenses:"
+			} else {
+				continue
+			}
+
+			if len(fields) >= 2 {
+				result = append(result, Transaction{
+					Id:             strings.Trim(lines[8], " "),
+					Date:           strings.Trim(fields[0], " "),
+					Payee:          strings.Trim(lines[2], " "),
+					Narration:      strings.Trim(lines[3], " "),
+					Number:         strings.Trim(lines[5], "¥"),
+					Account:        account,
+					Currency:       currency,
+					CurrencySymbol: currencySymbol,
+				})
+			}
+		}
+	}
+
+	OK(c, result)
+}

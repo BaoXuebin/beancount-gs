@@ -86,6 +86,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/file/content", service.QueryLedgerSourceFileContent)
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
 		authorized.POST("/import/alipay", service.ImportAliPayCSV)
+		authorized.POST("/import/wx", service.ImportWxPayCSV)
 	}
 }
 
