@@ -2,5 +2,6 @@
 .git
 bindata.go
 *.exe
+beancount-gs
 gin.log
 config.json

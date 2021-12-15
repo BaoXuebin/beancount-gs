@@ -209,10 +209,14 @@ func LoadLedgerConfigMap() error {
 		if err != nil {
 			return err
 		}
-		err = json.Unmarshal(fileContent, &ledgerConfigMap)
-		if err != nil {
-			LogSystemError("Failed unmarshal ledger_config file (" + path + ")")
-			return err
+		if string(fileContent) != "" {
+			err = json.Unmarshal(fileContent, &ledgerConfigMap)
+			if err != nil {
+				LogSystemError("Failed unmarshal ledger_config file (" + path + ")")
+				return err
+			}
+		} else {
+			ledgerConfigMap = make(map[string]Config)
 		}
 		LogSystemInfo("Success load ledger_config file (" + path + ")")
 	}
