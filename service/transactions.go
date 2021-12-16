@@ -93,7 +93,7 @@ func AddTransactions(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	// 账户是否平衡
 	sumVal := sum(addTransactionForm.Entries, ledgerConfig.OpeningBalances)
-	val, _ := decimal.NewFromString("0.01")
+	val, _ := decimal.NewFromString("0.1")
 	if sumVal.Abs().GreaterThan(val) {
 		TransactionNotBalance(c)
 		return
