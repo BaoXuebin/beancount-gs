@@ -43,7 +43,7 @@
 **docker**
 
 ```shell
-docker run --name benacount-gs -dp 10000:80 \
+docker run --name beancount-gs -dp 10000:80 \
 -w /app \
 -v "/data/beancount:/data/beancount" \
 -v "/data/beancount/icons:/app/public/icons" \
