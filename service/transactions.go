@@ -121,7 +121,7 @@ func AddTransactions(c *gin.Context) {
 func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledgerConfig *script.Config) error {
 	// 账户是否平衡
 	sumVal := sum(addTransactionForm.Entries, ledgerConfig.OpeningBalances)
-	val, _ := decimal.NewFromString("0.01")
+	val, _ := decimal.NewFromString("0.1")
 	if sumVal.Abs().GreaterThan(val) {
 		if c != nil {
 			TransactionNotBalance(c)
@@ -143,7 +143,7 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 		if entry.Account == ledgerConfig.OpeningBalances {
 			line += fmt.Sprintf("\r\n %s", entry.Account)
 		} else {
-			line += fmt.Sprintf("\r\n %s %s %s", entry.Account, entry.Number.Round(2).String(), account.Currency)
+			line += fmt.Sprintf("\r\n %s %s %s", entry.Account, entry.Number.Round(2).StringFixedBank(2), account.Currency)
 		}
 		// 判断是否设计多币种的转换
 		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
