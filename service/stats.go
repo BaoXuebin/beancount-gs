@@ -3,11 +3,13 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
-	"sort"
-	"strings"
 )
 
 type YearMonth struct {
@@ -222,6 +224,19 @@ type MonthTotal struct {
 	Amount            json.Number `json:"amount"`
 	OperatingCurrency string      `json:"operatingCurrency"`
 }
+type MonthTotalSort []MonthTotal
+
+func (s MonthTotalSort) Len() int {
+	return len(s)
+}
+func (s MonthTotalSort) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s MonthTotalSort) Less(i, j int) bool {
+	iYearMonth, _ := time.Parse("2006-1", s[i].Month)
+	jYearMonth, _ := time.Parse("2006-1", s[j].Month)
+	return iYearMonth.Before(jYearMonth)
+}
 
 func StatsMonthTotal(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
@@ -289,6 +304,7 @@ func StatsMonthTotal(c *gin.Context) {
 		monthTotalResult = append(monthTotalResult, monthExpenses)
 		monthTotalResult = append(monthTotalResult, MonthTotal{Type: "结余", Month: month, Amount: json.Number(monthIncomeAmount.Sub(monthExpensesAmount).Round(2).String()), OperatingCurrency: ledgerConfig.OperatingCurrency})
 	}
+	sort.Sort(MonthTotalSort(monthTotalResult))
 	OK(c, monthTotalResult)
 }
 
