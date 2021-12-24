@@ -3,7 +3,6 @@ package script
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os/exec"
 	"reflect"
 	"strconv"
@@ -98,7 +97,6 @@ func BQLQueryListByCustomSelect(ledgerConfig *Config, selectBql string, queryPar
 	if err != nil {
 		return err
 	}
-	log.Println(output)
 	err = parseResult(output, queryResultPtr, false)
 	if err != nil {
 		return err
