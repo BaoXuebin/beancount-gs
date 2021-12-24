@@ -24,8 +24,8 @@
 - [X] 多币种
 - [X] 标签
 - [X] 投资管理(FIFO)
-- [ ] 事件
 - [X] 第三方账单导入(支付宝，微信支付)
+- [ ] 事件
 
 ## 如何使用
 
@@ -48,6 +48,7 @@ docker run --name beancount-gs -dp 10000:80 \
 -v "/data/beancount:/data/beancount" \
 -v "/data/beancount/icons:/app/public/icons" \
 -v "/data/beancount/config:/app/config" \
+-v "/data/beancount/bak:/app/bak" \
 xdbin/beancount-gs:latest \
 sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
 ```
@@ -69,6 +70,7 @@ services:
       - "${dataPath:-/data/beancount}:${dataPath:-/data/beancount}"
       - "${dataPath:-/data/beancount}/icons:/app/public/icons"
       - "${dataPath:-/data/beancount}/config:/app/config"
+      - "${dataPath:-/data/beancount}/bak:/app/bak"
 ```
 
 ## 项目负责人
