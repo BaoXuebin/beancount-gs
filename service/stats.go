@@ -138,8 +138,12 @@ func StatsAccountTrend(c *gin.Context) {
 		Where:       true,
 	}
 	var bql string
-	if statsQuery.Type == "avg" {
+	if statsQuery.Type == "day" {
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	} else if statsQuery.Type == "month" {
+		bql = fmt.Sprintf("SELECT '\\', year, '-', month, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	} else if statsQuery.Type == "year" {
+		bql = fmt.Sprintf("SELECT '\\', year, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
 	} else if statsQuery.Type == "sum" {
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', convert(balance, '%s'), '\\'", ledgerConfig.OperatingCurrency)
 	} else {
@@ -156,9 +160,28 @@ func StatsAccountTrend(c *gin.Context) {
 
 	result := make([]AccountTrendResult, 0)
 	for _, stats := range statsResultList {
-		fields := strings.Fields(stats.Value)
+		commodities := strings.Split(stats.Value, ",")
+		// 多币种的处理方式：例如 75799.78 USD, 18500.00 IRAUSD, 176 VACHR
+		// 选择账本默认（ledgerConfig.OperatingCurrency）币种的值
+		var selectedCommodity = commodities[0]
+		for _, commodity := range commodities {
+			if strings.Contains(commodity, " "+ledgerConfig.OperatingCurrency) {
+				selectedCommodity = commodity
+				break
+			}
+		}
+
+		fields := strings.Fields(selectedCommodity)
 		amount, _ := decimal.NewFromString(fields[0])
-		result = append(result, AccountTrendResult{Date: stats.Key, Amount: json.Number(amount.Round(2).String()), OperatingCurrency: fields[1]})
+
+		var date = stats.Key
+		// 月格式化日期
+		if statsQuery.Type == "month" {
+			yearMonth := strings.Split(date, "-")
+			date = fmt.Sprintf("%s-%s", strings.Trim(yearMonth[0], " "), strings.Trim(yearMonth[1], " "))
+		}
+
+		result = append(result, AccountTrendResult{Date: date, Amount: json.Number(amount.Round(2).String()), OperatingCurrency: fields[1]})
 	}
 	OK(c, result)
 }

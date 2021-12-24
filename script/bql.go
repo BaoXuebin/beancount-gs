@@ -3,11 +3,13 @@ package script
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"log"
 	"os/exec"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type QueryParams struct {
@@ -96,6 +98,7 @@ func BQLQueryListByCustomSelect(ledgerConfig *Config, selectBql string, queryPar
 	if err != nil {
 		return err
 	}
+	log.Println(output)
 	err = parseResult(output, queryResultPtr, false)
 	if err != nil {
 		return err
