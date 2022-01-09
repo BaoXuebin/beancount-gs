@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/beancount-gs/script"
-	"github.com/gin-gonic/gin"
-	"github.com/shopspring/decimal"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/beancount-gs/script"
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
 type Transaction struct {
@@ -21,6 +22,7 @@ type Transaction struct {
 	Payee              string   `bql:"payee" json:"payee"`
 	Narration          string   `bql:"narration" json:"desc"`
 	Number             string   `bql:"number" json:"number"`
+	Balance            string   `bql:"balance" json:"balance"`
 	Currency           string   `bql:"currency" json:"currency"`
 	CostDate           string   `bql:"cost_date" json:"costDate"`
 	CostPrice          string   `bql:"cost_number" json:"costPrice"` // 交易净值
@@ -49,6 +51,9 @@ func QueryTransactions(c *gin.Context) {
 		transactions[i].CostCurrencySymbol = symbol
 		if transactions[i].Price != "" {
 			transactions[i].Price = strings.Fields(transactions[i].Price)[0]
+		}
+		if transactions[i].Balance != "" {
+			transactions[i].Balance = strings.Fields(transactions[i].Balance)[0]
 		}
 	}
 	OK(c, transactions)
