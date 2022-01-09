@@ -146,13 +146,14 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 	for _, entry := range addTransactionForm.Entries {
 		account := script.GetLedgerAccount(ledgerConfig.Id, entry.Account)
 		if entry.Account == ledgerConfig.OpeningBalances {
+			autoBalance = false
 			line += fmt.Sprintf("\r\n %s", entry.Account)
 		} else {
 			line += fmt.Sprintf("\r\n %s %s %s", entry.Account, entry.Number.Round(2).StringFixedBank(2), account.Currency)
 		}
-		// 判断是否设计多币种的转换
+		// 判断是否涉及多币种的转换
 		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
-			autoBalance = true
+			autoBalance = autoBalance && true
 			// 根据 number 的正负来判断是买入还是卖出
 			if entry.Number.GreaterThan(decimal.NewFromInt(0)) {
 				// {351.729 CNY, 2021-09-29}
