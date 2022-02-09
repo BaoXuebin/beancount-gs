@@ -11,8 +11,9 @@ COPY . .
 COPY public/icons ./public/default_icons
 RUN go build .
 
-FROM python:latest
-RUN pip3 install beancount -i https://pypi.tuna.tsinghua.edu.cn/simple
+FROM python:3.8
+RUN pip3 install setuptools wheel  -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip3 install setuptools wheel  -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 WORKDIR /app
 COPY --from=builder ./builder/public ./public
