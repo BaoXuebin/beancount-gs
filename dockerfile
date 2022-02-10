@@ -18,8 +18,8 @@ RUN python3 -m pip install -U pip setuptools wheel -i https://pypi.tuna.tsinghua
 COPY ./beancount-2.3.4-cp38-cp38-linux_x86_64.whl /tmp
 RUN pip3 install /tmp/beancount-2.3.4-cp38-cp38-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-COPY ./fava-1.18-py3-none-any.whl /tmp
-RUN pip3 install /tmp/fava-1.18-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+# COPY ./fava-1.18-py3-none-any.whl /tmp
+# RUN pip3 install /tmp/fava-1.18-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 
 WORKDIR /app
