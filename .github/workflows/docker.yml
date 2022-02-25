@@ -30,4 +30,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: xdbin/beancount-gs:latest
+          tags: frankwuzp/beancount-gs:latest
