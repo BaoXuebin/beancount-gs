@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.17.3 AS builder
+FROM golang:latest AS builder
 
 ENV GO111MODULE=on \
     GOPROXY=https://goproxy.cn,direct \
