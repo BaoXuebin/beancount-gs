@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/beancount-gs/script"
-	"github.com/beancount-gs/service"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/beancount-gs/script"
+	"github.com/beancount-gs/service"
+	"github.com/gin-gonic/gin"
 )
 
 func InitServerFiles() error {
@@ -88,6 +89,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
 		authorized.POST("/import/alipay", service.ImportAliPayCSV)
 		authorized.POST("/import/wx", service.ImportWxPayCSV)
+		authorized.DELETE("/ledger", service.DeleteLedger)
 	}
 }
 

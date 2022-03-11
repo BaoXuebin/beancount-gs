@@ -3,10 +3,11 @@ package script
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 var serverSecret string
@@ -155,12 +156,20 @@ func UpdateLedgerAccounts(ledgerId string, accounts []Account) {
 	ledgerAccountsMap[ledgerId] = accounts
 }
 
+func ClearLedgerAccounts(ledgerId string) {
+	delete(ledgerAccountsMap, ledgerId)
+}
+
 func GetLedgerAccountTypes(ledgerId string) map[string]string {
 	return ledgerAccountTypesMap[ledgerId]
 }
 
 func UpdateLedgerAccountTypes(ledgerId string, accountTypesMap map[string]string) {
 	ledgerAccountTypesMap[ledgerId] = accountTypesMap
+}
+
+func ClearLedgerAccountTypes(ledgerId string) {
+	delete(ledgerAccountTypesMap, ledgerId)
 }
 
 func GetAccountType(ledgerId string, acc string) AccountType {

@@ -3,14 +3,16 @@ package service
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"github.com/beancount-gs/script"
-	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/beancount-gs/script"
+	"github.com/gin-gonic/gin"
 )
 
 func CheckBeancount(c *gin.Context) {
@@ -176,6 +178,29 @@ func OpenOrCreateLedger(c *gin.Context) {
 	resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
 	resultMap["createDate"] = userLedger.CreateDate
 	OK(c, resultMap)
+}
+
+// 删除账本
+func DeleteLedger(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	// 删除账本源文件
+	os.RemoveAll(ledgerConfig.DataPath)
+	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
+	// 删除
+	ledgerConfigMap := script.GetLedgerConfigMap()
+	delete(ledgerConfigMap, ledgerConfig.Id)
+	err := script.WriteLedgerConfigMap(ledgerConfigMap)
+	if err != nil {
+		InternalError(c, "Failed to update ledger_config.json")
+		return
+	}
+	// remove from account cache
+	script.ClearLedgerAccounts(ledgerConfig.Id)
+	script.LogInfo(ledgerConfig.Mail, "Success clear ledger account cache "+ledgerConfig.Id)
+	// remove from account types cache
+	script.ClearLedgerAccountTypes(ledgerConfig.Id)
+	script.LogInfo(ledgerConfig.Mail, "Success clear ledger account types cache "+ledgerConfig.Id)
+	OK(c, "OK")
 }
 
 func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, error) {
