@@ -182,16 +182,10 @@ func OpenOrCreateLedger(c *gin.Context) {
 
 func DeleteLedger(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	// 删除账本源文件
-	err := os.RemoveAll(ledgerConfig.DataPath)
-	if err != nil {
-		return
-	}
-	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
-	// 删除
+	// remove from ledger_config.json
 	ledgerConfigMap := script.GetLedgerConfigMap()
 	delete(ledgerConfigMap, ledgerConfig.Id)
-	err = script.WriteLedgerConfigMap(ledgerConfigMap)
+	err := script.WriteLedgerConfigMap(ledgerConfigMap)
 	if err != nil {
 		InternalError(c, "Failed to update ledger_config.json")
 		return
@@ -202,6 +196,14 @@ func DeleteLedger(c *gin.Context) {
 	// remove from account types cache
 	script.ClearLedgerAccountTypes(ledgerConfig.Id)
 	script.LogInfo(ledgerConfig.Mail, "Success clear ledger account types cache "+ledgerConfig.Id)
+	// delete source file
+	err = os.RemoveAll(ledgerConfig.DataPath)
+	if err != nil {
+		script.LogError(ledgerConfig.Mail, "Failed to delete ledger, cause by "+err.Error())
+		InternalError(c, "Failed to delete ledger")
+		return
+	}
+	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
 	OK(c, "OK")
 }
 
