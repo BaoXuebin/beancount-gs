@@ -180,16 +180,18 @@ func OpenOrCreateLedger(c *gin.Context) {
 	OK(c, resultMap)
 }
 
-// 删除账本
 func DeleteLedger(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	// 删除账本源文件
-	os.RemoveAll(ledgerConfig.DataPath)
+	err := os.RemoveAll(ledgerConfig.DataPath)
+	if err != nil {
+		return
+	}
 	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
 	// 删除
 	ledgerConfigMap := script.GetLedgerConfigMap()
 	delete(ledgerConfigMap, ledgerConfig.Id)
-	err := script.WriteLedgerConfigMap(ledgerConfigMap)
+	err = script.WriteLedgerConfigMap(ledgerConfigMap)
 	if err != nil {
 		InternalError(c, "Failed to update ledger_config.json")
 		return
