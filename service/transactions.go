@@ -60,11 +60,12 @@ func QueryTransactions(c *gin.Context) {
 }
 
 type AddTransactionForm struct {
-	Date    string                    `form:"date" binding:"required"`
-	Payee   string                    `form:"payee"`
-	Desc    string                    `form:"desc" binding:"required"`
-	Tags    []string                  `form:"tags"`
-	Entries []AddTransactionEntryForm `form:"entries"`
+	Date           string                    `form:"date" binding:"required"`
+	Payee          string                    `form:"payee"`
+	Desc           string                    `form:"desc" binding:"required"`
+	Tags           []string                  `form:"tags"`
+	DivideDateList []string                  `form:"divideDateList"`
+	Entries        []AddTransactionEntryForm `form:"entries"`
 }
 
 type AddTransactionEntryForm struct {
@@ -116,8 +117,28 @@ func AddTransactions(c *gin.Context) {
 		return
 	}
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	err := saveTransaction(c, addTransactionForm, ledgerConfig)
+	// 判断是否分期
+	var err error
+	var divideCount = len(addTransactionForm.DivideDateList)
+	if divideCount <= 0 {
+		err = saveTransaction(c, addTransactionForm, ledgerConfig)
+	} else {
+		for idx, entry := range addTransactionForm.Entries {
+			// 保留 3 位小数
+			addTransactionForm.Entries[idx].Number = entry.Number.Div(decimal.NewFromInt(int64(divideCount))).Round(3)
+		}
+		for _, date := range addTransactionForm.DivideDateList {
+			addTransactionForm.Date = date
+			err = saveTransaction(c, addTransactionForm, ledgerConfig)
+			if err != nil {
+				break
+			}
+		}
+	}
+
 	if err != nil {
+		script.LogError(ledgerConfig.Mail, err.Error())
+		InternalError(c, "failed to add transaction")
 		return
 	}
 	OK(c, nil)
@@ -153,7 +174,6 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 		}
 		// 判断是否涉及多币种的转换
 		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
-			autoBalance = autoBalance && true
 			// 根据 number 的正负来判断是买入还是卖出
 			if entry.Number.GreaterThan(decimal.NewFromInt(0)) {
 				// {351.729 CNY, 2021-09-29}

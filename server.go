@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-
 	"github.com/beancount-gs/script"
 	"github.com/beancount-gs/service"
 	"github.com/gin-gonic/gin"
+	"io"
+	"net/http"
+	"os"
 )
 
 func InitServerFiles() error {
