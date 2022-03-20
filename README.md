@@ -18,13 +18,13 @@
 
 - [X] 私有部署
 - [X] 多账本
-- [X] 账户管理
-- [X] 资产管理
+- [X] 账户，资产管理
 - [X] 统计图表
 - [X] 多币种
 - [X] 标签
 - [X] 投资管理(FIFO)
 - [X] 第三方账单导入(支付宝，微信支付)
+- [X] 分期记账
 - [ ] 事件
 
 ## 如何使用
@@ -80,3 +80,10 @@ services:
 ## 开源协议
 
 [MIT](https://github.com/BaoXuebin/beancount-gs/blob/main/License) @BaoXuebin
+
+## 感谢
+
+<a href="https://jb.gg/OpenSourceSupport" style="display: flex; justify-content: left; align-items: center; flex-direction: row;">
+<img alt="JetBrains" src="./jb_beam.png" style="width: 120px; height: 120px;" />
+<h3>Licenses for Open Source Development</h3>
+</a>
