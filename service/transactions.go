@@ -82,7 +82,7 @@ func sum(entries []AddTransactionEntryForm, openingBalances string) decimal.Deci
 		if entry.Account == openingBalances {
 			return decimal.NewFromInt(0)
 		}
-		if entry.Price.IntPart() == 0 {
+		if entry.Price.Exponent() == 0 {
 			sumVal = entry.Number.Add(sumVal)
 		} else {
 			sumVal = entry.Number.Mul(entry.Price).Add(sumVal)
@@ -138,7 +138,6 @@ func AddTransactions(c *gin.Context) {
 
 	if err != nil {
 		script.LogError(ledgerConfig.Mail, err.Error())
-		InternalError(c, "failed to add transaction")
 		return
 	}
 	OK(c, nil)
