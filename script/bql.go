@@ -104,6 +104,15 @@ func BQLQueryListByCustomSelect(ledgerConfig *Config, selectBql string, queryPar
 	return nil
 }
 
+func BeanReportAllPrices(ledgerConfig *Config) string {
+	beanFilePath := ledgerConfig.DataPath + "/index.bean"
+
+	LogInfo(ledgerConfig.Mail, "bean-report "+beanFilePath+" all_prices")
+	cmd := exec.Command("bean-report", beanFilePath, "all_prices")
+	output, _ := cmd.Output()
+	return string(output)
+}
+
 func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryParams, queryResultPtr interface{}) (string, error) {
 	var bql string
 	if selectBql == "" {
