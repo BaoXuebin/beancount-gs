@@ -408,13 +408,13 @@ func StatsPayee(c *gin.Context) {
 }
 
 type StatsPricesResult struct {
-	Date     string `json:"date"`
-	Price    string `json:"price"`
-	Currency string `json:"operatingCurrency"`
-	Value    string `json:"value"`
+	Date      string `json:"date"`
+	Commodity string `json:"commodity"`
+	Currency  string `json:"operatingCurrency"`
+	Value     string `json:"value"`
 }
 
-func StatsPrices(c *gin.Context) {
+func StatsCommodityPrice(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	output := script.BeanReportAllPrices(ledgerConfig)
 	script.LogInfo(ledgerConfig.Mail, output)
@@ -429,10 +429,10 @@ func StatsPrices(c *gin.Context) {
 		// split line by " "
 		words := strings.Fields(line)
 		statsPricesResultList = append(statsPricesResultList, StatsPricesResult{
-			Date:     words[0],
-			Price:    words[2],
-			Value:    words[3],
-			Currency: words[4],
+			Date:      words[0],
+			Commodity: words[2],
+			Value:     words[3],
+			Currency:  words[4],
 		})
 	}
 	OK(c, statsPricesResultList)
