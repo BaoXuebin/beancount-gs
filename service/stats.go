@@ -420,7 +420,7 @@ func StatsCommodityPrice(c *gin.Context) {
 	script.LogInfo(ledgerConfig.Mail, output)
 
 	statsPricesResultList := make([]StatsPricesResult, 0)
-	lines := strings.Split(output, "\r\n")
+	lines := strings.Split(output, "\n")
 	// foreach lines
 	for _, line := range lines {
 		if strings.Trim(line, " ") == "" {
