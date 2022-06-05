@@ -65,18 +65,18 @@ func GetQueryParams(c *gin.Context) QueryParams {
 	return queryParams
 }
 
-func BQLQueryOne(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
-	assertQueryResultIsPointer(queryResultPtr)
-	output, err := bqlRawQuery(ledgerConfig, "", queryParams, queryResultPtr)
-	if err != nil {
-		return err
-	}
-	err = parseResult(output, queryResultPtr, true)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+//func BQLQueryOne(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
+//	assertQueryResultIsPointer(queryResultPtr)
+//	output, err := bqlRawQuery(ledgerConfig, "", queryParams, queryResultPtr)
+//	if err != nil {
+//		return err
+//	}
+//	err = parseResult(output, queryResultPtr, true)
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
 
 func BQLQueryList(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
 	assertQueryResultIsPointer(queryResultPtr)
