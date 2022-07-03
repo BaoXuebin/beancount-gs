@@ -163,13 +163,11 @@ func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryPa
 						bql = fmt.Sprintf("%s %s '%s' AND", bql, typeField.Tag.Get("bql"), val)
 					}
 				}
-				break
 			case reflect.Int:
 				val := valueField.Int()
 				if val != 0 {
 					bql = fmt.Sprintf("%s %s %d AND", bql, typeField.Tag.Get("bql"), val)
 				}
-				break
 			case reflect.Bool:
 				val := valueField.Bool()
 				// where 前的 from 可能会带有 and
@@ -179,7 +177,6 @@ func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryPa
 				if val {
 					bql = fmt.Sprintf("%s %s ", bql, typeField.Tag.Get("bql"))
 				}
-				break
 			}
 		}
 		bql = strings.TrimRight(bql, " AND")
@@ -220,14 +217,12 @@ func parseResult(output string, queryResultPtr interface{}, selectOne bool) erro
 						panic(err)
 					}
 					temp[jsonName] = i
-					break
 				// decimal
 				case reflect.String, reflect.Struct:
 					v := strings.Trim(val, " ")
 					if v != "" {
 						temp[jsonName] = v
 					}
-					break
 				case reflect.Array, reflect.Slice:
 					// 去除空格
 					strArray := strings.Split(val, ",")
@@ -238,7 +233,6 @@ func parseResult(output string, queryResultPtr interface{}, selectOne bool) erro
 						}
 					}
 					temp[jsonName] = notBlanks
-					break
 				default:
 					panic("Unsupported field type")
 				}
