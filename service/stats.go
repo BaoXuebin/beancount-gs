@@ -48,7 +48,7 @@ func StatsTotal(c *gin.Context) {
 		return
 	}
 
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 	for _, total := range accountTypeTotalList {
 		fields := strings.Fields(total.Value)
 		if len(fields) > 1 {
@@ -138,15 +138,16 @@ func StatsAccountTrend(c *gin.Context) {
 		Where:       true,
 	}
 	var bql string
-	if statsQuery.Type == "day" {
+	switch {
+	case statsQuery.Type == "day":
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "month" {
+	case statsQuery.Type == "month":
 		bql = fmt.Sprintf("SELECT '\\', year, '-', month, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "year" {
+	case statsQuery.Type == "year":
 		bql = fmt.Sprintf("SELECT '\\', year, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "sum" {
+	case statsQuery.Type == "sum":
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', convert(balance, '%s'), '\\'", ledgerConfig.OperatingCurrency)
-	} else {
+	default:
 		OK(c, new([]string))
 		return
 	}
