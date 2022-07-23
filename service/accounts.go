@@ -168,7 +168,7 @@ func CloseAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	line := fmt.Sprintf("%s close %s", accountForm.Date, accountForm.Account)
 	// 写入文件
-	filePath := ledgerConfig.DataPath + "/account/" + script.GetAccountPrefix(accountForm.Account) + ".bean"
+	filePath := ledgerConfig.DataPath + "/account/" + strings.ToLower(script.GetAccountPrefix(accountForm.Account)) + ".bean"
 	err := script.AppendFileInNewLine(filePath, line)
 	if err != nil {
 		InternalError(c, err.Error())
@@ -197,7 +197,7 @@ func ChangeAccountIcon(c *gin.Context) {
 	filePath := "./public/icons/" + script.GetAccountIconName(account) + ".png"
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		InternalError(c, err.Error())
-		//自己完成信息提示
+		// 自己完成信息提示
 		return
 	}
 	var result = make(map[string]string)
