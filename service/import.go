@@ -25,7 +25,7 @@ func ImportAliPayCSV(c *gin.Context) {
 
 	for {
 		lines, err := reader.Read()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			script.LogError(ledgerConfig.Mail, err.Error())
@@ -36,11 +36,19 @@ func ImportAliPayCSV(c *gin.Context) {
 				script.LogInfo(ledgerConfig.Mail, err.Error())
 				continue
 			}
+			if transaction.Account == "" {
+				script.LogInfo(ledgerConfig.Mail, "Invalid transaction")
+				continue
+			}
 			result = append(result, transaction)
 		} else if len(lines) == 12 {
 			transaction, err := importMobileAliPayCSV(lines, currency, currencySymbol)
 			if err != nil {
 				script.LogInfo(ledgerConfig.Mail, err.Error())
+				continue
+			}
+			if transaction.Account == "" {
+				script.LogInfo(ledgerConfig.Mail, "Invalid transaction")
 				continue
 			}
 			result = append(result, transaction)
@@ -54,7 +62,9 @@ func importBrowserAliPayCSV(lines []string, currency string, currencySymbol stri
 	dateColumn := strings.Fields(lines[2])
 	status := strings.Trim(lines[15], " ")
 	account := ""
-	if status == "已收入" {
+	if status == "" {
+		account = ""
+	} else if status == "已收入" {
 		account = "Income:"
 	} else {
 		account = "Expenses:"
@@ -79,7 +89,9 @@ func importMobileAliPayCSV(lines []string, currency string, currencySymbol strin
 	dateColumn := strings.Fields(lines[10])
 	status := strings.Trim(lines[0], " ")
 	account := ""
-	if status == "支出" {
+	if status == "" {
+		account = ""
+	} else if status == "支出" {
 		account = "Expenses:"
 	} else {
 		account = "Income:"
