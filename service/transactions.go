@@ -173,6 +173,7 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 		}
 		// 判断是否涉及多币种的转换
 		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
+			autoBalance = true
 			// 根据 number 的正负来判断是买入还是卖出
 			if entry.Number.GreaterThan(decimal.NewFromInt(0)) {
 				// {351.729 CNY, 2021-09-29}

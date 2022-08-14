@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"io"
@@ -205,6 +206,27 @@ func DeleteLedger(c *gin.Context) {
 	}
 	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
 	OK(c, "OK")
+}
+
+func CheckLedger(c *gin.Context) {
+	var stderr bytes.Buffer
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	cmd := exec.Command("bean-check", script.GetLedgerIndexFilePath(ledgerConfig.DataPath))
+	cmd.Stderr = &stderr
+	output, err := cmd.Output()
+	if err != nil {
+		errors := strings.Split(stderr.String(), "\r\n")
+		result := make([]string, 0)
+		for _, e := range errors {
+			if e == "" {
+				continue
+			}
+			result = append(result, e)
+		}
+		OK(c, result)
+	} else {
+		OK(c, string(output))
+	}
 }
 
 func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, error) {

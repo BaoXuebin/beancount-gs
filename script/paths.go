@@ -39,3 +39,8 @@ func GetLedgerPriceFilePath(dataPath string) string {
 func GetLedgerMonthsFilePath(dataPath string) string {
 	return dataPath + "/month/months.bean"
 }
+
+func GetLedgerIndexFilePath(dataPath string) string {
+	LogInfo(dataPath, dataPath+"/index.bean")
+	return dataPath + "/index.bean"
+}
