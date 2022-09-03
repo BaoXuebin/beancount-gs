@@ -19,8 +19,11 @@ type YearMonth struct {
 
 func MonthsList(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	// 添加排序
+	queryParams := script.GetQueryParams(c)
+	queryParams.OrderBy = "year, month desc"
 	yearMonthList := make([]YearMonth, 0)
-	err := script.BQLQueryList(ledgerConfig, nil, &yearMonthList)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &yearMonthList)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
