@@ -1,0 +1,8 @@
+.account-page .button-wrapper {
+    display: flex;
+    justify-content: space-between
+}
+
+.ant-upload.ant-upload-select {
+    display: block
+}

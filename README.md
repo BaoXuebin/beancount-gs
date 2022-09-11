@@ -49,8 +49,7 @@ docker run --name beancount-gs -dp 10000:80 \
 -v "/data/beancount/icons:/app/public/icons" \
 -v "/data/beancount/config:/app/config" \
 -v "/data/beancount/bak:/app/bak" \
-xdbin/beancount-gs:latest \
-sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
+xdbin/beancount-gs:latest
 ```
 
 **docker-compose**
@@ -60,12 +59,9 @@ version: "3.9"
 services:
   app:
     container_name: beancount-gs
-    image: xdbin/beancount-gs:latest
+    image: frankwuzp/beancount-gs:latest
     ports:
       - "10000:80"
-    # volumes 挂载目录会导 /app/public/icons 中的图标被覆盖，这里将默认图标在挂载后重新拷贝图标
-    command: >
-      sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
     volumes:
       - "${dataPath:-/data/beancount}:${dataPath:-/data/beancount}"
       - "${dataPath:-/data/beancount}/icons:/app/public/icons"

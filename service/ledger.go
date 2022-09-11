@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"io"
@@ -207,6 +208,27 @@ func DeleteLedger(c *gin.Context) {
 	OK(c, "OK")
 }
 
+func CheckLedger(c *gin.Context) {
+	var stderr bytes.Buffer
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	cmd := exec.Command("bean-check", script.GetLedgerIndexFilePath(ledgerConfig.DataPath))
+	cmd.Stderr = &stderr
+	output, err := cmd.Output()
+	if err != nil {
+		errors := strings.Split(stderr.String(), "\r\n")
+		result := make([]string, 0)
+		for _, e := range errors {
+			if e == "" {
+				continue
+			}
+			result = append(result, e)
+		}
+		OK(c, result)
+	} else {
+		OK(c, string(output))
+	}
+}
+
 func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, error) {
 	// create new ledger
 	serverConfig := script.GetServerConfig()
@@ -269,13 +291,18 @@ func copyFile(sourceFilePath string, targetFilePath string, ledgerConfig script.
 		newTargetFilePath := targetFilePath + "/" + fi.Name()
 		if fi.IsDir() {
 			err = script.MkDir(newTargetFilePath)
-			err = copyFile(newSourceFilePath, newTargetFilePath, ledgerConfig)
+			if err == nil {
+				err = copyFile(newSourceFilePath, newTargetFilePath, ledgerConfig)
+			}
 		} else if !script.FileIfExist(newTargetFilePath) {
-			fileContent, err := script.ReadFile(newSourceFilePath)
+			var fileContent, err = script.ReadFile(newSourceFilePath)
 			if err != nil {
 				return err
 			}
 			err = script.WriteFile(newTargetFilePath, strings.ReplaceAll(strings.ReplaceAll(string(fileContent), "%startDate%", ledgerConfig.StartDate), "%operatingCurrency%", ledgerConfig.OperatingCurrency))
+			if err != nil {
+				return err
+			}
 			script.LogInfo(ledgerConfig.Mail, "Success create file "+newTargetFilePath)
 		}
 		if err != nil {

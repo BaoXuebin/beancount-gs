@@ -48,7 +48,7 @@ func StatsTotal(c *gin.Context) {
 		return
 	}
 
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 	for _, total := range accountTypeTotalList {
 		fields := strings.Fields(total.Value)
 		if len(fields) > 1 {
@@ -138,15 +138,16 @@ func StatsAccountTrend(c *gin.Context) {
 		Where:       true,
 	}
 	var bql string
-	if statsQuery.Type == "day" {
+	switch {
+	case statsQuery.Type == "day":
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "month" {
+	case statsQuery.Type == "month":
 		bql = fmt.Sprintf("SELECT '\\', year, '-', month, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "year" {
+	case statsQuery.Type == "year":
 		bql = fmt.Sprintf("SELECT '\\', year, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "sum" {
+	case statsQuery.Type == "sum":
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', convert(balance, '%s'), '\\'", ledgerConfig.OperatingCurrency)
-	} else {
+	default:
 		OK(c, new([]string))
 		return
 	}
@@ -331,12 +332,67 @@ func StatsMonthTotal(c *gin.Context) {
 	OK(c, monthTotalResult)
 }
 
+type StatsMonthQuery struct {
+	Year  int `form:"year"`
+	Month int `form:"month"`
+}
+type StatsCalendarQueryResult struct {
+	Date     string
+	Account  string
+	Position string
+}
+type StatsCalendarResult struct {
+	Date           string      `json:"date"`
+	Account        string      `json:"account"`
+	Amount         json.Number `json:"amount"`
+	Currency       string      `json:"currency"`
+	CurrencySymbol string      `json:"currencySymbol"`
+}
+
+func StatsMonthCalendar(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	var statsMonthQuery StatsMonthQuery
+	if err := c.ShouldBindQuery(&statsMonthQuery); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+
+	queryParams := script.QueryParams{
+		Year:  statsMonthQuery.Year,
+		Month: statsMonthQuery.Month,
+		Where: true,
+	}
+
+	bql := fmt.Sprintf("SELECT '\\', date, '\\', root(account, 1), '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	statsCalendarQueryResult := make([]StatsCalendarQueryResult, 0)
+	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, &queryParams, &statsCalendarQueryResult)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	resultList := make([]StatsCalendarResult, 0)
+	for _, queryRes := range statsCalendarQueryResult {
+		if queryRes.Position != "" {
+			fields := strings.Fields(queryRes.Position)
+			resultList = append(resultList,
+				StatsCalendarResult{
+					Date:           queryRes.Date,
+					Account:        queryRes.Account,
+					Amount:         json.Number(fields[0]),
+					Currency:       fields[1],
+					CurrencySymbol: script.GetCommoditySymbol(fields[1]),
+				})
+		}
+	}
+	OK(c, resultList)
+}
+
 type StatsPayeeQueryResult struct {
 	Payee    string
 	Count    int32
 	Position string
 }
-
 type StatsPayeeResult struct {
 	Payee    string      `json:"payee"`
 	Currency string      `json:"operatingCurrency"`
@@ -420,7 +476,7 @@ func StatsCommodityPrice(c *gin.Context) {
 	script.LogInfo(ledgerConfig.Mail, output)
 
 	statsPricesResultList := make([]StatsPricesResult, 0)
-	lines := strings.Split(output, "\r\n")
+	lines := strings.Split(output, "\n")
 	// foreach lines
 	for _, line := range lines {
 		if strings.Trim(line, " ") == "" {

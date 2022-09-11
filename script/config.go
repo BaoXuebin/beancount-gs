@@ -192,7 +192,7 @@ func GetAccountType(ledgerId string, acc string) AccountType {
 
 func IsInWhiteList(ledgerId string) bool {
 	// ledger white list is empty, return true
-	if whiteList == nil || len(whiteList) == 0 {
+	if len(whiteList) == 0 {
 		return true
 	}
 	for i := range whiteList {

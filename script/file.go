@@ -3,6 +3,7 @@ package script
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func FileIfExist(filePath string) bool {
@@ -39,7 +40,10 @@ func WriteFile(filePath string, content string) error {
 func AppendFileInNewLine(filePath string, content string) error {
 	content = "\r\n" + content
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-	if err == nil {
+	if err != nil {
+		LogSystemError("Failed to open file (" + filePath + ")")
+		return err
+	} else {
 		_, err = file.WriteString(content)
 		if err != nil {
 			LogSystemError("Failed to append file (" + filePath + ")")
@@ -48,17 +52,22 @@ func AppendFileInNewLine(filePath string, content string) error {
 	}
 	defer file.Close()
 	LogSystemInfo("Success append file (" + filePath + ")")
-	return nil
+	return err
 }
 
 func CreateFile(filePath string) error {
-	f, err := os.Create(filePath)
-	if nil != err {
-		LogSystemError(filePath + " create failed")
-		return err
+	if _, e := os.Stat(filePath); os.IsNotExist(e) {
+		_ = os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
+		f, err := os.Create(filePath)
+		if nil != err {
+			LogSystemError(filePath + " create failed")
+			return err
+		}
+		defer f.Close()
+		LogSystemInfo("Success create file " + filePath)
+	} else {
+		LogSystemInfo("File is exist " + filePath)
 	}
-	defer f.Close()
-	LogSystemInfo("Success create file " + filePath)
 	return nil
 }
 

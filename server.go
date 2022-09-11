@@ -75,6 +75,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/stats/account/trend", service.StatsAccountTrend)
 		authorized.GET("/stats/account/balance", service.StatsAccountBalance)
 		authorized.GET("/stats/month/total", service.StatsMonthTotal)
+		authorized.GET("/stats/month/calendar", service.StatsMonthCalendar)
 		authorized.GET("/stats/commodity/price", service.StatsCommodityPrice)
 		authorized.GET("/transaction", service.QueryTransactions)
 		authorized.POST("/transaction", service.AddTransactions)
@@ -89,6 +90,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
 		authorized.POST("/import/alipay", service.ImportAliPayCSV)
 		authorized.POST("/import/wx", service.ImportWxPayCSV)
+		authorized.GET("/ledger/check", service.CheckLedger)
 		authorized.DELETE("/ledger", service.DeleteLedger)
 	}
 }
