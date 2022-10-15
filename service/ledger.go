@@ -213,20 +213,18 @@ func CheckLedger(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	cmd := exec.Command("bean-check", script.GetLedgerIndexFilePath(ledgerConfig.DataPath))
 	cmd.Stderr = &stderr
-	output, err := cmd.Output()
+	_, err := cmd.Output()
+	result := make([]string, 0)
 	if err != nil {
 		errors := strings.Split(stderr.String(), "\r\n")
-		result := make([]string, 0)
 		for _, e := range errors {
 			if e == "" {
 				continue
 			}
 			result = append(result, e)
 		}
-		OK(c, result)
-	} else {
-		OK(c, string(output))
 	}
+	OK(c, result)
 }
 
 func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, error) {
