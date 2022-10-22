@@ -38,6 +38,10 @@ func WriteFile(filePath string, content string) error {
 }
 
 func AppendFileInNewLine(filePath string, content string) error {
+	err := CreateFileIfNotExist(filePath)
+	if err != nil {
+		return err
+	}
 	content = "\r\n" + content
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
@@ -67,6 +71,20 @@ func CreateFile(filePath string) error {
 		LogSystemInfo("Success create file " + filePath)
 	} else {
 		LogSystemInfo("File is exist " + filePath)
+	}
+	return nil
+}
+
+func CreateFileIfNotExist(filePath string) error {
+	if _, e := os.Stat(filePath); os.IsNotExist(e) {
+		_ = os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
+		f, err := os.Create(filePath)
+		if nil != err {
+			LogSystemError(filePath + " create failed")
+			return err
+		}
+		defer f.Close()
+		LogSystemInfo("Success create file " + filePath)
 	}
 	return nil
 }
