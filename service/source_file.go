@@ -63,7 +63,7 @@ func QueryLedgerSourceFileContent(c *gin.Context) {
 
 type UpdateSourceFileForm struct {
 	Path    string `form:"path" binding:"required"`
-	Content string `form:"content" binding:"required"`
+	Content string `form:"content"`
 }
 
 func UpdateLedgerSourceFileContent(c *gin.Context) {
