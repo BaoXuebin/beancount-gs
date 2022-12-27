@@ -110,6 +110,38 @@ func CopyFile(sourceFilePath string, targetFilePath string) error {
 	return nil
 }
 
+func CopyDir(sourceDir string, targetDir string) error {
+	dirs, err := os.ReadDir(sourceDir)
+	if err != nil {
+		return err
+	}
+	err = MkDir(targetDir)
+	if err != nil {
+		return err
+	}
+	for _, dir := range dirs {
+		newSourceDir := filepath.Join(sourceDir, dir.Name())
+		newTargetDir := filepath.Join(targetDir, dir.Name())
+		if dir.IsDir() {
+			err := CopyFile(newSourceDir, newTargetDir)
+			if err != nil {
+				LogSystemError("Failed to copy dir from [" + newSourceDir + "] to [" + newTargetDir + "]")
+				return err
+			}
+		} else {
+			err := CreateFileIfNotExist(newTargetDir)
+			if err != nil {
+				return err
+			}
+			err = CopyFile(newSourceDir, newTargetDir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func MkDir(dirPath string) error {
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if nil != err {

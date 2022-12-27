@@ -237,7 +237,25 @@ func LoadLedgerAccountsMap() error {
 		ledgerAccountsMap = make(map[string][]Account)
 	}
 	for _, config := range ledgerConfigMap {
-		err := LoadLedgerAccounts(config.Id)
+		// 兼容性处理
+		err := handleCompatible(config)
+		if err != nil {
+			return err
+		}
+		err = LoadLedgerAccounts(config.Id)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleCompatible(config Config) error {
+	// 兼容性处理，.beancount-ns -> .beancount-gs
+	beancountGsConfigPath := GetLedgerConfigDocument(config.DataPath)
+	beancountNsConfigPath := GetCompatibleLedgerConfigDocument(config.DataPath)
+	if FileIfExist(beancountNsConfigPath) && !FileIfExist(beancountGsConfigPath) {
+		err := CopyDir(beancountNsConfigPath, beancountGsConfigPath)
 		if err != nil {
 			return err
 		}
