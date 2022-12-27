@@ -8,7 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func ImportAliPayCSV(c *gin.Context) {
@@ -159,4 +161,118 @@ func ImportWxPayCSV(c *gin.Context) {
 	}
 
 	OK(c, result)
+}
+
+func ImportICBCCSV(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+
+	file, _ := c.FormFile("file")
+	f, _ := file.Open()
+	reader := csv.NewReader(bufio.NewReader(f))
+
+	result := make([]Transaction, 0)
+
+	currency := "CNY"
+	currencySymbol := script.GetCommoditySymbol(currency)
+
+	id := 0
+	for {
+		lines, err := reader.Read()
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			script.LogError(ledgerConfig.Mail, err.Error())
+		}
+		if len(lines) >= 13 && lines[0] != "交易日期" {
+			incomeAmount := formatStr(lines[8])
+			expensesAmount := formatStr(lines[9])
+			account := ""
+			number := ""
+			switch {
+			case incomeAmount != "":
+				account = "Income:"
+				number = strings.ReplaceAll(incomeAmount, ",", "")
+			case expensesAmount != "":
+				account = "Expenses:"
+				number = strings.ReplaceAll(expensesAmount, ",", "")
+			default:
+				continue
+			}
+
+			id++
+			result = append(result, Transaction{
+				Id:             strconv.Itoa(id),
+				Date:           formatStr(lines[0]),
+				Payee:          formatStr(lines[12]),
+				Narration:      formatStr(lines[1]),
+				Number:         number,
+				Account:        account,
+				Currency:       currency,
+				CurrencySymbol: currencySymbol,
+			})
+		}
+	}
+
+	OK(c, result)
+}
+
+func ImportABCCSV(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+
+	file, _ := c.FormFile("file")
+	f, _ := file.Open()
+	reader := csv.NewReader(bufio.NewReader(f))
+
+	result := make([]Transaction, 0)
+
+	currency := "CNY"
+	currencySymbol := script.GetCommoditySymbol(currency)
+
+	id := 0
+	for {
+		lines, err := reader.Read()
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			script.LogError(ledgerConfig.Mail, err.Error())
+		}
+		if len(lines) >= 11 && lines[0] != "交易日期" {
+			amount := formatStr(lines[2])
+			account := ""
+			number := ""
+			switch {
+			case strings.HasPrefix(amount, "+"):
+				account = "Income:"
+				number = strings.ReplaceAll(amount, "+", "")
+			case strings.HasPrefix(amount, "-"):
+				account = "Expenses:"
+				number = strings.ReplaceAll(amount, "-", "")
+			default:
+				continue
+			}
+
+			id++
+			date, err := time.Parse("20060102", formatStr(lines[0]))
+			if err != nil {
+				continue
+			}
+			result = append(result, Transaction{
+				Id:             strconv.Itoa(id),
+				Date:           date.Format("2006-01-02"),
+				Payee:          formatStr(lines[10]),
+				Narration:      formatStr(lines[9]),
+				Number:         number,
+				Account:        account,
+				Currency:       currency,
+				CurrencySymbol: currencySymbol,
+			})
+		}
+	}
+
+	OK(c, result)
+}
+
+func formatStr(str string) string {
+	str = strings.Trim(str, "\t")
+	return strings.Trim(str, " ")
 }

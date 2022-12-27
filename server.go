@@ -90,6 +90,8 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
 		authorized.POST("/import/alipay", service.ImportAliPayCSV)
 		authorized.POST("/import/wx", service.ImportWxPayCSV)
+		authorized.POST("/import/icbc", service.ImportICBCCSV)
+		authorized.POST("/import/abc", service.ImportABCCSV)
 		authorized.GET("/ledger/check", service.CheckLedger)
 		authorized.DELETE("/ledger", service.DeleteLedger)
 	}
