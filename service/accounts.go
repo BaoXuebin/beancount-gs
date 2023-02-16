@@ -239,8 +239,17 @@ func BalanceAccount(c *gin.Context) {
 	line := fmt.Sprintf("\r\n%s pad %s Equity:OpeningBalances", yesterdayStr, accountForm.Account)
 	line += fmt.Sprintf("\r\n%s balance %s %s %s", todayStr, accountForm.Account, accountForm.Number, acc.Currency)
 
-	filePath := fmt.Sprintf("%s/month/%s.bean", ledgerConfig.DataPath, month)
-	err = script.AppendFileInNewLine(filePath, line)
+	// check month bean file exist
+	err = CreateMonthBeanFileIfNotExist(ledgerConfig.DataPath, month)
+	if err != nil {
+		if c != nil {
+			InternalError(c, err.Error())
+		}
+		return
+	}
+
+	// append padding content to month bean file
+	err = script.AppendFileInNewLine(script.GetLedgerMonthFilePath(ledgerConfig.DataPath, month), line)
 	if err != nil {
 		InternalError(c, err.Error())
 		return

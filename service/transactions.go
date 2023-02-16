@@ -205,29 +205,18 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 		}
 		return errors.New("internal error")
 	}
-	monthStr := month.Format("2006-01")
-	filePath := fmt.Sprintf("%s/month/%s.bean", ledgerConfig.DataPath, monthStr)
 
-	// 文件不存在，则创建
-	if !script.FileIfExist(filePath) {
-		err = script.CreateFile(filePath)
-		if err != nil {
-			if c != nil {
-				InternalError(c, err.Error())
-			}
-			return errors.New("internal error")
+	// 交易的月份信息
+	monthStr := month.Format("2006-01")
+	err = CreateMonthBeanFileIfNotExist(ledgerConfig.DataPath, monthStr)
+	if err != nil {
+		if c != nil {
+			InternalError(c, err.Error())
 		}
-		// include ./2021-11.bean
-		err = script.AppendFileInNewLine(script.GetLedgerMonthsFilePath(ledgerConfig.DataPath), fmt.Sprintf("include \"./%s.bean\"", monthStr))
-		if err != nil {
-			if c != nil {
-				InternalError(c, err.Error())
-			}
-			return errors.New("internal error")
-		}
+		return err
 	}
 
-	err = script.AppendFileInNewLine(filePath, line)
+	err = script.AppendFileInNewLine(script.GetLedgerMonthFilePath(ledgerConfig.DataPath, monthStr), line)
 	if err != nil {
 		if c != nil {
 			InternalError(c, err.Error())
