@@ -54,20 +54,35 @@ xdbin/beancount-gs:latest
 
 **docker-compose**
 
+在指定目录创建文件 `docker-compose.yml`，然后复制下面内容到这个文件，执行 `docker-compose up -d`
+
 ```yaml
 version: "3.9"
 services:
   app:
     container_name: beancount-gs
-    image: xdbin/beancount-gs:latest
+    image: xdbin/beancount-gs:${tag:-latest}
     ports:
       - "10000:80"
+    # volumes 挂载目录会导 /app/public/icons 中的图标被覆盖，这里将默认图标在挂载后重新拷贝图标
+    command: >
+      sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
     volumes:
-      - "${dataPath:-/data/beancount}:${dataPath:-/data/beancount}"
+      - "${dataPath:-/data/beancount}:/data/beancount"
       - "${dataPath:-/data/beancount}/icons:/app/public/icons"
       - "${dataPath:-/data/beancount}/config:/app/config"
       - "${dataPath:-/data/beancount}/bak:/app/bak"
+      - "${dataPath:-/data/beancount}/logs:/app/logs"
 ```
+
+默认的文件存储路径为 `/data/beancount`，如果你想更换其他路径，可以在当前目录下新建 `var.env`，然后将下面内容复制到这个文件
+
+```properties
+tag=latest
+dataPath=自定义的目录
+```
+
+执行 `docker-compose --env-file ./var.env up -d` 即可
 
 ## 项目负责人
 
