@@ -1,5 +1,5 @@
 # 构建 beancount
-FROM python:3.6.15 as beancount_builder
+FROM python:3.7.16 as beancount_builder
 WORKDIR /build
 ENV PATH "/app/bin:$PATH"
 RUN python3 -mvenv /app
@@ -23,7 +23,7 @@ COPY public/icons ./public/default_icons
 RUN go build .
 
 # 镜像
-FROM python:3.6.15-alpine
+FROM python:3.7.16-alpine
 
 COPY --from=beancount_builder /app /app
 
