@@ -1,17 +1,15 @@
-ARG BEANCOUNT_VERSION=2.3.5
-ARG GOLANG_VERSION=1.17.3
-
 # 构建 beancount
 FROM python:latest as beancount_builder
 WORKDIR /build
 ENV PATH "/app/bin:$PATH"
 RUN python3 -mvenv /app
-RUN git clone -b ${BEANCOUNT_VERSION} https://github.com/beancount/beancount.git
-RUN python3 -m pip install ./beancount -i https://mirrors.aliyun.com/pypi/simple/
+RUN wget https://github.com/beancount/beancount/archive/refs/tags/2.3.5.tar.gz
+RUN tar -zxvf 2.3.5.tar.gz
+RUN python3 -m pip install ./beancount-2.3.5 -i https://mirrors.aliyun.com/pypi/simple/
 RUN find /app -name __pycache__ -exec rm -rf -v {} +
 
 # 构建 beancount-gs
-FROM golang:${GOLANG_VERSION} AS go_builder
+FROM golang:1.17.3 AS go_builder
 
 ENV GO111MODULE=on \
     GOPROXY=https://goproxy.cn,direct \
