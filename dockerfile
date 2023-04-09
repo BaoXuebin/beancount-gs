@@ -1,11 +1,11 @@
 # 构建 beancount
-FROM python:latest as beancount_builder
+FROM python:3.6.15 as beancount_builder
 WORKDIR /build
 ENV PATH "/app/bin:$PATH"
 RUN python3 -mvenv /app
 RUN wget https://github.com/beancount/beancount/archive/refs/tags/2.3.5.tar.gz
 RUN tar -zxvf 2.3.5.tar.gz
-RUN python3 -m pip install ./beancount-2.3.5
+RUN python3 -m pip install ./beancount-2.3.5 -i https://mirrors.aliyun.com/pypi/simple/
 RUN find /app -name __pycache__ -exec rm -rf -v {} +
 
 # 构建 beancount-gs
@@ -23,7 +23,7 @@ COPY public/icons ./public/default_icons
 RUN go build .
 
 # 镜像
-FROM python:3.10-alpine
+FROM python:3.6.15-alpine
 
 COPY --from=beancount_builder /app /app
 
