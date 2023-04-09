@@ -5,7 +5,7 @@ ENV PATH "/app/bin:$PATH"
 RUN python3 -mvenv /app
 RUN wget https://github.com/beancount/beancount/archive/refs/tags/2.3.5.tar.gz
 RUN tar -zxvf 2.3.5.tar.gz
-RUN python3 -m pip install ./beancount-2.3.5 -i https://mirrors.aliyun.com/pypi/simple/
+RUN python3 -m pip install ./beancount-2.3.5
 RUN find /app -name __pycache__ -exec rm -rf -v {} +
 
 # 构建 beancount-gs

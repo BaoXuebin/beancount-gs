@@ -129,7 +129,7 @@ func main() {
 	// gin 日志设置
 	gin.DisableConsoleColor()
 	fs, _ := os.Create("logs/gin.log")
-	gin.DefaultWriter = io.MultiWriter(fs)
+	gin.DefaultWriter = io.MultiWriter(fs, os.Stdout)
 	router := gin.Default()
 	// 注册路由
 	RegisterRouter(router)
