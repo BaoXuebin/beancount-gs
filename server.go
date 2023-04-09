@@ -101,7 +101,7 @@ func main() {
 	var secret string
 	var port int
 	flag.StringVar(&secret, "secret", "", "服务器密钥")
-	flag.IntVar(&port, "p", 3001, "端口号")
+	flag.IntVar(&port, "p", 10000, "端口号")
 	flag.Parse()
 
 	// 读取配置文件
@@ -128,7 +128,7 @@ func main() {
 	}
 	// gin 日志设置
 	gin.DisableConsoleColor()
-	fs, _ := os.Create("gin.log")
+	fs, _ := os.Create("logs/gin.log")
 	gin.DefaultWriter = io.MultiWriter(fs)
 	router := gin.Default()
 	// 注册路由
