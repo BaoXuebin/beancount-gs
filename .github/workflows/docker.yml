@@ -18,7 +18,6 @@ jobs:
           # list of Docker images to use as base name for tags
           images: |
             xdbin/beancount-gs
-            ghcr.io/BaoXuebin/beancount-gs
           # generate Docker tags based on the following events/attributes
           tags: |
             type=semver,pattern={{version}}
