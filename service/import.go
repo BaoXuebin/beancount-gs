@@ -43,7 +43,7 @@ func ImportAliPayCSV(c *gin.Context) {
 				continue
 			}
 			result = append(result, transaction)
-		} else if len(lines) == 12 {
+		} else if len(lines) == 12 || len(lines) == 13 {
 			transaction, err := importMobileAliPayCSV(lines, currency, currencySymbol)
 			if err != nil {
 				script.LogInfo(ledgerConfig.Mail, err.Error())
@@ -88,8 +88,8 @@ func importBrowserAliPayCSV(lines []string, currency string, currencySymbol stri
 }
 
 func importMobileAliPayCSV(lines []string, currency string, currencySymbol string) (Transaction, error) {
-	dateColumn := strings.Fields(lines[10])
-	status := strings.Trim(lines[0], " ")
+	dateColumn := strings.Fields(lines[0])
+	status := strings.Trim(lines[5], " ")
 	account := ""
 	if status == "" {
 		account = ""
@@ -101,11 +101,11 @@ func importMobileAliPayCSV(lines []string, currency string, currencySymbol strin
 
 	if len(dateColumn) >= 2 {
 		return Transaction{
-			Id:             strings.Trim(lines[8], " "),
+			Id:             strings.Trim(lines[9], " "),
 			Date:           strings.Trim(dateColumn[0], " "),
-			Payee:          strings.Trim(lines[1], " "),
-			Narration:      strings.Trim(lines[3], " "),
-			Number:         strings.Trim(lines[5], " "),
+			Payee:          strings.Trim(lines[2], " "),
+			Narration:      strings.Trim(lines[4], " "),
+			Number:         strings.Trim(lines[6], " "),
 			Account:        account,
 			Currency:       currency,
 			CurrencySymbol: currencySymbol,
