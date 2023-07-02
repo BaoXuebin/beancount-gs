@@ -213,6 +213,8 @@ func StatsAccountBalance(c *gin.Context) {
 
 	queryParams := script.QueryParams{
 		AccountLike: statsQuery.Prefix,
+		Year:        statsQuery.Year,
+		Month:       statsQuery.Month,
 		Where:       true,
 	}
 
