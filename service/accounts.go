@@ -32,7 +32,7 @@ type accountPosition struct {
 func QueryAllAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 
-	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')) as market_position, '\\', sum(value(position)) as position, '\\'", ledgerConfig.OperatingCurrency)
+	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')) as market_position, '\\', sum(convert(value(position), currency)) as position, '\\'", ledgerConfig.OperatingCurrency)
 	accountPositions := make([]accountPosition, 0)
 	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, nil, &accountPositions)
 	if err != nil {

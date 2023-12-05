@@ -113,6 +113,15 @@ func BeanReportAllPrices(ledgerConfig *Config) string {
 	return string(output)
 }
 
+func BeanReportAllEvents(ledgerConfig *Config) string {
+	beanFilePath := GetLedgerEventsFilePath(ledgerConfig.DataPath)
+
+	LogInfo(ledgerConfig.Mail, "bean-report "+beanFilePath+" events")
+	cmd := exec.Command("bean-report", beanFilePath, "events")
+	output, _ := cmd.Output()
+	return string(output)
+}
+
 func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryParams, queryResultPtr interface{}) (string, error) {
 	var bql string
 	if selectBql == "" {

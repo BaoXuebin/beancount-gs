@@ -6,6 +6,7 @@ import (
 )
 
 func isWindows() bool {
+	return false
 	os := runtime.GOOS
 	return os == "windows"
 }

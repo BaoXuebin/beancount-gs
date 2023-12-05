@@ -56,3 +56,13 @@ func GetLedgerIndexFilePath(dataPath string) string {
 	LogInfo(dataPath, dataPath+"/index.bean")
 	return dataPath + "/index.bean"
 }
+
+func GetLedgerIncludesFilePath(dataPath string) string {
+	LogInfo(dataPath, dataPath+"/includes.bean")
+	return dataPath + "/includes.bean"
+}
+
+func GetLedgerEventsFilePath(dataPath string) string {
+	LogInfo(dataPath, dataPath+"/event/events.bean")
+	return dataPath + "/event/events.bean"
+}

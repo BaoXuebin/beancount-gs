@@ -10,3 +10,5 @@ include "./price/prices.bean"
 include "./history.bean"
 ; 新的数据（按月拆分）
 include "./month/months.bean"
+; 事件数据
+include "./event/events.bean"
