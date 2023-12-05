@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -23,14 +24,15 @@ func QueryValidAccount(c *gin.Context) {
 }
 
 type accountPosition struct {
-	Account  string `json:"account"`
-	Position string `json:"position"`
+	Account        string `json:"account"`
+	MarketPosition string `json:"market_position"`
+	Position       string `json:"position"`
 }
 
 func QueryAllAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 
-	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')) as market_position, '\\', sum(value(position)) as position, '\\'", ledgerConfig.OperatingCurrency)
 	accountPositions := make([]accountPosition, 0)
 	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, nil, &accountPositions)
 	if err != nil {
@@ -54,16 +56,49 @@ func QueryAllAccount(c *gin.Context) {
 		key := account.Acc
 		typ := script.GetAccountType(ledgerConfig.Id, key)
 		account.Type = &typ
-		position := strings.Trim(accountPositionMap[key].Position, " ")
-		if position != "" {
-			fields := strings.Fields(position)
+		marketPosition := strings.Trim(accountPositionMap[key].MarketPosition, " ")
+		if marketPosition != "" {
+			fields := strings.Fields(marketPosition)
 			account.MarketNumber = fields[0]
 			account.MarketCurrency = fields[1]
 			account.MarketCurrencySymbol = script.GetCommoditySymbol(fields[1])
 		}
+		position := strings.Trim(accountPositionMap[key].Position, " ")
+		if position != "" {
+			account.Positions = parseAccountPositions(position)
+		}
 		result = append(result, account)
 	}
 	OK(c, result)
+}
+
+func parseAccountPositions(input string) []script.AccountPosition {
+	// 使用正则表达式提取数字、货币代码和金额
+	re := regexp.MustCompile(`(-?\d+\.\d+) (\w+)`)
+	matches := re.FindAllStringSubmatch(input, -1)
+
+	var positions []script.AccountPosition
+
+	// 遍历匹配项并创建 AccountPosition
+	for _, match := range matches {
+		number := match[1]
+		currency := match[2]
+
+		// 获取货币符号
+		symbol := script.GetCommoditySymbol(currency)
+
+		// 创建 AccountPosition
+		position := script.AccountPosition{
+			Number:         number,
+			Currency:       currency,
+			CurrencySymbol: symbol,
+		}
+
+		// 添加到切片中
+		positions = append(positions, position)
+	}
+
+	return positions
 }
 
 func QueryAccountType(c *gin.Context) {

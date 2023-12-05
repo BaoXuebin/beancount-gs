@@ -171,11 +171,16 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 		} else {
 			line += fmt.Sprintf("\r\n %s %s %s", entry.Account, entry.Number.Round(2).StringFixedBank(2), account.Currency)
 		}
+		zero := decimal.NewFromInt(0)
 		// 判断是否涉及多币种的转换
 		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
-			autoBalance = true
+			autoBalance = false
+			// 汇率值小于等于0，则不进行汇率转换
+			if entry.Price.LessThanOrEqual(zero) {
+				continue
+			}
 			// 根据 number 的正负来判断是买入还是卖出
-			if entry.Number.GreaterThan(decimal.NewFromInt(0)) {
+			if entry.Number.GreaterThan(zero) {
 				// {351.729 CNY, 2021-09-29}
 				line += fmt.Sprintf(" {%s %s, %s}", entry.Price, ledgerConfig.OperatingCurrency, addTransactionForm.Date)
 			} else {

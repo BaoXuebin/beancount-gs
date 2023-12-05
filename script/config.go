@@ -30,14 +30,21 @@ type Config struct {
 }
 
 type Account struct {
-	Acc                  string       `json:"account"`
-	StartDate            string       `json:"startDate"`
-	Currency             string       `json:"currency,omitempty"`
-	MarketNumber         string       `json:"marketNumber,omitempty"`
-	MarketCurrency       string       `json:"marketCurrency,omitempty"`
-	MarketCurrencySymbol string       `json:"marketCurrencySymbol,omitempty"`
-	EndDate              string       `json:"endDate,omitempty"`
-	Type                 *AccountType `json:"type,omitempty"`
+	Acc                  string            `json:"account"`
+	StartDate            string            `json:"startDate"`
+	Currency             string            `json:"currency,omitempty"`
+	Positions            []AccountPosition `json:"positions,omitempty"`
+	MarketNumber         string            `json:"marketNumber,omitempty"`
+	MarketCurrency       string            `json:"marketCurrency,omitempty"`
+	MarketCurrencySymbol string            `json:"marketCurrencySymbol,omitempty"`
+	EndDate              string            `json:"endDate,omitempty"`
+	Type                 *AccountType      `json:"type,omitempty"`
+}
+
+type AccountPosition struct {
+	Number         string `json:"number,omitempty"`
+	Currency       string `json:"currency,omitempty"`
+	CurrencySymbol string `json:"currencySymbol,omitempty"`
 }
 
 type AccountType struct {
@@ -371,11 +378,27 @@ func EqualServerSecret(secret string) bool {
 func GetCommoditySymbol(commodity string) string {
 	switch commodity {
 	case "CNY":
-		return "￥"
+		return "¥"
 	case "USD":
 		return "$"
+	case "EUR":
+		return "€"
+	case "JPY":
+		return "¥"
+	case "GBP":
+		return "£"
+	case "AUD":
+		return "$"
+	case "CAD":
+		return "$"
+	case "INR":
+		return "₹"
+	case "RUB":
+		return "₽"
+	case "BRL":
+		return "R$"
 	}
-	return ""
+	return commodity
 }
 
 func GetAccountPrefix(account string) string {
