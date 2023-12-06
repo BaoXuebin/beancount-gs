@@ -40,6 +40,10 @@ func GetLedgerAccountTypeFilePath(dataPath string) string {
 	return dataPath + "/.beancount-gs/account_type.json"
 }
 
+func GetLedgerCurrenciesFilePath(dataPath string) string {
+	return dataPath + "/.beancount-gs/currency.json"
+}
+
 func GetLedgerPriceFilePath(dataPath string) string {
 	return dataPath + "/price/prices.bean"
 }

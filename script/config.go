@@ -15,6 +15,7 @@ var serverConfig Config
 var ledgerConfigMap map[string]Config
 var ledgerAccountsMap map[string][]Account
 var ledgerAccountTypesMap map[string]map[string]string
+var ledgerCurrencyMap map[string][]LedgerCurrency
 var whiteList []string
 
 type Config struct {
@@ -50,6 +51,12 @@ type AccountPosition struct {
 type AccountType struct {
 	Key  string `json:"key"`
 	Name string `json:"name"`
+}
+
+type LedgerCurrency struct {
+	Name     string `json:"name"`
+	Currency string `json:"currency"`
+	Symbol   string `json:"symbol"`
 }
 
 func GetServerConfig() Config {
@@ -253,6 +260,10 @@ func LoadLedgerAccountsMap() error {
 		if err != nil {
 			return err
 		}
+		err = LoadLedgerCurrencyMap(config)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -373,6 +384,41 @@ func GenerateServerSecret(secret string) string {
 
 func EqualServerSecret(secret string) bool {
 	return serverSecret == secret
+}
+
+func LoadLedgerCurrencyMap(config Config) error {
+	path := GetLedgerCurrenciesFilePath(config.DataPath)
+	if !FileIfExist(path) {
+		err := CreateFile(path)
+		if err != nil {
+			return err
+		}
+		err = WriteFile(path, "[{\"name\":\"人民币\",\"symbol\":\"¥\",\"currency\":\"CNY\"},{\"name\":\"美元\",\"symbol\":\"$\",\"currency\":\"USD\"},{\"name\":\"欧元\",\"symbol\":\"€\",\"currency\":\"EUR\"},{\"name\":\"英镑\",\"symbol\":\"£\",\"currency\":\"GBP\"},{\"name\":\"日元\",\"symbol\":\"¥\",\"currency\":\"JPY\"},{\"name\":\"加拿大元\",\"symbol\":\"$\",\"currency\":\"CAD\"},{\"name\":\"澳大利亚元\",\"symbol\":\"$\",\"currency\":\"AUD\"},{\"name\":\"瑞士法郎\",\"symbol\":\"CHF\",\"currency\":\"CHF\"},{\"name\":\"俄罗斯卢布\",\"symbol\":\"₽\",\"currency\":\"RUB\"}]")
+		if err != nil {
+			return err
+		}
+	}
+
+	fileContent, err := ReadFile(path)
+	if err != nil {
+		return err
+	}
+	var currencies []LedgerCurrency
+	err = json.Unmarshal(fileContent, &currencies)
+	if err != nil {
+		LogSystemError("Failed unmarshal config file (" + path + ")")
+		return err
+	}
+	if ledgerCurrencyMap == nil {
+		ledgerCurrencyMap = make(map[string][]LedgerCurrency)
+	}
+	ledgerCurrencyMap[config.Id] = currencies
+	LogSystemInfo(fmt.Sprintf("Success load [%s] account type cache", config.Mail))
+	return nil
+}
+
+func GetLedgerCurrency(ledgerId string) []LedgerCurrency {
+	return ledgerCurrencyMap[ledgerId]
 }
 
 func GetCommoditySymbol(commodity string) string {

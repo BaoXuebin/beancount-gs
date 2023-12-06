@@ -68,6 +68,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.POST("/account/balance", service.BalanceAccount)
 		authorized.POST("/account/refresh", service.RefreshAccountCache)
 		authorized.POST("/commodity/price", service.SyncCommodityPrice)
+		authorized.GET("/commodity/currencies", service.QueryAllCurrencies)
 		authorized.GET("/stats/months", service.MonthsList)
 		authorized.GET("/stats/total", service.StatsTotal)
 		authorized.GET("/stats/payee", service.StatsPayee)

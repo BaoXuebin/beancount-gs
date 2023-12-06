@@ -272,6 +272,11 @@ func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, erro
 	if err != nil {
 		return nil, err
 	}
+	// add currency cache
+	err = script.LoadLedgerCurrencyMap(ledgerConfig)
+	if err != nil {
+		return nil, err
+	}
 	return &ledgerConfig, nil
 }
 
