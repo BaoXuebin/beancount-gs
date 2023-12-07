@@ -35,10 +35,12 @@ type Config struct {
 type Account struct {
 	Acc                  string            `json:"account"`
 	StartDate            string            `json:"startDate"`
-	Currency             string            `json:"currency,omitempty"`       // 货币
-	CurrencySymbol       string            `json:"currencySymbol,omitempty"` // 货币符号
-	ExRate               string            `json:"exRate,omitempty"`         // 汇率
-	ExDate               string            `json:"exDate,omitempty"`         // 汇率日期
+	Currency             string            `json:"currency,omitempty"`          // 货币
+	CurrencySymbol       string            `json:"currencySymbol,omitempty"`    // 货币符号
+	ExRate               string            `json:"exRate,omitempty"`            // 汇率
+	ExDate               string            `json:"exDate,omitempty"`            // 汇率日期
+	IsAnotherCurrency    bool              `json:"isAnotherCurrency,omitempty"` // 其他币种标识
+	IsCurrent            bool              `json:"isCurrent,omitempty"`
 	Positions            []AccountPosition `json:"positions,omitempty"`
 	MarketNumber         string            `json:"marketNumber,omitempty"`
 	MarketCurrency       string            `json:"marketCurrency,omitempty"`
@@ -59,13 +61,12 @@ type AccountType struct {
 }
 
 type LedgerCurrency struct {
-	Name      string `json:"name"`
-	Currency  string `json:"currency"`
-	Symbol    string `json:"symbol"`
-	IsCurrent bool   `json:"isCurrent,omitempty"` // 是否是货币（非货币的为投资单位）
-	Current   bool   `json:"current,omitempty"`
-	ExRate    string `json:"exRate,omitempty"`
-	Date      string `json:"date,omitempty"`
+	Name     string `json:"name"`
+	Currency string `json:"currency"`
+	Symbol   string `json:"symbol"`
+	Current  bool   `json:"current,omitempty"`
+	ExRate   string `json:"exRate,omitempty"`
+	Date     string `json:"date,omitempty"`
 }
 
 func GetServerConfig() Config {
