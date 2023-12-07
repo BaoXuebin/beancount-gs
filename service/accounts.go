@@ -14,9 +14,21 @@ import (
 func QueryValidAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	allAccounts := script.GetLedgerAccounts(ledgerConfig.Id)
+	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
 	result := make([]script.Account, 0)
 	for _, account := range allAccounts {
 		if account.EndDate == "" {
+			// 货币实时汇率（忽略账本主货币）
+			if account.Currency != ledgerConfig.OperatingCurrency && account.Currency != "" {
+				// 从 map 中获取对应货币的实时汇率和符号
+				currency, ok := currencyMap[account.Currency]
+				if ok {
+					account.CurrencySymbol = currency.Symbol
+					account.ExRate = currency.ExRate
+					account.ExDate = currency.Date
+					account.IsAnotherCurrency = true
+				}
+			}
 			result = append(result, account)
 		}
 	}
@@ -45,6 +57,7 @@ func QueryAllAccount(c *gin.Context) {
 		accountPositionMap[ap.Account] = ap
 	}
 
+	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
 	accounts := script.GetLedgerAccounts(ledgerConfig.Id)
 	result := make([]script.Account, 0, len(accounts))
 	for i := 0; i < len(accounts); i++ {
@@ -52,6 +65,17 @@ func QueryAllAccount(c *gin.Context) {
 		// 过滤已结束的账户
 		if account.EndDate != "" {
 			continue
+		}
+		// 货币实时汇率（忽略账本主货币）
+		if account.Currency != ledgerConfig.OperatingCurrency && account.Currency != "" {
+			// 从 map 中获取对应货币的实时汇率和符号
+			currency, ok := currencyMap[account.Currency]
+			if ok {
+				account.CurrencySymbol = currency.Symbol
+				account.ExRate = currency.ExRate
+				account.ExDate = currency.Date
+				account.IsAnotherCurrency = true
+			}
 		}
 		key := account.Acc
 		typ := script.GetAccountType(ledgerConfig.Id, key)
@@ -61,18 +85,18 @@ func QueryAllAccount(c *gin.Context) {
 			fields := strings.Fields(marketPosition)
 			account.MarketNumber = fields[0]
 			account.MarketCurrency = fields[1]
-			account.MarketCurrencySymbol = script.GetCommoditySymbol(fields[1])
+			account.MarketCurrencySymbol = script.GetCommoditySymbol(ledgerConfig.Id, fields[1])
 		}
 		position := strings.Trim(accountPositionMap[key].Position, " ")
 		if position != "" {
-			account.Positions = parseAccountPositions(position)
+			account.Positions = parseAccountPositions(ledgerConfig.Id, position)
 		}
 		result = append(result, account)
 	}
 	OK(c, result)
 }
 
-func parseAccountPositions(input string) []script.AccountPosition {
+func parseAccountPositions(ledgerId string, input string) []script.AccountPosition {
 	// 使用正则表达式提取数字、货币代码和金额
 	re := regexp.MustCompile(`(-?\d+\.\d+) (\w+)`)
 	matches := re.FindAllStringSubmatch(input, -1)
@@ -85,7 +109,7 @@ func parseAccountPositions(input string) []script.AccountPosition {
 		currency := match[2]
 
 		// 获取货币符号
-		symbol := script.GetCommoditySymbol(currency)
+		symbol := script.GetCommoditySymbol(ledgerId, currency)
 
 		// 创建 AccountPosition
 		position := script.AccountPosition{
@@ -294,7 +318,7 @@ func BalanceAccount(c *gin.Context) {
 	result["date"] = accountForm.Date
 	result["marketNumber"] = accountForm.Number
 	result["marketCurrency"] = ledgerConfig.OperatingCurrency
-	result["marketCurrencySymbol"] = script.GetCommoditySymbol(ledgerConfig.OperatingCurrency)
+	result["marketCurrencySymbol"] = script.GetCommoditySymbol(ledgerConfig.Id, ledgerConfig.OperatingCurrency)
 	OK(c, result)
 }
 

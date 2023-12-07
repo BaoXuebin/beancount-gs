@@ -46,7 +46,7 @@ func QueryTransactions(c *gin.Context) {
 	}
 	// 格式化金额
 	for i := 0; i < len(transactions); i++ {
-		symbol := script.GetCommoditySymbol(transactions[i].Currency)
+		symbol := script.GetCommoditySymbol(ledgerConfig.Id, transactions[i].Currency)
 		transactions[i].CurrencySymbol = symbol
 		transactions[i].CostCurrencySymbol = symbol
 		if transactions[i].Price != "" {

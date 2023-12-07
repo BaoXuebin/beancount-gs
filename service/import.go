@@ -23,7 +23,7 @@ func ImportAliPayCSV(c *gin.Context) {
 	result := make([]Transaction, 0)
 
 	currency := "CNY"
-	currencySymbol := script.GetCommoditySymbol(currency)
+	currencySymbol := script.GetCommoditySymbol(ledgerConfig.Id, currency)
 
 	for {
 		lines, err := reader.Read()
@@ -124,7 +124,7 @@ func ImportWxPayCSV(c *gin.Context) {
 	result := make([]Transaction, 0)
 
 	currency := "CNY"
-	currencySymbol := script.GetCommoditySymbol(currency)
+	currencySymbol := script.GetCommoditySymbol(ledgerConfig.Id, currency)
 
 	for {
 		lines, err := reader.Read()
@@ -173,7 +173,7 @@ func ImportICBCCSV(c *gin.Context) {
 	result := make([]Transaction, 0)
 
 	currency := "CNY"
-	currencySymbol := script.GetCommoditySymbol(currency)
+	currencySymbol := script.GetCommoditySymbol(ledgerConfig.Id, currency)
 
 	id := 0
 	for {
@@ -226,7 +226,7 @@ func ImportABCCSV(c *gin.Context) {
 	result := make([]Transaction, 0)
 
 	currency := "CNY"
-	currencySymbol := script.GetCommoditySymbol(currency)
+	currencySymbol := script.GetCommoditySymbol(ledgerConfig.Id, currency)
 
 	id := 0
 	for {

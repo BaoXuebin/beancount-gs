@@ -160,7 +160,7 @@ func OpenOrCreateLedger(c *gin.Context) {
 		resultMap["ledgerId"] = ledgerId
 		resultMap["title"] = userLedger.Title
 		resultMap["currency"] = userLedger.OperatingCurrency
-		resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
+		resultMap["currencySymbol"] = script.GetServerCommoditySymbol(userLedger.OperatingCurrency)
 		resultMap["createDate"] = userLedger.CreateDate
 		OK(c, resultMap)
 		return
@@ -176,7 +176,7 @@ func OpenOrCreateLedger(c *gin.Context) {
 	resultMap["ledgerId"] = ledgerId
 	resultMap["title"] = userLedger.Title
 	resultMap["currency"] = userLedger.OperatingCurrency
-	resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
+	resultMap["currencySymbol"] = script.GetCommoditySymbol(ledgerId, userLedger.OperatingCurrency)
 	resultMap["createDate"] = userLedger.CreateDate
 	OK(c, resultMap)
 }

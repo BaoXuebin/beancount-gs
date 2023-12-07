@@ -386,7 +386,7 @@ func StatsMonthCalendar(c *gin.Context) {
 					Account:        queryRes.Account,
 					Amount:         json.Number(fields[0]),
 					Currency:       fields[1],
-					CurrencySymbol: script.GetCommoditySymbol(fields[1]),
+					CurrencySymbol: script.GetCommoditySymbol(ledgerConfig.Id, fields[1]),
 				})
 		}
 	}
