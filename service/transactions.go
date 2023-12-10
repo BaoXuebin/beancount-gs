@@ -183,8 +183,9 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 				continue
 			}
 
+			_, isCurrency := currencyMap[account.Currency]
 			// 货币跳过汇率转换
-			if _, ok := currencyMap[account.Currency]; !ok {
+			if !isCurrency {
 				// 根据 number 的正负来判断是买入还是卖出
 				if entry.Number.GreaterThan(zero) {
 					// {351.729 CNY, 2021-09-29}
@@ -202,6 +203,14 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 					InternalError(c, err.Error())
 				}
 				return errors.New("internal error")
+			}
+			// 刷新币种汇率
+			if isCurrency {
+				err = script.LoadLedgerCurrencyMap(ledgerConfig)
+				if err != nil {
+					InternalError(c, err.Error())
+					return errors.New("internal error")
+				}
 			}
 		}
 	}
