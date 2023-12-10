@@ -37,8 +37,8 @@ type Account struct {
 	StartDate            string            `json:"startDate"`
 	Currency             string            `json:"currency,omitempty"`          // 货币
 	CurrencySymbol       string            `json:"currencySymbol,omitempty"`    // 货币符号
-	ExRate               string            `json:"exRate,omitempty"`            // 汇率
-	ExDate               string            `json:"exDate,omitempty"`            // 汇率日期
+	Price                string            `json:"price,omitempty"`             // 汇率
+	PriceDate            string            `json:"priceDate,omitempty"`         // 汇率日期
 	IsAnotherCurrency    bool              `json:"isAnotherCurrency,omitempty"` // 其他币种标识
 	IsCurrent            bool              `json:"isCurrent,omitempty"`
 	Positions            []AccountPosition `json:"positions,omitempty"`
@@ -61,12 +61,12 @@ type AccountType struct {
 }
 
 type LedgerCurrency struct {
-	Name     string `json:"name"`
-	Currency string `json:"currency"`
-	Symbol   string `json:"symbol"`
-	Current  bool   `json:"current,omitempty"`
-	ExRate   string `json:"exRate,omitempty"`
-	Date     string `json:"date,omitempty"`
+	Name      string `json:"name"`
+	Currency  string `json:"currency"`
+	Symbol    string `json:"symbol"`
+	Current   bool   `json:"current,omitempty"`
+	Price     string `json:"price,omitempty"`
+	PriceDate string `json:"priceDate,omitempty"`
 }
 
 func GetServerConfig() Config {
@@ -488,25 +488,25 @@ func RefreshLedgerCurrency(ledgerConfig *Config) []LedgerCurrency {
 	currencies := GetLedgerCurrency(ledgerConfig.Id)
 	for _, c := range currencies {
 		current := c.Currency == ledgerConfig.OperatingCurrency
-		var exRate string
+		var price string
 		var date string
 		if current {
-			exRate = "1"
+			price = "1"
 			date = time.Now().Format("2006-01-02")
 		} else {
 			value, exists := existCurrencyMap[c.Currency]
 			if exists {
-				exRate = value.Value
+				price = value.Value
 				date = value.Date
 			}
 		}
 		result = append(result, LedgerCurrency{
-			Name:     c.Name,
-			Currency: c.Currency,
-			Symbol:   c.Symbol,
-			Current:  current,
-			ExRate:   exRate,
-			Date:     date,
+			Name:      c.Name,
+			Currency:  c.Currency,
+			Symbol:    c.Symbol,
+			Current:   current,
+			Price:     price,
+			PriceDate: date,
 		})
 	}
 	// 刷新账本货币缓存

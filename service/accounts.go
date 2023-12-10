@@ -24,8 +24,8 @@ func QueryValidAccount(c *gin.Context) {
 				currency, ok := currencyMap[account.Currency]
 				if ok {
 					account.CurrencySymbol = currency.Symbol
-					account.ExRate = currency.ExRate
-					account.ExDate = currency.Date
+					account.Price = currency.Price
+					account.PriceDate = currency.PriceDate
 					account.IsAnotherCurrency = true
 				}
 			}
@@ -72,8 +72,8 @@ func QueryAllAccount(c *gin.Context) {
 			currency, ok := currencyMap[account.Currency]
 			if ok {
 				account.CurrencySymbol = currency.Symbol
-				account.ExRate = currency.ExRate
-				account.ExDate = currency.Date
+				account.Price = currency.Price
+				account.PriceDate = currency.PriceDate
 				account.IsAnotherCurrency = true
 			}
 		}
