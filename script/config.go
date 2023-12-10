@@ -270,7 +270,7 @@ func LoadLedgerAccountsMap() error {
 		if err != nil {
 			return err
 		}
-		err = LoadLedgerCurrencyMap(config)
+		err = LoadLedgerCurrencyMap(&config)
 		if err != nil {
 			return err
 		}
@@ -408,7 +408,7 @@ func LoadServerCurrencyMap() {
 	serverCurrencies = append(serverCurrencies, LedgerCurrency{Name: "俄罗斯卢布", Currency: "RUB", Symbol: "₽"})
 }
 
-func LoadLedgerCurrencyMap(config Config) error {
+func LoadLedgerCurrencyMap(config *Config) error {
 	LoadServerCurrencyMap()
 	path := GetLedgerCurrenciesFilePath(config.DataPath)
 	if !FileIfExist(path) {
@@ -443,7 +443,7 @@ func LoadLedgerCurrencyMap(config Config) error {
 	ledgerCurrencyMap[config.Id] = currencies
 	LogSystemInfo(fmt.Sprintf("Success load [%s] account type cache", config.Mail))
 	// 刷新汇率
-	RefreshLedgerCurrency(&config)
+	RefreshLedgerCurrency(config)
 	return nil
 }
 

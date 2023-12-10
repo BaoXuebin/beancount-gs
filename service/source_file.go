@@ -92,5 +92,14 @@ func UpdateLedgerSourceFileContent(c *gin.Context) {
 		return
 	}
 
+	// 更新外币种源文件后，更新缓存
+	if strings.Contains(updateSourceFileForm.Path, "currency.json") {
+		err = script.LoadLedgerCurrencyMap(ledgerConfig)
+		if err != nil {
+			InternalError(c, err.Error())
+			return
+		}
+	}
+
 	OK(c, nil)
 }

@@ -69,11 +69,12 @@ type AddTransactionForm struct {
 }
 
 type AddTransactionEntryForm struct {
-	Account       string          `form:"account" binding:"required" json:"account"`
-	Number        decimal.Decimal `form:"number" json:"number"`
-	Currency      string          `form:"currency" json:"currency"`
-	Price         decimal.Decimal `form:"price" json:"price"`
-	PriceCurrency string          `form:"priceCurrency" json:"priceCurrency"`
+	Account           string          `form:"account" binding:"required" json:"account"`
+	Number            decimal.Decimal `form:"number" json:"number,omitempty"`
+	Currency          string          `form:"currency" json:"currency"`
+	Price             decimal.Decimal `form:"price" json:"price,omitempty"`
+	PriceCurrency     string          `form:"priceCurrency" json:"priceCurrency,omitempty"`
+	IsAnotherCurrency bool            `form:"isAnotherCurrency" json:"isAnotherCurrency,omitempty"`
 }
 
 func sum(entries []AddTransactionEntryForm, openingBalances string) decimal.Decimal {

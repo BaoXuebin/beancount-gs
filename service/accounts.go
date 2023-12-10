@@ -331,7 +331,7 @@ func RefreshAccountCache(c *gin.Context) {
 		return
 	}
 	// 加载货币缓存
-	err = script.LoadLedgerCurrencyMap(*ledgerConfig)
+	err = script.LoadLedgerCurrencyMap(ledgerConfig)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
