@@ -177,13 +177,16 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 		zero := decimal.NewFromInt(0)
 		// 判断是否涉及多币种的转换
 		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
-			autoBalance = true
 			// 汇率值小于等于0，则不进行汇率转换
 			if entry.Price.LessThanOrEqual(zero) {
 				continue
 			}
 
-			_, isCurrency := currencyMap[account.Currency]
+			currency, isCurrency := currencyMap[account.Currency]
+			currencyPrice := entry.Price
+			if currencyPrice.Equal(zero) {
+				currencyPrice, _ = decimal.NewFromString(currency.Price)
+			}
 			// 货币跳过汇率转换
 			if !isCurrency {
 				// 根据 number 的正负来判断是买入还是卖出
@@ -194,6 +197,10 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 					// {} @ 359.019 CNY
 					line += fmt.Sprintf(" {} @ %s %s", entry.Price, ledgerConfig.OperatingCurrency)
 				}
+			} else {
+				// 外币种格式：Assets:Fixed:三顿半咖啡 -1.00 SATURN_BIRD {5.61 CNY}
+				// fix issue #66 https://github.com/BaoXuebin/beancount-gs/issues/66
+				line += fmt.Sprintf(" {%s %s}", currencyPrice, ledgerConfig.OperatingCurrency)
 			}
 
 			priceLine := fmt.Sprintf("%s price %s %s %s", addTransactionForm.Date, account.Currency, entry.Price, ledgerConfig.OperatingCurrency)
