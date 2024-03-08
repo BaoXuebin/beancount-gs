@@ -442,23 +442,35 @@ func StatsPayee(c *gin.Context) {
 
 	result := make([]StatsPayeeResult, 0)
 	for _, l := range statsPayeeQueryResultList {
+		// 交易账户名称非空
 		if l.Payee != "" {
 			payee := StatsPayeeResult{
 				Payee:    l.Payee,
 				Currency: ledgerConfig.OperatingCurrency,
 			}
+			//查询交易次数
 			if statsQuery.Type == "cot" {
 				payee.Value = json.Number(decimal.NewFromInt32(l.Count).String())
 			} else {
-				fields := strings.Fields(l.Position)
-				total, err := decimal.NewFromString(fields[0])
-				if err != nil {
-					panic(err)
-				}
-				if statsQuery.Type == "avg" {
-					payee.Value = json.Number(total.Div(decimal.NewFromInt32(l.Count)).Round(2).String())
-				} else {
-					payee.Value = json.Number(fields[0])
+				//查询交易金额，要过滤掉空白交易金额的科目，
+				// 比如 记账购买后又全额退款导致科目交易条目数>0但是累计金额=0
+				if l.Position != "" {
+					// 读取交易金额相关信息
+					fields := strings.Fields(l.Position)
+					// 交易金额
+					total, err := decimal.NewFromString(fields[0])
+					// 错误处理
+					if err != nil {
+						panic(err)
+					}
+
+					if statsQuery.Type == "avg" {
+						// 如果是查询平均交易金额
+						payee.Value = json.Number(total.Div(decimal.NewFromInt32(l.Count)).Round(2).String())
+					} else {
+						// 如果是查询总交易金额
+						payee.Value = json.Number(fields[0])
+					}
 				}
 			}
 			result = append(result, payee)
