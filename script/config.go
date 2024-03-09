@@ -319,20 +319,38 @@ func LoadLedgerAccounts(ledgerId string) error {
 					key := words[2]
 					temp = accountMap[key]
 					account := Account{Acc: key, Type: nil}
-					// 货币单位
-					if len(words) >= 4 {
-						account.Currency = words[3]
-					}
+
 					if words[1] == "open" {
 						account.StartDate = words[0]
+						if account.StartDate != "" && temp.StartDate != "" && account.StartDate >= temp.StartDate {
+							// 重复定义的账户，取最早的开始时间为准
+							continue
+						}
+						// 货币单位
+						if len(words) >= 4 {
+							account.Currency = words[3]
+						}
 					} else if words[1] == "close" {
 						account.EndDate = words[0]
+						if account.EndDate != "" && temp.EndDate != "" && account.EndDate < temp.EndDate {
+							// 重复定义的账户，取最晚的开始时间为准
+							continue
+						}
 					}
-					if temp.StartDate != "" {
+
+					if account.StartDate == "" {
 						account.StartDate = temp.StartDate
 					}
-					if temp.EndDate != "" {
+					if account.EndDate == "" {
 						account.EndDate = temp.EndDate
+					}
+					if account.Currency == "" {
+						account.Currency = temp.Currency
+					}
+
+					// 如果结束时间小于开始时间，则结束时间为空
+					if account.EndDate != "" && account.StartDate > account.EndDate {
+						account.EndDate = ""
 					}
 					accountMap[key] = account
 				}
