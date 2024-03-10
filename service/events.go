@@ -8,32 +8,38 @@ import (
 )
 
 type Event struct {
-	Date        string `form:"date" binding:"required" json:"date"`
-	Type        string `form:"type" binding:"required" json:"type"`
-	Description string `form:"description" binding:"required" json:"description"`
+	Date        string   `form:"date" binding:"required" json:"date"`
+	Stage       string   `form:"stage" json:"stage"`
+	Type        string   `form:"type" json:"type"`
+	Types       []string `form:"types" json:"types"`
+	Description string   `form:"description" binding:"required" json:"description"`
 }
 
 func GetAllEvents(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	output := script.BeanReportAllEvents(ledgerConfig)
-	script.LogInfo(ledgerConfig.Mail, output)
 
+	beanFilePath := script.GetLedgerEventsFilePath(ledgerConfig.DataPath)
+	bytes, err := script.ReadFile(beanFilePath)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	lines := strings.Split(string(bytes), "\n")
 	events := make([]Event, 0)
-	lines := strings.Split(output, "\n")
 	// foreach lines
-	for idx, line := range lines {
-		if idx < 2 || idx > len(lines)-3 {
-			continue
-		}
+	for _, line := range lines {
 		if strings.Trim(line, " ") == "" {
 			continue
 		}
 		// split line by " "
 		words := strings.Fields(line)
+		if words[1] != "event" {
+			continue
+		}
 		events = append(events, Event{
 			Date:        words[0],
-			Type:        words[1],
-			Description: words[2],
+			Type:        strings.ReplaceAll(words[2], "\"", ""),
+			Description: strings.ReplaceAll(words[3], "\"", ""),
 		})
 	}
 	OK(c, events)
@@ -49,14 +55,31 @@ func AddEvent(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	filePath := script.GetLedgerEventsFilePath(ledgerConfig.DataPath)
 
-	line := fmt.Sprintf("%s event \"%s\" \"%s\"", event.Date, event.Type, event.Description)
-	// 写入文件
-	err := script.AppendFileInNewLine(filePath, line)
-	if err != nil {
-		InternalError(c, err.Error())
-		return
+	if event.Type != "" {
+		event.Types = []string{event.Type}
 	}
-	OK(c, event)
+
+	// 定义Event类型的数组
+	events := make([]Event, 0)
+
+	if event.Types != nil {
+		for _, t := range event.Types {
+			events = append(events, Event{
+				Date:        event.Date,
+				Type:        t,
+				Description: event.Description,
+			})
+			line := fmt.Sprintf("%s event \"%s\" \"%s\"", event.Date, t, event.Description)
+			// 写入文件
+			err := script.AppendFileInNewLine(filePath, line)
+			if err != nil {
+				InternalError(c, err.Error())
+				return
+			}
+		}
+	}
+
+	OK(c, events)
 }
 
 func DeleteEvent(c *gin.Context) {
