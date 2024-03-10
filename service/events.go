@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
+	"sort"
 	"strings"
 )
 
@@ -13,6 +14,21 @@ type Event struct {
 	Type        string   `form:"type" json:"type"`
 	Types       []string `form:"types" json:"types"`
 	Description string   `form:"description" binding:"required" json:"description"`
+}
+
+// Events 切片包含多个事件
+type Events []Event
+
+func (e Events) Len() int {
+	return len(e)
+}
+
+func (e Events) Less(i, j int) bool {
+	return strings.Compare(e[i].Date, e[j].Date) < 0
+}
+
+func (e Events) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
 }
 
 func GetAllEvents(c *gin.Context) {
@@ -25,7 +41,7 @@ func GetAllEvents(c *gin.Context) {
 		return
 	}
 	lines := strings.Split(string(bytes), "\n")
-	events := make([]Event, 0)
+	events := Events{}
 	// foreach lines
 	for _, line := range lines {
 		if strings.Trim(line, " ") == "" {
@@ -42,6 +58,8 @@ func GetAllEvents(c *gin.Context) {
 			Description: strings.ReplaceAll(words[3], "\"", ""),
 		})
 	}
+	// events 按时间倒序排列
+	sort.Sort(sort.Reverse(events))
 	OK(c, events)
 }
 
