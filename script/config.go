@@ -322,9 +322,9 @@ func LoadLedgerAccounts(ledgerId string) error {
 
 					if words[1] == "open" {
 						account.StartDate = words[0]
-						if account.StartDate != "" && temp.StartDate != "" && account.StartDate >= temp.StartDate {
+						if account.StartDate != "" && temp.StartDate != "" && strings.Compare(account.StartDate, temp.StartDate) < 0 {
 							// 重复定义的账户，取最早的开始时间为准
-							continue
+							account.StartDate = temp.StartDate
 						}
 						// 货币单位
 						if len(words) >= 4 {
@@ -332,9 +332,9 @@ func LoadLedgerAccounts(ledgerId string) error {
 						}
 					} else if words[1] == "close" {
 						account.EndDate = words[0]
-						if account.EndDate != "" && temp.EndDate != "" && account.EndDate < temp.EndDate {
+						if account.EndDate != "" && temp.EndDate != "" && strings.Compare(account.EndDate, temp.EndDate) > 0 {
 							// 重复定义的账户，取最晚的开始时间为准
-							continue
+							account.EndDate = temp.EndDate
 						}
 					}
 
@@ -349,7 +349,7 @@ func LoadLedgerAccounts(ledgerId string) error {
 					}
 
 					// 如果结束时间小于开始时间，则结束时间为空
-					if account.EndDate != "" && account.StartDate > account.EndDate {
+					if account.EndDate != "" && strings.Compare(account.StartDate, account.EndDate) > 0 {
 						account.EndDate = ""
 					}
 					accountMap[key] = account
@@ -357,6 +357,7 @@ func LoadLedgerAccounts(ledgerId string) error {
 			}
 		}
 	}
+
 	accounts := make([]Account, 0)
 	for _, account := range accountMap {
 		accounts = append(accounts, account)
