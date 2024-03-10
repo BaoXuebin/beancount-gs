@@ -49,6 +49,9 @@ func GetAllEvents(c *gin.Context) {
 		}
 		// split line by " "
 		words := strings.Fields(line)
+		if len(words) < 4 {
+			continue
+		}
 		if words[1] != "event" {
 			continue
 		}
@@ -58,8 +61,10 @@ func GetAllEvents(c *gin.Context) {
 			Description: strings.ReplaceAll(words[3], "\"", ""),
 		})
 	}
-	// events 按时间倒序排列
-	sort.Sort(sort.Reverse(events))
+	if len(events) > 0 {
+		// events 按时间倒序排列
+		sort.Sort(sort.Reverse(events))
+	}
 	OK(c, events)
 }
 
