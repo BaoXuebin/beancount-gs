@@ -47,6 +47,7 @@ type Account struct {
 	MarketCurrencySymbol string            `json:"marketCurrencySymbol,omitempty"`
 	EndDate              string            `json:"endDate,omitempty"`
 	Type                 *AccountType      `json:"type,omitempty"`
+	Status               bool              `json:"status,omitempty"`
 }
 
 type AccountPosition struct {
@@ -313,46 +314,43 @@ func LoadLedgerAccounts(ledgerId string) error {
 		lines := strings.Split(string(bytes), "\n")
 		var temp Account
 		for _, line := range lines {
+			line = strings.TrimSpace(line) //去除文本前后空白
 			if line != "" {
-				words := strings.Fields(line)
-				if len(words) >= 3 {
-					key := words[2]
-					temp = accountMap[key]
-					account := Account{Acc: key, Type: nil}
-
-					if words[1] == "open" {
-						account.StartDate = words[0]
-						if account.StartDate != "" && temp.StartDate != "" && strings.Compare(account.StartDate, temp.StartDate) < 0 {
-							// 重复定义的账户，取最早的开始时间为准
-							account.StartDate = temp.StartDate
+				if line[0] == ';' {
+					// 跳过注释行
+					continue
+				} else {
+					//非注释行
+					words := strings.Fields(line)
+					if len(words) >= 3 {
+						key := words[2]
+						temp = accountMap[key]
+						account := Account{Acc: key, Type: nil, StartDate: "", EndDate: ""}
+						if words[1] == "open" {
+							// 最晚的开户日期设置为账户开户日期
+							account.StartDate = getMaxDate(words[0], temp.StartDate)
+							// 货币单位
+							if len(words) >= 4 {
+								account.Currency = words[3]
+							}
+						} else if words[1] == "close" {
+							//账户最晚的关闭日期设置为账户关闭日期
+							account.EndDate = getMaxDate(words[0], temp.EndDate)
 						}
-						// 货币单位
-						if len(words) >= 4 {
-							account.Currency = words[3]
+						if account.EndDate != "" && account.StartDate == getMaxDate(account.StartDate, account.EndDate) {
+							// 如果结束时间非空，且 开户日期>关闭日期，则清空账户结束日期，设置此账户为有效账户
+							account.EndDate = ""
+							account.Status = true
 						}
-					} else if words[1] == "close" {
-						account.EndDate = words[0]
-						if account.EndDate != "" && temp.EndDate != "" && strings.Compare(account.EndDate, temp.EndDate) > 0 {
-							// 重复定义的账户，取最晚的开始时间为准
-							account.EndDate = temp.EndDate
+						// 现在如果结束日期非空，肯定满足有开始时间<结束时间
+						if account.EndDate != "" {
+							account.Status = false
 						}
+						if account.Currency == "" {
+							account.Currency = temp.Currency
+						}
+						accountMap[key] = account
 					}
-
-					if account.StartDate == "" {
-						account.StartDate = temp.StartDate
-					}
-					if account.EndDate == "" {
-						account.EndDate = temp.EndDate
-					}
-					if account.Currency == "" {
-						account.Currency = temp.Currency
-					}
-
-					// 如果结束时间小于开始时间，则结束时间为空
-					if account.EndDate != "" && strings.Compare(account.StartDate, account.EndDate) > 0 {
-						account.EndDate = ""
-					}
-					accountMap[key] = account
 				}
 			}
 		}
