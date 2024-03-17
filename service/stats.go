@@ -19,8 +19,11 @@ type YearMonth struct {
 
 func MonthsList(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	// 添加排序
+	queryParams := script.GetQueryParams(c)
+	queryParams.OrderBy = "year, month desc"
 	yearMonthList := make([]YearMonth, 0)
-	err := script.BQLQueryList(ledgerConfig, nil, &yearMonthList)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &yearMonthList)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
@@ -48,7 +51,7 @@ func StatsTotal(c *gin.Context) {
 		return
 	}
 
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 	for _, total := range accountTypeTotalList {
 		fields := strings.Fields(total.Value)
 		if len(fields) > 1 {
@@ -138,15 +141,16 @@ func StatsAccountTrend(c *gin.Context) {
 		Where:       true,
 	}
 	var bql string
-	if statsQuery.Type == "day" {
+	switch {
+	case statsQuery.Type == "day":
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "month" {
+	case statsQuery.Type == "month":
 		bql = fmt.Sprintf("SELECT '\\', year, '-', month, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "year" {
+	case statsQuery.Type == "year":
 		bql = fmt.Sprintf("SELECT '\\', year, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	} else if statsQuery.Type == "sum" {
+	case statsQuery.Type == "sum":
 		bql = fmt.Sprintf("SELECT '\\', date, '\\', convert(balance, '%s'), '\\'", ledgerConfig.OperatingCurrency)
-	} else {
+	default:
 		OK(c, new([]string))
 		return
 	}
@@ -209,6 +213,8 @@ func StatsAccountBalance(c *gin.Context) {
 
 	queryParams := script.QueryParams{
 		AccountLike: statsQuery.Prefix,
+		Year:        statsQuery.Year,
+		Month:       statsQuery.Month,
 		Where:       true,
 	}
 
@@ -331,12 +337,67 @@ func StatsMonthTotal(c *gin.Context) {
 	OK(c, monthTotalResult)
 }
 
+type StatsMonthQuery struct {
+	Year  int `form:"year"`
+	Month int `form:"month"`
+}
+type StatsCalendarQueryResult struct {
+	Date     string
+	Account  string
+	Position string
+}
+type StatsCalendarResult struct {
+	Date           string      `json:"date"`
+	Account        string      `json:"account"`
+	Amount         json.Number `json:"amount"`
+	Currency       string      `json:"currency"`
+	CurrencySymbol string      `json:"currencySymbol"`
+}
+
+func StatsMonthCalendar(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	var statsMonthQuery StatsMonthQuery
+	if err := c.ShouldBindQuery(&statsMonthQuery); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+
+	queryParams := script.QueryParams{
+		Year:  statsMonthQuery.Year,
+		Month: statsMonthQuery.Month,
+		Where: true,
+	}
+
+	bql := fmt.Sprintf("SELECT '\\', date, '\\', root(account, 1), '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	statsCalendarQueryResult := make([]StatsCalendarQueryResult, 0)
+	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, &queryParams, &statsCalendarQueryResult)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	resultList := make([]StatsCalendarResult, 0)
+	for _, queryRes := range statsCalendarQueryResult {
+		if queryRes.Position != "" {
+			fields := strings.Fields(queryRes.Position)
+			resultList = append(resultList,
+				StatsCalendarResult{
+					Date:           queryRes.Date,
+					Account:        queryRes.Account,
+					Amount:         json.Number(fields[0]),
+					Currency:       fields[1],
+					CurrencySymbol: script.GetCommoditySymbol(ledgerConfig.Id, fields[1]),
+				})
+		}
+	}
+	OK(c, resultList)
+}
+
 type StatsPayeeQueryResult struct {
 	Payee    string
 	Count    int32
 	Position string
 }
-
 type StatsPayeeResult struct {
 	Payee    string      `json:"payee"`
 	Currency string      `json:"operatingCurrency"`
@@ -381,23 +442,35 @@ func StatsPayee(c *gin.Context) {
 
 	result := make([]StatsPayeeResult, 0)
 	for _, l := range statsPayeeQueryResultList {
+		// 交易账户名称非空
 		if l.Payee != "" {
 			payee := StatsPayeeResult{
 				Payee:    l.Payee,
 				Currency: ledgerConfig.OperatingCurrency,
 			}
+			//查询交易次数
 			if statsQuery.Type == "cot" {
 				payee.Value = json.Number(decimal.NewFromInt32(l.Count).String())
 			} else {
-				fields := strings.Fields(l.Position)
-				total, err := decimal.NewFromString(fields[0])
-				if err != nil {
-					panic(err)
-				}
-				if statsQuery.Type == "avg" {
-					payee.Value = json.Number(total.Div(decimal.NewFromInt32(l.Count)).Round(2).String())
-				} else {
-					payee.Value = json.Number(fields[0])
+				//查询交易金额，要过滤掉空白交易金额的科目，
+				// 比如 记账购买后又全额退款导致科目交易条目数>0但是累计金额=0
+				if l.Position != "" {
+					// 读取交易金额相关信息
+					fields := strings.Fields(l.Position)
+					// 交易金额
+					total, err := decimal.NewFromString(fields[0])
+					// 错误处理
+					if err != nil {
+						panic(err)
+					}
+
+					if statsQuery.Type == "avg" {
+						// 如果是查询平均交易金额
+						payee.Value = json.Number(total.Div(decimal.NewFromInt32(l.Count)).Round(2).String())
+					} else {
+						// 如果是查询总交易金额
+						payee.Value = json.Number(fields[0])
+					}
 				}
 			}
 			result = append(result, payee)
@@ -405,4 +478,35 @@ func StatsPayee(c *gin.Context) {
 	}
 	sort.Sort(StatsPayeeResultSort(result))
 	OK(c, result)
+}
+
+type StatsPricesResult struct {
+	Date      string `json:"date"`
+	Commodity string `json:"commodity"`
+	Currency  string `json:"operatingCurrency"`
+	Value     string `json:"value"`
+}
+
+func StatsCommodityPrice(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	output := script.BeanReportAllPrices(ledgerConfig)
+	script.LogInfo(ledgerConfig.Mail, output)
+
+	statsPricesResultList := make([]StatsPricesResult, 0)
+	lines := strings.Split(output, "\n")
+	// foreach lines
+	for _, line := range lines {
+		if strings.Trim(line, " ") == "" {
+			continue
+		}
+		// split line by " "
+		words := strings.Fields(line)
+		statsPricesResultList = append(statsPricesResultList, StatsPricesResult{
+			Date:      words[0],
+			Commodity: words[2],
+			Value:     words[3],
+			Currency:  words[4],
+		})
+	}
+	OK(c, statsPricesResultList)
 }

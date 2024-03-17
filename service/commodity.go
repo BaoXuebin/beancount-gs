@@ -28,5 +28,19 @@ func SyncCommodityPrice(c *gin.Context) {
 		InternalError(c, err.Error())
 		return
 	}
+
+	// 刷新货币最新汇率值
+	err = script.LoadLedgerCurrencyMap(ledgerConfig)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
 	OK(c, syncCommodityPriceForm)
+}
+
+func QueryAllCurrencies(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	// 查询货币获取当前汇率
+	currency := script.RefreshLedgerCurrency(ledgerConfig)
+	OK(c, currency)
 }

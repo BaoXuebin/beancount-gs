@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"io"
@@ -159,7 +160,7 @@ func OpenOrCreateLedger(c *gin.Context) {
 		resultMap["ledgerId"] = ledgerId
 		resultMap["title"] = userLedger.Title
 		resultMap["currency"] = userLedger.OperatingCurrency
-		resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
+		resultMap["currencySymbol"] = script.GetServerCommoditySymbol(userLedger.OperatingCurrency)
 		resultMap["createDate"] = userLedger.CreateDate
 		OK(c, resultMap)
 		return
@@ -175,18 +176,14 @@ func OpenOrCreateLedger(c *gin.Context) {
 	resultMap["ledgerId"] = ledgerId
 	resultMap["title"] = userLedger.Title
 	resultMap["currency"] = userLedger.OperatingCurrency
-	resultMap["currencySymbol"] = script.GetCommoditySymbol(userLedger.OperatingCurrency)
+	resultMap["currencySymbol"] = script.GetCommoditySymbol(ledgerId, userLedger.OperatingCurrency)
 	resultMap["createDate"] = userLedger.CreateDate
 	OK(c, resultMap)
 }
 
-// 删除账本
 func DeleteLedger(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	// 删除账本源文件
-	os.RemoveAll(ledgerConfig.DataPath)
-	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
-	// 删除
+	// remove from ledger_config.json
 	ledgerConfigMap := script.GetLedgerConfigMap()
 	delete(ledgerConfigMap, ledgerConfig.Id)
 	err := script.WriteLedgerConfigMap(ledgerConfigMap)
@@ -200,7 +197,34 @@ func DeleteLedger(c *gin.Context) {
 	// remove from account types cache
 	script.ClearLedgerAccountTypes(ledgerConfig.Id)
 	script.LogInfo(ledgerConfig.Mail, "Success clear ledger account types cache "+ledgerConfig.Id)
+	// delete source file
+	err = os.RemoveAll(ledgerConfig.DataPath)
+	if err != nil {
+		script.LogError(ledgerConfig.Mail, "Failed to delete ledger, cause by "+err.Error())
+		InternalError(c, "Failed to delete ledger")
+		return
+	}
+	script.LogInfo(ledgerConfig.Mail, "Success delete "+ledgerConfig.DataPath)
 	OK(c, "OK")
+}
+
+func CheckLedger(c *gin.Context) {
+	var stderr bytes.Buffer
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	cmd := exec.Command("bean-check", script.GetLedgerIndexFilePath(ledgerConfig.DataPath))
+	cmd.Stderr = &stderr
+	_, err := cmd.Output()
+	result := make([]string, 0)
+	if err != nil {
+		errors := strings.Split(stderr.String(), "\r\n")
+		for _, e := range errors {
+			if e == "" {
+				continue
+			}
+			result = append(result, e)
+		}
+	}
+	OK(c, result)
 }
 
 func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, error) {
@@ -248,6 +272,11 @@ func createNewLedger(loginForm LoginForm, ledgerId string) (*script.Config, erro
 	if err != nil {
 		return nil, err
 	}
+	// add currency cache
+	err = script.LoadLedgerCurrencyMap(&ledgerConfig)
+	if err != nil {
+		return nil, err
+	}
 	return &ledgerConfig, nil
 }
 
@@ -265,13 +294,18 @@ func copyFile(sourceFilePath string, targetFilePath string, ledgerConfig script.
 		newTargetFilePath := targetFilePath + "/" + fi.Name()
 		if fi.IsDir() {
 			err = script.MkDir(newTargetFilePath)
-			err = copyFile(newSourceFilePath, newTargetFilePath, ledgerConfig)
+			if err == nil {
+				err = copyFile(newSourceFilePath, newTargetFilePath, ledgerConfig)
+			}
 		} else if !script.FileIfExist(newTargetFilePath) {
-			fileContent, err := script.ReadFile(newSourceFilePath)
+			var fileContent, err = script.ReadFile(newSourceFilePath)
 			if err != nil {
 				return err
 			}
 			err = script.WriteFile(newTargetFilePath, strings.ReplaceAll(strings.ReplaceAll(string(fileContent), "%startDate%", ledgerConfig.StartDate), "%operatingCurrency%", ledgerConfig.OperatingCurrency))
+			if err != nil {
+				return err
+			}
 			script.LogInfo(ledgerConfig.Mail, "Success create file "+newTargetFilePath)
 		}
 		if err != nil {

@@ -24,12 +24,24 @@ func GetTemplateLedgerConfigDirPath() string {
 	return currentPath + "/template"
 }
 
+func GetLedgerConfigDocument(dataPath string) string {
+	return dataPath + "/.beancount-gs"
+}
+
+func GetCompatibleLedgerConfigDocument(dataPath string) string {
+	return dataPath + "/.beancount-ns"
+}
+
 func GetLedgerTransactionsTemplateFilePath(dataPath string) string {
-	return dataPath + "/.beancount-ns/transaction_template.json"
+	return dataPath + "/.beancount-gs/transaction_template.json"
 }
 
 func GetLedgerAccountTypeFilePath(dataPath string) string {
-	return dataPath + "/.beancount-ns/account_type.json"
+	return dataPath + "/.beancount-gs/account_type.json"
+}
+
+func GetLedgerCurrenciesFilePath(dataPath string) string {
+	return dataPath + "/.beancount-gs/currency.json"
 }
 
 func GetLedgerPriceFilePath(dataPath string) string {
@@ -38,4 +50,23 @@ func GetLedgerPriceFilePath(dataPath string) string {
 
 func GetLedgerMonthsFilePath(dataPath string) string {
 	return dataPath + "/month/months.bean"
+}
+
+func GetLedgerMonthFilePath(dataPath string, month string) string {
+	return dataPath + "/month/" + month + ".bean"
+}
+
+func GetLedgerIndexFilePath(dataPath string) string {
+	LogInfo(dataPath, dataPath+"/index.bean")
+	return dataPath + "/index.bean"
+}
+
+func GetLedgerIncludesFilePath(dataPath string) string {
+	LogInfo(dataPath, dataPath+"/includes.bean")
+	return dataPath + "/includes.bean"
+}
+
+func GetLedgerEventsFilePath(dataPath string) string {
+	LogInfo(dataPath, dataPath+"/event/events.bean")
+	return dataPath + "/event/events.bean"
 }

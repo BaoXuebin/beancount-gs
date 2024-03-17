@@ -1,29 +1,38 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.17.3 AS builder
+# 构建 beancount
+FROM python:3.7.16 as beancount_builder
+WORKDIR /build
+ENV PATH "/app/bin:$PATH"
+RUN python3 -mvenv /app
+RUN wget https://github.com/beancount/beancount/archive/refs/tags/2.3.5.tar.gz
+RUN tar -zxvf 2.3.5.tar.gz
+RUN python3 -m pip install ./beancount-2.3.5 -i https://mirrors.aliyun.com/pypi/simple/
+RUN find /app -name __pycache__ -exec rm -rf -v {} +
+
+# 构建 beancount-gs
+FROM golang:1.17.3 AS go_builder
 
 ENV GO111MODULE=on \
     GOPROXY=https://goproxy.cn,direct \
     GIN_MODE=release \
+    CGO_ENABLED=0 \
     PORT=80
 
-WORKDIR /builder
-
+WORKDIR /build
 COPY . .
 COPY public/icons ./public/default_icons
 RUN go build .
 
-FROM python:3.10.2
-RUN python3 -m pip install -U pip setuptools wheel -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 镜像
+FROM python:3.7.16-alpine
 
-COPY ./beancount-2.3.4-cp310-cp310-linux_x86_64.whl /tmp
-COPY ./fava-1.18-py3-none-any.whl /tmp
-
-RUN pip3 install /tmp/beancount-2.3.4-cp310-cp310-linux_x86_64.whl /tmp/fava-1.18-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+COPY --from=beancount_builder /app /app
 
 WORKDIR /app
-COPY --from=builder ./builder/public ./public
-COPY --from=builder ./builder/config ./config
-COPY --from=builder ./builder/template ./template
-COPY --from=builder ./builder/beancount-gs* ./
+COPY --from=go_builder /build/beancount-gs ./
+COPY --from=go_builder /build/template ./template
+COPY --from=go_builder /build/config ./config
+COPY --from=go_builder /build/public ./public
+COPY --from=go_builder /build/logs ./logs
 
+ENV PATH "/app/bin:$PATH"
 EXPOSE 80

@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-
 	"github.com/beancount-gs/script"
 	"github.com/beancount-gs/service"
 	"github.com/gin-gonic/gin"
+	"io"
+	"net/http"
+	"os"
 )
 
 func InitServerFiles() error {
@@ -69,6 +68,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.POST("/account/balance", service.BalanceAccount)
 		authorized.POST("/account/refresh", service.RefreshAccountCache)
 		authorized.POST("/commodity/price", service.SyncCommodityPrice)
+		authorized.GET("/commodity/currencies", service.QueryAllCurrencies)
 		authorized.GET("/stats/months", service.MonthsList)
 		authorized.GET("/stats/total", service.StatsTotal)
 		authorized.GET("/stats/payee", service.StatsPayee)
@@ -76,6 +76,8 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/stats/account/trend", service.StatsAccountTrend)
 		authorized.GET("/stats/account/balance", service.StatsAccountBalance)
 		authorized.GET("/stats/month/total", service.StatsMonthTotal)
+		authorized.GET("/stats/month/calendar", service.StatsMonthCalendar)
+		authorized.GET("/stats/commodity/price", service.StatsCommodityPrice)
 		authorized.GET("/transaction", service.QueryTransactions)
 		authorized.POST("/transaction", service.AddTransactions)
 		authorized.POST("/transaction/batch", service.AddBatchTransactions)
@@ -83,12 +85,18 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/transaction/template", service.QueryTransactionTemplates)
 		authorized.POST("/transaction/template", service.AddTransactionTemplate)
 		authorized.DELETE("/transaction/template", service.DeleteTransactionTemplate)
+		authorized.GET("/event/all", service.GetAllEvents)
+		authorized.POST("/event", service.AddEvent)
+		authorized.DELETE("/event", service.DeleteEvent)
 		authorized.GET("/tags", service.QueryTags)
 		authorized.GET("/file/dir", service.QueryLedgerSourceFileDir)
 		authorized.GET("/file/content", service.QueryLedgerSourceFileContent)
 		authorized.POST("/file", service.UpdateLedgerSourceFileContent)
 		authorized.POST("/import/alipay", service.ImportAliPayCSV)
 		authorized.POST("/import/wx", service.ImportWxPayCSV)
+		authorized.POST("/import/icbc", service.ImportICBCCSV)
+		authorized.POST("/import/abc", service.ImportABCCSV)
+		authorized.GET("/ledger/check", service.CheckLedger)
 		authorized.DELETE("/ledger", service.DeleteLedger)
 	}
 }
@@ -97,7 +105,7 @@ func main() {
 	var secret string
 	var port int
 	flag.StringVar(&secret, "secret", "", "服务器密钥")
-	flag.IntVar(&port, "p", 3001, "端口号")
+	flag.IntVar(&port, "p", 10000, "端口号")
 	flag.Parse()
 
 	// 读取配置文件
@@ -124,8 +132,8 @@ func main() {
 	}
 	// gin 日志设置
 	gin.DisableConsoleColor()
-	fs, _ := os.Create("gin.log")
-	gin.DefaultWriter = io.MultiWriter(fs)
+	fs, _ := os.Create("logs/gin.log")
+	gin.DefaultWriter = io.MultiWriter(fs, os.Stdout)
 	router := gin.Default()
 	// 注册路由
 	RegisterRouter(router)

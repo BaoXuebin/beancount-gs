@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -13,9 +14,21 @@ import (
 func QueryValidAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	allAccounts := script.GetLedgerAccounts(ledgerConfig.Id)
+	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
 	result := make([]script.Account, 0)
 	for _, account := range allAccounts {
 		if account.EndDate == "" {
+			// 货币实时汇率（忽略账本主货币）
+			if account.Currency != ledgerConfig.OperatingCurrency && account.Currency != "" {
+				// 从 map 中获取对应货币的实时汇率和符号
+				currency, ok := currencyMap[account.Currency]
+				if ok {
+					account.CurrencySymbol = currency.Symbol
+					account.Price = currency.Price
+					account.PriceDate = currency.PriceDate
+					account.IsAnotherCurrency = true
+				}
+			}
 			result = append(result, account)
 		}
 	}
@@ -23,14 +36,15 @@ func QueryValidAccount(c *gin.Context) {
 }
 
 type accountPosition struct {
-	Account  string `json:"account"`
-	Position string `json:"position"`
+	Account        string `json:"account"`
+	MarketPosition string `json:"market_position"`
+	Position       string `json:"position"`
 }
 
 func QueryAllAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 
-	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
+	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')) as market_position, '\\', sum(convert(value(position), currency)) as position, '\\'", ledgerConfig.OperatingCurrency)
 	accountPositions := make([]accountPosition, 0)
 	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, nil, &accountPositions)
 	if err != nil {
@@ -43,6 +57,7 @@ func QueryAllAccount(c *gin.Context) {
 		accountPositionMap[ap.Account] = ap
 	}
 
+	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
 	accounts := script.GetLedgerAccounts(ledgerConfig.Id)
 	result := make([]script.Account, 0, len(accounts))
 	for i := 0; i < len(accounts); i++ {
@@ -51,19 +66,63 @@ func QueryAllAccount(c *gin.Context) {
 		if account.EndDate != "" {
 			continue
 		}
+		// 货币实时汇率（忽略账本主货币）
+		if account.Currency != ledgerConfig.OperatingCurrency && account.Currency != "" {
+			// 从 map 中获取对应货币的实时汇率和符号
+			currency, ok := currencyMap[account.Currency]
+			if ok {
+				account.CurrencySymbol = currency.Symbol
+				account.Price = currency.Price
+				account.PriceDate = currency.PriceDate
+				account.IsAnotherCurrency = true
+			}
+		}
 		key := account.Acc
 		typ := script.GetAccountType(ledgerConfig.Id, key)
 		account.Type = &typ
-		position := strings.Trim(accountPositionMap[key].Position, " ")
-		if position != "" {
-			fields := strings.Fields(position)
+		marketPosition := strings.Trim(accountPositionMap[key].MarketPosition, " ")
+		if marketPosition != "" {
+			fields := strings.Fields(marketPosition)
 			account.MarketNumber = fields[0]
 			account.MarketCurrency = fields[1]
-			account.MarketCurrencySymbol = script.GetCommoditySymbol(fields[1])
+			account.MarketCurrencySymbol = script.GetCommoditySymbol(ledgerConfig.Id, fields[1])
+		}
+		position := strings.Trim(accountPositionMap[key].Position, " ")
+		if position != "" {
+			account.Positions = parseAccountPositions(ledgerConfig.Id, position)
 		}
 		result = append(result, account)
 	}
 	OK(c, result)
+}
+
+func parseAccountPositions(ledgerId string, input string) []script.AccountPosition {
+	// 使用正则表达式提取数字、货币代码和金额
+	re := regexp.MustCompile(`(-?\d+\.\d+) (\w+)`)
+	matches := re.FindAllStringSubmatch(input, -1)
+
+	var positions []script.AccountPosition
+
+	// 遍历匹配项并创建 AccountPosition
+	for _, match := range matches {
+		number := match[1]
+		currency := match[2]
+
+		// 获取货币符号
+		symbol := script.GetCommoditySymbol(ledgerId, currency)
+
+		// 创建 AccountPosition
+		position := script.AccountPosition{
+			Number:         number,
+			Currency:       currency,
+			CurrencySymbol: symbol,
+		}
+
+		// 添加到切片中
+		positions = append(positions, position)
+	}
+
+	return positions
 }
 
 func QueryAccountType(c *gin.Context) {
@@ -168,7 +227,7 @@ func CloseAccount(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	line := fmt.Sprintf("%s close %s", accountForm.Date, accountForm.Account)
 	// 写入文件
-	filePath := ledgerConfig.DataPath + "/account/" + script.GetAccountPrefix(accountForm.Account) + ".bean"
+	filePath := ledgerConfig.DataPath + "/account/" + strings.ToLower(script.GetAccountPrefix(accountForm.Account)) + ".bean"
 	err := script.AppendFileInNewLine(filePath, line)
 	if err != nil {
 		InternalError(c, err.Error())
@@ -197,7 +256,7 @@ func ChangeAccountIcon(c *gin.Context) {
 	filePath := "./public/icons/" + script.GetAccountIconName(account) + ".png"
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		InternalError(c, err.Error())
-		//自己完成信息提示
+		// 自己完成信息提示
 		return
 	}
 	var result = make(map[string]string)
@@ -239,8 +298,17 @@ func BalanceAccount(c *gin.Context) {
 	line := fmt.Sprintf("\r\n%s pad %s Equity:OpeningBalances", yesterdayStr, accountForm.Account)
 	line += fmt.Sprintf("\r\n%s balance %s %s %s", todayStr, accountForm.Account, accountForm.Number, acc.Currency)
 
-	filePath := fmt.Sprintf("%s/month/%s.bean", ledgerConfig.DataPath, month)
-	err = script.AppendFileInNewLine(filePath, line)
+	// check month bean file exist
+	err = CreateMonthBeanFileIfNotExist(ledgerConfig.DataPath, month)
+	if err != nil {
+		if c != nil {
+			InternalError(c, err.Error())
+		}
+		return
+	}
+
+	// append padding content to month bean file
+	err = script.AppendFileInNewLine(script.GetLedgerMonthFilePath(ledgerConfig.DataPath, month), line)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
@@ -250,7 +318,7 @@ func BalanceAccount(c *gin.Context) {
 	result["date"] = accountForm.Date
 	result["marketNumber"] = accountForm.Number
 	result["marketCurrency"] = ledgerConfig.OperatingCurrency
-	result["marketCurrencySymbol"] = script.GetCommoditySymbol(ledgerConfig.OperatingCurrency)
+	result["marketCurrencySymbol"] = script.GetCommoditySymbol(ledgerConfig.Id, ledgerConfig.OperatingCurrency)
 	OK(c, result)
 }
 
@@ -258,6 +326,12 @@ func RefreshAccountCache(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	// 加载账户缓存
 	err := script.LoadLedgerAccounts(ledgerConfig.Id)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	// 加载货币缓存
+	err = script.LoadLedgerCurrencyMap(ledgerConfig)
 	if err != nil {
 		InternalError(c, err.Error())
 		return

@@ -63,7 +63,7 @@ func QueryLedgerSourceFileContent(c *gin.Context) {
 
 type UpdateSourceFileForm struct {
 	Path    string `form:"path" binding:"required"`
-	Content string `form:"content" binding:"required"`
+	Content string `form:"content"`
 }
 
 func UpdateLedgerSourceFileContent(c *gin.Context) {
@@ -90,6 +90,15 @@ func UpdateLedgerSourceFileContent(c *gin.Context) {
 	if err != nil {
 		InternalError(c, err.Error())
 		return
+	}
+
+	// 更新外币种源文件后，更新缓存
+	if strings.Contains(updateSourceFileForm.Path, "currency.json") {
+		err = script.LoadLedgerCurrencyMap(ledgerConfig)
+		if err != nil {
+			InternalError(c, err.Error())
+			return
+		}
 	}
 
 	OK(c, nil)
