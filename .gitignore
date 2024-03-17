@@ -6,3 +6,4 @@ bindata.go
 beancount-gs
 gin.log
 config.json
+.env/
