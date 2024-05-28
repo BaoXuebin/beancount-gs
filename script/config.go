@@ -33,13 +33,14 @@ type Config struct {
 }
 
 type Account struct {
-	Acc                  string            `json:"account"`
-	StartDate            string            `json:"startDate"`
-	Currency             string            `json:"currency,omitempty"`          // 货币
-	CurrencySymbol       string            `json:"currencySymbol,omitempty"`    // 货币符号
-	Price                string            `json:"price,omitempty"`             // 汇率
-	PriceDate            string            `json:"priceDate,omitempty"`         // 汇率日期
-	IsAnotherCurrency    bool              `json:"isAnotherCurrency,omitempty"` // 其他币种标识
+	Acc       string `json:"account"`
+	StartDate string `json:"startDate"`
+	Currency  string `json:"currency,omitempty"` // 货币
+	//CurrencySymbol       string            `json:"currencySymbol,omitempty"`    // 货币符号
+	Currencies []AccountCurrency `json:"currencies,omitempty"` // 多个货币单位
+	//Price                string            `json:"price,omitempty"`             // 汇率
+	//PriceDate            string            `json:"priceDate,omitempty"`         // 汇率日期
+	//IsAnotherCurrency    bool              `json:"isAnotherCurrency,omitempty"` // 其他币种标识
 	IsCurrent            bool              `json:"isCurrent,omitempty"`
 	Positions            []AccountPosition `json:"positions,omitempty"`
 	MarketNumber         string            `json:"marketNumber,omitempty"`
@@ -47,6 +48,14 @@ type Account struct {
 	MarketCurrencySymbol string            `json:"marketCurrencySymbol,omitempty"`
 	EndDate              string            `json:"endDate,omitempty"`
 	Type                 *AccountType      `json:"type,omitempty"`
+}
+
+type AccountCurrency struct {
+	Currency          string `json:"currency,omitempty"`          // 货币
+	CurrencySymbol    string `json:"currencySymbol,omitempty"`    // 货币符号
+	IsAnotherCurrency bool   `json:"isAnotherCurrency,omitempty"` // 其他币种标识
+	Price             string `json:"price,omitempty"`             // 汇率
+	PriceDate         string `json:"priceDate,omitempty"`         // 汇率日期
 }
 
 type AccountPosition struct {
@@ -325,6 +334,8 @@ func LoadLedgerAccounts(ledgerId string) error {
 					}
 					if words[1] == "open" {
 						account.StartDate = words[0]
+						// fix: 处理已关闭又打开的账户
+						account.EndDate = ""
 					} else if words[1] == "close" {
 						account.EndDate = words[0]
 					}

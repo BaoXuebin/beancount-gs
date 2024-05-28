@@ -15,11 +15,6 @@ func TestPingRoute(t *testing.T) {
 	// 创建一个Gin引擎
 	r := gin.Default()
 
-	// 定义测试路由处理程序
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
-	})
-
 	// 创建一个模拟的HTTP请求
 	req, err := http.NewRequest(http.MethodGet, "/ping", nil)
 	assert.NoError(t, err)

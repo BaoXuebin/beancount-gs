@@ -18,17 +18,10 @@ func QueryValidAccount(c *gin.Context) {
 	result := make([]script.Account, 0)
 	for _, account := range allAccounts {
 		if account.EndDate == "" {
-			// 货币实时汇率（忽略账本主货币）
-			if account.Currency != ledgerConfig.OperatingCurrency && account.Currency != "" {
-				// 从 map 中获取对应货币的实时汇率和符号
-				currency, ok := currencyMap[account.Currency]
-				if ok {
-					account.CurrencySymbol = currency.Symbol
-					account.Price = currency.Price
-					account.PriceDate = currency.PriceDate
-					account.IsAnotherCurrency = true
-				}
-			}
+			// 多个货币处理
+			multiCurrency := strings.Split(account.Currency, ",")
+			account.Currency = multiCurrency[0]
+			account.Currencies = multiCurrencies(*ledgerConfig, multiCurrency, currencyMap)
 			result = append(result, account)
 		}
 	}
@@ -66,17 +59,11 @@ func QueryAllAccount(c *gin.Context) {
 		if account.EndDate != "" {
 			continue
 		}
-		// 货币实时汇率（忽略账本主货币）
-		if account.Currency != ledgerConfig.OperatingCurrency && account.Currency != "" {
-			// 从 map 中获取对应货币的实时汇率和符号
-			currency, ok := currencyMap[account.Currency]
-			if ok {
-				account.CurrencySymbol = currency.Symbol
-				account.Price = currency.Price
-				account.PriceDate = currency.PriceDate
-				account.IsAnotherCurrency = true
-			}
-		}
+		// 多个货币处理
+		multiCurrency := strings.Split(account.Currency, ",")
+		account.Currency = multiCurrency[0]
+		account.Currencies = multiCurrencies(*ledgerConfig, multiCurrency, currencyMap)
+
 		key := account.Acc
 		typ := script.GetAccountType(ledgerConfig.Id, key)
 		account.Type = &typ
@@ -94,6 +81,26 @@ func QueryAllAccount(c *gin.Context) {
 		result = append(result, account)
 	}
 	OK(c, result)
+}
+
+func multiCurrencies(ledgerConfig script.Config, multiCurrencyStr []string, currencyMap map[string]script.LedgerCurrency) []script.AccountCurrency {
+	currencies := make([]script.AccountCurrency, 0)
+	for i := 0; i < len(multiCurrencyStr); i++ {
+		accCurrency := script.AccountCurrency{
+			Currency:       multiCurrencyStr[i],
+			CurrencySymbol: script.GetCommoditySymbol(ledgerConfig.Id, multiCurrencyStr[i]),
+		}
+		// 从 map 中获取对应货币的实时汇率和符号
+		currency, ok := currencyMap[multiCurrencyStr[i]]
+		if ok {
+			accCurrency.CurrencySymbol = currency.Symbol
+			accCurrency.Price = currency.Price
+			accCurrency.PriceDate = currency.PriceDate
+			accCurrency.IsAnotherCurrency = multiCurrencyStr[i] != ledgerConfig.OperatingCurrency
+		}
+		currencies = append(currencies, accCurrency)
+	}
+	return currencies
 }
 
 func parseAccountPositions(ledgerId string, input string) []script.AccountPosition {
