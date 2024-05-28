@@ -83,7 +83,8 @@ func sum(entries []AddTransactionEntryForm, openingBalances string) decimal.Deci
 		if entry.Account == openingBalances {
 			return decimal.NewFromInt(0)
 		}
-		if entry.Price.Exponent() == 0 {
+		pVal, _ := entry.Price.Float64()
+		if pVal == 0 {
 			sumVal = entry.Number.Add(sumVal)
 		} else {
 			sumVal = entry.Number.Mul(entry.Price).Add(sumVal)

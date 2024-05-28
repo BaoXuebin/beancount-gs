@@ -48,6 +48,7 @@ type Account struct {
 	MarketCurrencySymbol string            `json:"marketCurrencySymbol,omitempty"`
 	EndDate              string            `json:"endDate,omitempty"`
 	Type                 *AccountType      `json:"type,omitempty"`
+	Status               bool              `json:"status,omitempty"`
 }
 
 type AccountCurrency struct {
@@ -322,34 +323,48 @@ func LoadLedgerAccounts(ledgerId string) error {
 		lines := strings.Split(string(bytes), "\n")
 		var temp Account
 		for _, line := range lines {
+			line = strings.TrimSpace(line) //去除文本前后空白
 			if line != "" {
-				words := strings.Fields(line)
-				if len(words) >= 3 {
-					key := words[2]
-					temp = accountMap[key]
-					account := Account{Acc: key, Type: nil}
-					// 货币单位
-					if len(words) >= 4 {
-						account.Currency = words[3]
+				if line[0] == ';' {
+					// 跳过注释行
+					continue
+				} else {
+					//非注释行
+					words := strings.Fields(line)
+					if len(words) >= 3 {
+						key := words[2]
+						temp = accountMap[key]
+						account := Account{Acc: key, Type: nil, StartDate: "", EndDate: ""}
+						if words[1] == "open" {
+							// 最晚的开户日期设置为账户开户日期
+							account.StartDate = getMaxDate(words[0], temp.StartDate)
+							// 货币单位
+							if len(words) >= 4 {
+								account.Currency = words[3]
+							}
+						} else if words[1] == "close" {
+							//账户最晚的关闭日期设置为账户关闭日期
+							account.EndDate = getMaxDate(words[0], temp.EndDate)
+						}
+						if account.EndDate != "" && account.StartDate == getMaxDate(account.StartDate, account.EndDate) {
+							// 如果结束时间非空，且 开户日期>关闭日期，则清空账户结束日期，设置此账户为有效账户
+							account.EndDate = ""
+							account.Status = true
+						}
+						// 现在如果结束日期非空，肯定满足有开始时间<结束时间
+						if account.EndDate != "" {
+							account.Status = false
+						}
+						if account.Currency == "" {
+							account.Currency = temp.Currency
+						}
+						accountMap[key] = account
 					}
-					if words[1] == "open" {
-						account.StartDate = words[0]
-						// fix: 处理已关闭又打开的账户
-						account.EndDate = ""
-					} else if words[1] == "close" {
-						account.EndDate = words[0]
-					}
-					if temp.StartDate != "" {
-						account.StartDate = temp.StartDate
-					}
-					if temp.EndDate != "" {
-						account.EndDate = temp.EndDate
-					}
-					accountMap[key] = account
 				}
 			}
 		}
 	}
+
 	accounts := make([]Account, 0)
 	for _, account := range accountMap {
 		accounts = append(accounts, account)
