@@ -168,22 +168,21 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 
 	var autoBalance bool
 	for _, entry := range addTransactionForm.Entries {
-		account := script.GetLedgerAccount(ledgerConfig.Id, entry.Account)
 		if entry.Account == ledgerConfig.OpeningBalances {
 			autoBalance = false
 			line += fmt.Sprintf("\r\n %s", entry.Account)
 		} else {
-			line += fmt.Sprintf("\r\n %s %s %s", entry.Account, entry.Number.Round(2).StringFixedBank(2), account.Currency)
+			line += fmt.Sprintf("\r\n %s %s %s", entry.Account, entry.Number.Round(2).StringFixedBank(2), entry.Currency)
 		}
 		zero := decimal.NewFromInt(0)
 		// 判断是否涉及多币种的转换
-		if account.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
+		if entry.Currency != ledgerConfig.OperatingCurrency && entry.Account != ledgerConfig.OpeningBalances {
 			// 汇率值小于等于0，则不进行汇率转换
 			if entry.Price.LessThanOrEqual(zero) {
 				continue
 			}
 
-			currency, isCurrency := currencyMap[account.Currency]
+			currency, isCurrency := currencyMap[entry.Currency]
 			currencyPrice := entry.Price
 			if currencyPrice.Equal(zero) {
 				currencyPrice, _ = decimal.NewFromString(currency.Price)
@@ -204,7 +203,7 @@ func saveTransaction(c *gin.Context, addTransactionForm AddTransactionForm, ledg
 				line += fmt.Sprintf(" {%s %s}", currencyPrice, ledgerConfig.OperatingCurrency)
 			}
 
-			priceLine := fmt.Sprintf("%s price %s %s %s", addTransactionForm.Date, account.Currency, entry.Price, ledgerConfig.OperatingCurrency)
+			priceLine := fmt.Sprintf("%s price %s %s %s", addTransactionForm.Date, entry.Currency, entry.Price, ledgerConfig.OperatingCurrency)
 			err := script.AppendFileInNewLine(script.GetLedgerPriceFilePath(ledgerConfig.DataPath), priceLine)
 			if err != nil {
 				if c != nil {

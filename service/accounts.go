@@ -61,6 +61,7 @@ func QueryAllAccount(c *gin.Context) {
 		}
 		// 多个货币处理
 		multiCurrency := strings.Split(account.Currency, ",")
+		// 账户主货币
 		account.Currency = multiCurrency[0]
 		account.Currencies = multiCurrencies(*ledgerConfig, multiCurrency, currencyMap)
 
