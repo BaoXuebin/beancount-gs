@@ -1,15 +1,5 @@
-# 构建 beancount
-FROM python:3.7.16 as beancount_builder
-WORKDIR /build
-ENV PATH "/app/bin:$PATH"
-RUN python3 -mvenv /app
-RUN wget https://github.com/beancount/beancount/archive/refs/tags/2.3.5.tar.gz
-RUN tar -zxvf 2.3.5.tar.gz
-RUN python3 -m pip install ./beancount-2.3.5 -i https://mirrors.aliyun.com/pypi/simple/
-RUN find /app -name __pycache__ -exec rm -rf -v {} +
-
 # 构建 beancount-gs
-FROM golang:1.17.3 AS go_builder
+FROM golang:1.17.3-alpine AS go_builder
 
 ENV GO111MODULE=on \
     GOPROXY=https://goproxy.cn,direct \
@@ -19,20 +9,34 @@ ENV GO111MODULE=on \
 
 WORKDIR /build
 COPY . .
-COPY public/icons ./public/default_icons
+COPY public/icons /build/public/default_icons
 RUN go build .
 
 # 镜像
-FROM python:3.7.16-alpine
-
-COPY --from=beancount_builder /app /app
+FROM python:3.11.9-alpine3.19
 
 WORKDIR /app
-COPY --from=go_builder /build/beancount-gs ./
-COPY --from=go_builder /build/template ./template
-COPY --from=go_builder /build/config ./config
-COPY --from=go_builder /build/public ./public
-COPY --from=go_builder /build/logs ./logs
 
-ENV PATH "/app/bin:$PATH"
+RUN echo "https://mirrors.aliyun.com/alpine/v3.16/main/" > /etc/apk/repositories  \
+    && echo "https://mirrors.aliyun.com/alpine/v3.16/community/" >> /etc/apk/repositories \
+    && set -x \
+    && apk update \
+    && apk add --no-cache gcc musl-dev \
+    && python3 -mvenv /app/beancount \
+    && /app/beancount/bin/pip install --no-cache-dir beanquery -i https://mirrors.aliyun.com/pypi/simple/ \
+    && apk del gcc musl-dev
+
+COPY --from=go_builder /build/beancount-gs /app
+COPY --from=go_builder /build/template /app/template
+COPY --from=go_builder /build/config /app/config
+COPY --from=go_builder /build/public /app/public
+COPY --from=go_builder /build/logs /app/logs
+
+ENV LANG=C.UTF-8 \
+    SHELL=/bin/bash \
+    PS1="\u@\h:\w \$ " \
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin"
+
 EXPOSE 80
+
+ENTRYPOINT [ "/bin/sh", "-c", "cp -rn /app/public/default_icons/* /app/public/icons && /app/beancount-gs -p 80" ]
