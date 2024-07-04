@@ -35,7 +35,7 @@ COPY --from=go_builder /build/logs /app/logs
 ENV LANG=C.UTF-8 \
     SHELL=/bin/bash \
     PS1="\u@\h:\w \$ " \
-    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin"
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin:/app/beancount/bin"
 
 EXPOSE 80
 
