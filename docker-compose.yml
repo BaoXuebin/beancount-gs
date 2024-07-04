@@ -5,9 +5,6 @@ services:
     image: xdbin/beancount-gs:${tag:-latest}
     ports:
       - "10000:80"
-    # volumes 挂载目录会导 /app/public/icons 中的图标被覆盖，这里将默认图标在挂载后重新拷贝图标
-    command: >
-      sh -c "cp -rn /app/public/default_icons/* /app/public/icons && ./beancount-gs -p 80"
     volumes:
       - "${dataPath:-/data/beancount}:/data/beancount"
       - "${dataPath:-/data/beancount}/icons:/app/public/icons"
