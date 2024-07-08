@@ -80,27 +80,27 @@ func getMaxDate(str_date1 string, str_date2 string) string {
 
 // 获取1-2个日期字符串中最小的日期值
 // 如果双参数均为空，则返回账簿开始记账日期
-func getMinDate(str_date1 string, str_date2 string) string {
-	//time_layout := "2006-01-02 15:04:05"
-	var min_date string
-	if str_date1 != "" && str_date2 == "" {
-		// 只定义了第一个账户，取第一个账户的日期为准
-		min_date = str_date1
-	} else if str_date1 == "" && str_date2 != "" {
-		// 只定义了第二个账户，取第二个账户的日期为准
-		min_date = str_date2
-	} else if str_date1 != "" && str_date2 != "" {
-		// 重复定义的账户，取最早的时间
-		t1 := getTimeStamp(str_date1)
-		t2 := getTimeStamp(str_date2)
-		if t1 < t2 {
-			min_date = str_date1
-		} else {
-			min_date = str_date2
-		}
-	} else if str_date1 == "" && str_date2 == "" {
-		// 没有定义账户，取固定日期"1970-01-01"
-		min_date = "1970-01-01"
-	}
-	return min_date
-}
+//func getMinDate(str_date1 string, str_date2 string) string {
+//	//time_layout := "2006-01-02 15:04:05"
+//	var min_date string
+//	if str_date1 != "" && str_date2 == "" {
+//		// 只定义了第一个账户，取第一个账户的日期为准
+//		min_date = str_date1
+//	} else if str_date1 == "" && str_date2 != "" {
+//		// 只定义了第二个账户，取第二个账户的日期为准
+//		min_date = str_date2
+//	} else if str_date1 != "" && str_date2 != "" {
+//		// 重复定义的账户，取最早的时间
+//		t1 := getTimeStamp(str_date1)
+//		t2 := getTimeStamp(str_date2)
+//		if t1 < t2 {
+//			min_date = str_date1
+//		} else {
+//			min_date = str_date2
+//		}
+//	} else if str_date1 == "" && str_date2 == "" {
+//		// 没有定义账户，取固定日期"1970-01-01"
+//		min_date = "1970-01-01"
+//	}
+//	return min_date
+//}
