@@ -31,6 +31,7 @@ type Transaction struct {
 	Tags               []string `bql:"tags" json:"tags"`
 	CurrencySymbol     string   `json:"currencySymbol,omitempty"`
 	CostCurrencySymbol string   `json:"costCurrencySymbol,omitempty"`
+	IsAnotherCurrency  bool     `json:"isAnotherCurrency,omitempty"`
 }
 
 func QueryTransactions(c *gin.Context) {
@@ -44,8 +45,16 @@ func QueryTransactions(c *gin.Context) {
 		InternalError(c, err.Error())
 		return
 	}
+
+	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
+
 	// 格式化金额
 	for i := 0; i < len(transactions); i++ {
+		_, ok := currencyMap[transactions[i].Currency]
+		if ok {
+			transactions[i].IsAnotherCurrency = transactions[i].Currency != ledgerConfig.OperatingCurrency
+		}
+
 		symbol := script.GetCommoditySymbol(ledgerConfig.Id, transactions[i].Currency)
 		transactions[i].CurrencySymbol = symbol
 		transactions[i].CostCurrencySymbol = symbol
