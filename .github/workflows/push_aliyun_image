@@ -1,0 +1,41 @@
+name: Docker Build and Push
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the Docker image'
+        required: true
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Alibaba Cloud Container Registry
+        env:
+          REGISTRY: ${{ secrets.ALIYUN_REGISTRY }}
+          USERNAME: ${{ secrets.ALIYUN_USERNAME }}
+          PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
+        run: echo "${{ secrets.ALIYUN_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u ${{ secrets.ALIYUN_USERNAME }} --password-stdin
+
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Build and Push Docker image
+        env:
+          ## 修改为你对应的镜像名称
+          IMAGE_NAME: ${{ secrets.ALIYUN_REGISTRY }}/xdbin/beancount-gs
+          BRANCH: ${{ env.branch_name }}
+        run: |
+          docker build -t $IMAGE_NAME:$BRANCH .
+          docker push $IMAGE_NAME:$BRANCH
