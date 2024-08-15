@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: Push Aliyun Image Registry
 
 on:
   workflow_dispatch:
