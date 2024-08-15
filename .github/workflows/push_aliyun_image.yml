@@ -1,4 +1,4 @@
-name: Push Aliyun Image Registry
+name: Manual Push Aliyun Image Registry
 
 on:
   workflow_dispatch:
@@ -6,8 +6,6 @@ on:
       tag:
         description: 'Tag for the Docker image'
         required: true
-  release:
-    types: [published]
 
 jobs:
   build:
@@ -35,7 +33,7 @@ jobs:
         env:
           ## 修改为你对应的镜像名称
           IMAGE_NAME: ${{ secrets.ALIYUN_REGISTRY }}/xdbin/beancount-gs
-          BRANCH: ${{ env.branch_name }}
+          TAG: ${{ github.event.inputs.tag }}
         run: |
-          docker build -t $IMAGE_NAME:$BRANCH .
-          docker push $IMAGE_NAME:$BRANCH
+          docker build -t $IMAGE_NAME:$TAG .
+          docker push $IMAGE_NAME:$TAG
