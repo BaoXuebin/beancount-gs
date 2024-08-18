@@ -484,11 +484,8 @@ type CommodityPrice struct {
 	Value     string `json:"value"`
 }
 
-func RefreshLedgerCurrency(ledgerConfig *Config) []LedgerCurrency {
-	// 查询货币获取当前汇率
-	output := BeanReportAllPrices(ledgerConfig)
-	statsPricesResultList := make([]CommodityPrice, 0)
-	lines := strings.Split(output, "\n")
+func newCommodityPriceListFromString(lines []string) []CommodityPrice {
+	commodityPriceList := make([]CommodityPrice, 0, len(lines))
 	// foreach lines
 	for _, line := range lines {
 		if strings.Trim(line, " ") == "" {
@@ -496,14 +493,19 @@ func RefreshLedgerCurrency(ledgerConfig *Config) []LedgerCurrency {
 		}
 		// split line by " "
 		words := strings.Fields(line)
-		statsPricesResultList = append(statsPricesResultList, CommodityPrice{
+		commodityPriceList = append(commodityPriceList, CommodityPrice{
 			Date:      words[0],
 			Commodity: words[2],
 			Value:     words[3],
 			Currency:  words[4],
 		})
 	}
+	return commodityPriceList
+}
 
+func RefreshLedgerCurrency(ledgerConfig *Config) []LedgerCurrency {
+	// 查询货币获取当前汇率
+	statsPricesResultList := BeanReportAllPrices(ledgerConfig)
 	// statsPricesResultList 转为 map
 	existCurrencyMap := make(map[string]CommodityPrice)
 	for _, statsPricesResult := range statsPricesResultList {

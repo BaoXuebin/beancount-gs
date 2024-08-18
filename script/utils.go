@@ -4,8 +4,15 @@ import (
 	"bytes"
 	"math/rand"
 	"net"
+	"os/exec"
 	"time"
 )
+
+func checkCommandExists(command string) bool {
+	cmd := exec.Command(command, "--version")
+	_, err := cmd.Output()
+	return err == nil
+}
 
 func GetIpAddress() string {
 	addrs, _ := net.InterfaceAddrs()
@@ -53,7 +60,7 @@ func getTimeStamp(str_date string) Timestamp {
 	return Timestamp(the_time.Unix())
 }
 
-//获取1到2个日期字符串中更大的日期
+// 获取1到2个日期字符串中更大的日期
 func getMaxDate(str_date1 string, str_date2 string) string {
 	var max_date string
 	if str_date1 != "" && str_date2 == "" {
