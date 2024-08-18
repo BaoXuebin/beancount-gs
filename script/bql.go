@@ -104,13 +104,31 @@ func BQLQueryListByCustomSelect(ledgerConfig *Config, selectBql string, queryPar
 	return nil
 }
 
-func BeanReportAllPrices(ledgerConfig *Config) string {
+func BeanReportAllPrices(ledgerConfig *Config) []CommodityPrice {
 	beanFilePath := GetLedgerPriceFilePath(ledgerConfig.DataPath)
-
-	LogInfo(ledgerConfig.Mail, "bean-report "+beanFilePath+" all_prices")
-	cmd := exec.Command("bean-report", beanFilePath, "all_prices")
+	var (
+		command       string
+		useBeanReport = checkCommandExists("bean-report")
+	)
+	// `bean-report` had been deprecated since https://github.com/beancount/beancount/commit/a7c4f14f083de63e8d4e5a8d3664209daf95e1ec,
+	// we use `bean-query` instead. Here we add a check to use `bean-report` if `bean-query` is not installed for better compatibility.
+	if useBeanReport {
+		command = fmt.Sprintf("bean-report %s all_prices", beanFilePath)
+	} else {
+		// 'price' column works as a column placeholder to be consistent with the output of `bean-report`.
+		command = fmt.Sprintf(`bean-query %s "SELECT date, 'price', currency, price FROM account ~ 'Assets' WHERE price is not NULL"`, beanFilePath)
+	}
+	LogInfo(ledgerConfig.Mail, command)
+	cmd := exec.Command(command)
 	output, _ := cmd.Output()
-	return string(output)
+	outputStr := string(output)
+	lines := strings.Split(outputStr, "\n")
+	LogInfo(ledgerConfig.Mail, outputStr)
+	// Remove the first two lines of the output since they are the header and separator with BQL output.
+	if !useBeanReport && len(lines) > 2 {
+		lines = lines[2:]
+	}
+	return newCommodityPriceListFromString(lines)
 }
 
 func bqlRawQuery(ledgerConfig *Config, selectBql string, queryParamsPtr *QueryParams, queryResultPtr interface{}) (string, error) {

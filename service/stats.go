@@ -480,33 +480,6 @@ func StatsPayee(c *gin.Context) {
 	OK(c, result)
 }
 
-type StatsPricesResult struct {
-	Date      string `json:"date"`
-	Commodity string `json:"commodity"`
-	Currency  string `json:"operatingCurrency"`
-	Value     string `json:"value"`
-}
-
 func StatsCommodityPrice(c *gin.Context) {
-	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	output := script.BeanReportAllPrices(ledgerConfig)
-	script.LogInfo(ledgerConfig.Mail, output)
-
-	statsPricesResultList := make([]StatsPricesResult, 0)
-	lines := strings.Split(output, "\n")
-	// foreach lines
-	for _, line := range lines {
-		if strings.Trim(line, " ") == "" {
-			continue
-		}
-		// split line by " "
-		words := strings.Fields(line)
-		statsPricesResultList = append(statsPricesResultList, StatsPricesResult{
-			Date:      words[0],
-			Commodity: words[2],
-			Value:     words[3],
-			Currency:  words[4],
-		})
-	}
-	OK(c, statsPricesResultList)
+	OK(c, script.BeanReportAllPrices(script.GetLedgerConfigFromContext(c)))
 }
