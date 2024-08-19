@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -119,7 +120,9 @@ func BeanReportAllPrices(ledgerConfig *Config) []CommodityPrice {
 		command = fmt.Sprintf(`bean-query %s "SELECT date, 'price', currency, price FROM account ~ 'Assets' WHERE price is not NULL"`, beanFilePath)
 	}
 	LogInfo(ledgerConfig.Mail, command)
-	cmd := exec.Command(command)
+	re := regexp.MustCompile(`"([^"]*)"|(\S+)`)
+	cmds := re.FindAllString(command, -1)
+	cmd := exec.Command(cmds[0], cmds[1:]...)
 	output, _ := cmd.Output()
 	outputStr := string(output)
 	lines := strings.Split(outputStr, "\n")
