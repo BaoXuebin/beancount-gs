@@ -579,6 +579,11 @@ func GetAccountPrefix(account string) string {
 	return nodes[0]
 }
 
+func GetAccountName(account string) string {
+	nodes := strings.Split(account, ":")
+	return nodes[len(nodes)-1]
+}
+
 func GetAccountIconName(account string) string {
 	nodes := strings.Split(account, ":")
 	return strings.Join(nodes, "_")

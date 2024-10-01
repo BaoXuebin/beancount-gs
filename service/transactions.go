@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +33,20 @@ type Transaction struct {
 	CurrencySymbol     string   `json:"currencySymbol,omitempty"`
 	CostCurrencySymbol string   `json:"costCurrencySymbol,omitempty"`
 	IsAnotherCurrency  bool     `json:"isAnotherCurrency,omitempty"`
+}
+
+type TransactionSort []Transaction
+
+func (s TransactionSort) Len() int {
+	return len(s)
+}
+func (s TransactionSort) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s TransactionSort) Less(i, j int) bool {
+	a, _ := strconv.Atoi(s[i].Number)
+	b, _ := strconv.Atoi(s[j].Number)
+	return a <= b
 }
 
 func QueryTransactions(c *gin.Context) {

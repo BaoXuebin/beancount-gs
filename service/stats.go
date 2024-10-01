@@ -3,7 +3,9 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -239,6 +241,178 @@ func StatsAccountBalance(c *gin.Context) {
 		}
 	}
 	OK(c, resultList)
+}
+
+type AccountSankeyResult struct {
+	Nodes []AccountSankeyNode `json:"nodes"`
+	Links []AccountSankeyLink `json:"links"`
+}
+
+type AccountSankeyNode struct {
+	Name string `json:"name"`
+}
+type AccountSankeyLink struct {
+	Source int    `json:"source"`
+	Target int    `json:"target"`
+	Value  string `json:"value"`
+}
+
+func NewAccountSankeyLink() *AccountSankeyLink {
+	return &AccountSankeyLink{
+		Source: -1,
+		Target: -1,
+		Value:  "",
+	}
+}
+
+func StatsAccountSankey(c *gin.Context) {
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+	queryParams := script.GetQueryParams(c)
+	// 倒序查询
+	queryParams.OrderBy = "date desc"
+	transactions := make([]Transaction, 0)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &transactions)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	accountSankeyResult := AccountSankeyResult{}
+	// 构建 nodes 和 links
+	var nodes []AccountSankeyNode
+
+	// 遍历 transactions 中按id进行分组
+	if len(transactions) > 0 {
+		for _, transaction := range transactions {
+			// 如果nodes中不存在该节点，则添加
+			accountName := script.GetAccountName(transaction.Account)
+			if !contains(nodes, accountName) {
+				nodes = append(nodes, AccountSankeyNode{Name: accountName})
+			}
+		}
+		accountSankeyResult.Nodes = nodes
+
+		transactionsMap := groupTransactionsByID(transactions)
+		// 声明 links
+		links := make([]AccountSankeyLink, 0)
+		// 遍历 transactionsMap
+		for _, transactions := range transactionsMap {
+			// 拼接成 links
+			sourceTransaction := Transaction{}
+			targetTransaction := Transaction{}
+			currentLinkNode := NewAccountSankeyLink()
+			// transactions 的最大长度
+			maxCycle := len(transactions) * 2
+
+			for {
+				if len(transactions) == 0 || maxCycle == 0 {
+					break
+				}
+				transaction := transactions[0]
+				transactions = transactions[1:]
+
+				accountName := script.GetAccountName(transaction.Account)
+				num, err := strconv.ParseFloat(transaction.Number, 64)
+				if err != nil {
+					continue
+				}
+				if currentLinkNode.Source == -1 && num < 0 {
+					if sourceTransaction.Account == "" {
+						sourceTransaction = transaction
+					}
+					currentLinkNode.Source = indexOf(nodes, accountName)
+					if currentLinkNode.Target == -1 {
+						currentLinkNode.Value = strconv.FormatFloat(num, 'f', 2, 64)
+					} else {
+						// 比较 link node value 和 num 大小
+						value, _ := strconv.ParseFloat(currentLinkNode.Value, 64)
+						delta := value + num
+						if delta == 0 {
+							currentLinkNode.Value = strconv.FormatFloat(math.Abs(num), 'f', 2, 64)
+						} else if delta < 0 { // source > target
+							targetNumber, _ := strconv.ParseFloat(targetTransaction.Number, 64)
+							currentLinkNode.Value = strconv.FormatFloat(math.Abs(targetNumber), 'f', 2, 64)
+							sourceTransaction.Number = strconv.FormatFloat(delta, 'f', 2, 64)
+							transactions = append(transactions, sourceTransaction)
+						} else { // source < target
+							targetTransaction.Number = strconv.FormatFloat(delta, 'f', 2, 64)
+							transactions = append(transactions, targetTransaction)
+						}
+						// 完成一个 linkNode 的构建，重置判定条件
+						sourceTransaction.Account = ""
+						targetTransaction.Account = ""
+						links = append(links, *currentLinkNode)
+						currentLinkNode = NewAccountSankeyLink()
+					}
+				} else if currentLinkNode.Target == -1 && num > 0 {
+					if targetTransaction.Account == "" {
+						targetTransaction = transaction
+					}
+					currentLinkNode.Target = indexOf(nodes, accountName)
+					if currentLinkNode.Source == -1 {
+						currentLinkNode.Value = strconv.FormatFloat(num, 'f', 2, 64)
+					} else {
+						value, _ := strconv.ParseFloat(currentLinkNode.Value, 64)
+						delta := value + num
+						if delta == 0 {
+							currentLinkNode.Value = strconv.FormatFloat(math.Abs(num), 'f', 2, 64)
+						} else if delta < 0 { // source > target
+							currentLinkNode.Value = strconv.FormatFloat(math.Abs(num), 'f', 2, 64)
+							sourceTransaction.Number = strconv.FormatFloat(delta, 'f', 2, 64)
+							transactions = append(transactions, sourceTransaction)
+						} else { // source < target
+							sourceNumber, _ := strconv.ParseFloat(sourceTransaction.Number, 64)
+							currentLinkNode.Value = strconv.FormatFloat(math.Abs(sourceNumber), 'f', 2, 64)
+							targetTransaction.Number = strconv.FormatFloat(delta, 'f', 2, 64)
+							transactions = append(transactions, targetTransaction)
+						}
+						// 完成一个 linkNode 的构建，重置判定条件
+						sourceTransaction.Account = ""
+						targetTransaction.Account = ""
+						links = append(links, *currentLinkNode)
+						currentLinkNode = NewAccountSankeyLink()
+					}
+				} else {
+					// 将当前的 transaction 加入到队列末尾
+					transactions = append(transactions, transaction)
+				}
+				maxCycle -= 1
+			}
+		}
+		accountSankeyResult.Links = links
+	}
+
+	OK(c, accountSankeyResult)
+}
+
+func contains(nodes []AccountSankeyNode, str string) bool {
+	for _, s := range nodes {
+		if s.Name == str {
+			return true
+		}
+	}
+	return false
+}
+
+func indexOf(nodes []AccountSankeyNode, str string) int {
+	idx := 0
+	for _, s := range nodes {
+		if s.Name == str {
+			return idx
+		}
+		idx += 1
+	}
+	return -1
+}
+
+func groupTransactionsByID(transactions []Transaction) map[string][]Transaction {
+	grouped := make(map[string][]Transaction)
+
+	for _, transaction := range transactions {
+		grouped[transaction.Id] = append(grouped[transaction.Id], transaction)
+	}
+
+	return grouped
 }
 
 type MonthTotalBQLResult struct {
