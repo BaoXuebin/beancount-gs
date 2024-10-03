@@ -17,6 +17,8 @@ type QueryParams struct {
 	FromYear    int    `bql:"year ="`
 	FromMonth   int    `bql:"month ="`
 	Where       bool   `bql:"where"`
+	ID          string `bql:"id ="`
+	IDList      string `bql:"id in"`
 	Currency    string `bql:"currency ="`
 	Year        int    `bql:"year ="`
 	Month       int    `bql:"month ="`
