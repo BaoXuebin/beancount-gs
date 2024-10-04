@@ -77,9 +77,9 @@ type AccountPercentQueryResult struct {
 }
 
 type AccountPercentResult struct {
-	Account           string      `json:"account"`
-	Amount            json.Number `json:"amount"`
-	OperatingCurrency string      `json:"operatingCurrency"`
+	Account           string          `json:"account"`
+	Amount            decimal.Decimal `json:"amount"`
+	OperatingCurrency string          `json:"operatingCurrency"`
 }
 
 func StatsAccountPercent(c *gin.Context) {
@@ -96,13 +96,8 @@ func StatsAccountPercent(c *gin.Context) {
 		Month:       statsQuery.Month,
 		Where:       true,
 	}
-	var bql string
-	if statsQuery.Level != 0 {
-		prefixNodeLen := len(strings.Split(strings.Trim(statsQuery.Prefix, ":"), ":"))
-		bql = fmt.Sprintf("SELECT '\\', root(account, %d) as subAccount, '\\', sum(convert(value(position), '%s')), '\\'", statsQuery.Level+prefixNodeLen, ledgerConfig.OperatingCurrency)
-	} else {
-		bql = fmt.Sprintf("SELECT '\\', account, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	}
+
+	bql := fmt.Sprintf("SELECT '\\', account, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
 
 	statsQueryResultList := make([]AccountPercentQueryResult, 0)
 	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, &queryParams, &statsQueryResultList)
@@ -115,10 +110,38 @@ func StatsAccountPercent(c *gin.Context) {
 	for _, queryRes := range statsQueryResultList {
 		if queryRes.Position != "" {
 			fields := strings.Fields(queryRes.Position)
-			result = append(result, AccountPercentResult{Account: queryRes.Account, Amount: json.Number(fields[0]), OperatingCurrency: fields[1]})
+			account := queryRes.Account
+			if statsQuery.Level == 1 {
+				accountType := script.GetAccountType(ledgerConfig.Id, queryRes.Account)
+				account = accountType.Key + ":" + accountType.Name
+			}
+			amount, err := decimal.NewFromString(fields[0])
+			if err == nil {
+				result = append(result, AccountPercentResult{Account: account, Amount: amount, OperatingCurrency: fields[1]})
+			}
 		}
 	}
-	OK(c, result)
+
+	OK(c, aggregateAccountPercentList(result))
+}
+
+func aggregateAccountPercentList(result []AccountPercentResult) []AccountPercentResult {
+	// 创建一个映射来存储连接
+	nodeMap := make(map[string]AccountPercentResult)
+	for _, account := range result {
+		acc := account.Account
+		if exist, found := nodeMap[acc]; found {
+			exist.Amount = exist.Amount.Add(account.Amount)
+			nodeMap[acc] = exist
+		} else {
+			nodeMap[acc] = account
+		}
+	}
+	aggregateResult := make([]AccountPercentResult, 0)
+	for _, value := range nodeMap {
+		aggregateResult = append(aggregateResult, value)
+	}
+	return aggregateResult
 }
 
 type AccountTrendResult struct {
@@ -316,13 +339,8 @@ func StatsAccountSankey(c *gin.Context) {
 			queryParams.IDList = strings.Join(idList, "|")
 		}
 	}
-
-	if statsQuery.Level != 0 {
-		prefixNodeLen := len(strings.Split(strings.Trim(statsQuery.Prefix, ":"), ":"))
-		bql = fmt.Sprintf("SELECT '\\', id, '\\', root(account, %d) as subAccount, '\\', sum(convert(value(position), '%s')), '\\'", statsQuery.Level+prefixNodeLen, ledgerConfig.OperatingCurrency)
-	} else {
-		bql = fmt.Sprintf("SELECT '\\', id, '\\', account, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
-	}
+	// 查询全部account的交易数据
+	bql = fmt.Sprintf("SELECT '\\', id, '\\', account, '\\', sum(convert(value(position), '%s')), '\\'", ledgerConfig.OperatingCurrency)
 
 	statsQueryResultList = make([]TransactionAccountPositionBQLResult, 0)
 	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, &queryParams, &statsQueryResultList)
@@ -335,14 +353,20 @@ func StatsAccountSankey(c *gin.Context) {
 	for _, queryRes := range statsQueryResultList {
 		if queryRes.Position != "" {
 			fields := strings.Fields(queryRes.Position)
+			account := queryRes.Account
+			if statsQuery.Level == 1 {
+				accountType := script.GetAccountType(ledgerConfig.Id, account)
+				account = accountType.Key + ":" + accountType.Name
+			}
 			result = append(result, Transaction{
 				Id:       queryRes.Id,
-				Account:  queryRes.Account,
+				Account:  account,
 				Number:   fields[0],
 				Currency: fields[1],
 			})
 		}
 	}
+
 	OK(c, buildSankeyResult(result))
 }
 
