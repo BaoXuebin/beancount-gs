@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -294,14 +295,15 @@ func StatsAccountSankey(c *gin.Context) {
 	var bql string
 	// 账户不为空，则查询时间范围内所有涉及该账户的交易记录
 	if statsQuery.Prefix != "" {
-		// 清空 account 查询条件，改为使用 ID 查询包含该账户所有交易记录
-		queryParams.AccountLike = ""
 		bql = "SELECT '\\', id, '\\'"
 		err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, &queryParams, &statsQueryResultList)
 		if err != nil {
 			InternalError(c, err.Error())
 			return
 		}
+		// 清空 account 查询条件，改为使用 ID 查询包含该账户所有交易记录
+		queryParams.AccountLike = ""
+		queryParams.IDList = "|"
 		if len(statsQueryResultList) != 0 {
 			idSet := make(map[string]bool)
 			for _, bqlResult := range statsQueryResultList {
@@ -447,9 +449,120 @@ func buildSankeyResult(transactions []Transaction) AccountSankeyResult {
 				maxCycle -= 1
 			}
 		}
-		accountSankeyResult.Links = aggregateLinkNodes(links)
+		accountSankeyResult.Links = links
+		// 同样source和target的link进行归并
+		accountSankeyResult.Links = aggregateLinkNodes(accountSankeyResult.Links)
+		//// source/target相反的link进行合并
+		//accountSankeyResult.Nodes = nodes
+		// 处理桑基图的link循环指向的问题
+		if hasCycle(accountSankeyResult.Links) {
+			newNodes, newLinks := breakCycleAndAddNode(accountSankeyResult.Nodes, accountSankeyResult.Links)
+			accountSankeyResult.Nodes = newNodes
+			accountSankeyResult.Links = newLinks
+		}
 	}
+	// 过滤 source 和 target 相同的节点
+
 	return accountSankeyResult
+}
+
+// 检查是否存在循环引用
+func hasCycle(links []AccountSankeyLink) bool {
+	visited := make(map[int]bool)
+	recStack := make(map[int]bool)
+
+	var dfs func(node int) bool
+	dfs = func(node int) bool {
+		if recStack[node] {
+			return true // 找到循环
+		}
+		if visited[node] {
+			return false // 已访问过，不再检查
+		}
+
+		visited[node] = true
+		recStack[node] = true
+
+		// 检查所有 links，看是否有从当前节点指向其他节点
+		for _, link := range links {
+			if link.Source == node {
+				if dfs(link.Target) {
+					return true
+				}
+			}
+		}
+		recStack[node] = false // 当前节点的 DFS 结束
+		return false
+	}
+
+	// 遍历所有节点
+	for _, link := range links {
+		if dfs(link.Source) {
+			return true // 发现循环
+		}
+	}
+
+	return false // 没有循环
+}
+
+// 打破循环引用，添加新的节点
+func breakCycleAndAddNode(nodes []AccountSankeyNode, links []AccountSankeyLink) ([]AccountSankeyNode, []AccountSankeyLink) {
+	visited := make(map[int]bool)
+	recStack := make(map[int]bool)
+	newNodeCount := 0 // 计数新节点
+
+	var dfs func(node int) bool
+	newNodes := make(map[int]int) // 记录新节点的映射
+
+	dfs = func(node int) bool {
+		if recStack[node] {
+			return true // 找到循环
+		}
+		if visited[node] {
+			return false // 已访问过，不再检查
+		}
+
+		visited[node] = true
+		recStack[node] = true
+
+		// 遍历所有 links，看是否有从当前节点指向其他节点
+		for _, link := range links {
+			if link.Source == node {
+				if dfs(link.Target) {
+					// 检测到循环，创建新节点
+					originalNode := nodes[node]
+					newNode := AccountSankeyNode{
+						Name: originalNode.Name + "1", // 新节点名称
+					}
+
+					// 将新节点添加到 nodes 列表中
+					nodes = append(nodes, newNode)
+					newNodeIndex := len(nodes) - 1
+					newNodes[node] = newNodeIndex // 记录原节点到新节点的映射
+
+					// 更新当前节点的所有链接，将 target 指向新节点
+					for i := range links {
+						if links[i].Source == node {
+							links[i].Target = newNodeIndex
+						}
+					}
+
+					newNodeCount++ // 增加新节点计数
+				}
+			}
+		}
+		recStack[node] = false // 当前节点的 DFS 结束
+		return false
+	}
+
+	// 遍历所有节点，检测循环
+	for _, link := range links {
+		if !visited[link.Source] {
+			dfs(link.Source) // 如果未访问过，则调用 DFS
+		}
+	}
+
+	return nodes, links
 }
 
 func contains(nodes []AccountSankeyNode, str string) bool {
@@ -482,28 +595,46 @@ func groupTransactionsByID(transactions []Transaction) map[string][]Transaction 
 	return grouped
 }
 
-// 聚合函数，聚合相同 source 和 target 的值
-func aggregateLinkNodes(nodes []AccountSankeyLink) []AccountSankeyLink {
-	// 创建一个映射 key 为 "source-target"，value 为 LinkNode
-	nodeMap := make(map[string]AccountSankeyLink)
+// 聚合函数，聚合相同 source 和 target（相反方向）的值
+func aggregateLinkNodes(links []AccountSankeyLink) []AccountSankeyLink {
+	// 创建一个映射来存储连接
+	nodeMap := make(map[string]decimal.Decimal)
 
-	for _, node := range nodes {
-		key := fmt.Sprintf("%d-%d", node.Source, node.Target)
+	for _, link := range links {
+		if link.Source == link.Target {
+			fmt.Printf("%-%s-%d", link.Source, link.Target, link.Value)
+			continue
+		}
 
-		if existingNode, found := nodeMap[key]; found {
-			// 如果已经存在相同的 source 和 target，累加 value
-			existingNode.Value = existingNode.Value.Add(node.Value)
-			nodeMap[key] = existingNode
+		key := fmt.Sprintf("%d-%d", link.Source, link.Target)
+		reverseKey := fmt.Sprintf("%d-%d", link.Target, link.Source)
+		if existingValue, found := nodeMap[key]; found {
+			// 如果已存在相同方向，累加 value
+			nodeMap[key] = existingValue.Add(link.Value)
+		} else if existingValue, found := nodeMap[reverseKey]; found {
+			// 如果存在相反方向，确定最终的 source 和 target
+			totalValue := existingValue.Sub(link.Value)
+			if totalValue.IsPositive() {
+				nodeMap[reverseKey] = totalValue
+			} else if totalValue.IsZero() {
+				delete(nodeMap, reverseKey)
+			} else {
+				delete(nodeMap, reverseKey)
+				nodeMap[key] = totalValue.Abs()
+			}
 		} else {
-			// 否则直接插入新的 LinkNode
-			nodeMap[key] = node
+			// 否则直接插入新的 value
+			nodeMap[key] = link.Value
 		}
 	}
 
-	// 将 map 转换为 slice
-	result := make([]AccountSankeyLink, 0, len(nodeMap))
-	for _, aggregatedNode := range nodeMap {
-		result = append(result, aggregatedNode)
+	// 将结果转换为 slice
+	result := make([]AccountSankeyLink, 0)
+	for key, value := range nodeMap {
+		var parts = strings.Split(key, "-")
+		source, _ := strconv.Atoi(parts[0])
+		target, _ := strconv.Atoi(parts[1])
+		result = append(result, AccountSankeyLink{Source: source, Target: target, Value: value})
 	}
 
 	return result
