@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "beancount-gs",
+  "name": "基于beancount的个人记账财务管理软件",
   "icons": [
     {
       "src": "favicon.ico",
