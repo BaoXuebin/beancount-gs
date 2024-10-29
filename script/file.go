@@ -212,7 +212,7 @@ func MkDir(dirPath string) error {
 // FindConsecutiveMultilineTextInFile 查找文件中连续多行文本片段的开始和结束行号
 func FindConsecutiveMultilineTextInFile(filePath string, multilineLines []string) (startLine, endLine int, err error) {
 	for i := range multilineLines {
-		multilineLines[i] = cleanString(multilineLines[i])
+		multilineLines[i] = CleanString(multilineLines[i])
 	}
 
 	file, err := os.Open(filePath)
@@ -230,7 +230,7 @@ func FindConsecutiveMultilineTextInFile(filePath string, multilineLines []string
 	for scanner.Scan() {
 		lineNumber++
 		// 清理文件中的当前行
-		lineText := cleanString(scanner.Text())
+		lineText := CleanString(scanner.Text())
 
 		// 检查当前行是否匹配多行文本片段的当前行
 		if lineText == multilineLines[matchIndex] {
@@ -263,11 +263,24 @@ func FindConsecutiveMultilineTextInFile(filePath string, multilineLines []string
 	return startLine, endLine, nil
 }
 
-// cleanString 去除字符串中的首尾空白和中间的所有空格字符
-func cleanString(str string) string {
-	all := strings.ReplaceAll(strings.TrimSpace(str), " ", "")
-	// 去除逗号，处理金额千分位
-	return strings.ReplaceAll(all, ",", "")
+// CleanString 去除字符串中的首尾空白和中间的所有空格字符
+func CleanString(str string) string {
+	if IsComment(str) {
+		return ""
+	}
+	// 去除 " ", ";", "\r"
+	result := strings.ReplaceAll(str, " ", "")
+	result = strings.ReplaceAll(result, ";", "")
+	result = strings.ReplaceAll(result, "\r", "")
+	return result
+}
+
+func IsComment(line string) bool {
+	trimmed := strings.TrimLeft(line, " ")
+	if strings.HasPrefix(trimmed, ";") {
+		return true
+	}
+	return false
 }
 
 // 删除指定行范围的内容

@@ -349,7 +349,7 @@ func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerC
 			return errors.New(e.Error())
 		}
 		// 使用 \r\t 分割多行文本片段，并清理每一行的空白
-		oldLines := filterEmptyStrings(strings.Split(result, "\r\n"))
+		oldLines := filterEmptyStrings(strings.Split(result, "\n"))
 		startLine, endLine, e := script.FindConsecutiveMultilineTextInFile(beanFilePath, oldLines)
 		if e != nil {
 			InternalError(c, e.Error())
@@ -360,7 +360,7 @@ func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerC
 			InternalError(c, e.Error())
 			return errors.New(e.Error())
 		}
-		newLines := filterEmptyStrings(strings.Split(line, "\r\n"))
+		newLines := filterEmptyStrings(strings.Split(line, "\n"))
 		newLines = append(newLines, "")
 		lines, e = script.InsertLines(lines, startLine, newLines)
 		if e != nil {
@@ -389,7 +389,7 @@ func filterEmptyStrings(arr []string) []string {
 	// 创建一个新切片来存储非空字符串
 	var result []string
 	for _, str := range arr {
-		if str != "" { // 检查字符串是否为空
+		if script.CleanString(str) != "" { // 检查字符串是否为空
 			result = append(result, str)
 		}
 	}
@@ -416,7 +416,7 @@ func UpdateTransactionRawTextById(c *gin.Context) {
 		return
 	}
 
-	oldLines := filterEmptyStrings(strings.Split(result, "\r\n"))
+	oldLines := filterEmptyStrings(strings.Split(result, "\n"))
 	startLine, endLine, err := script.FindConsecutiveMultilineTextInFile(beanFilePath, oldLines)
 	if err != nil {
 		InternalError(c, err.Error())
@@ -427,7 +427,7 @@ func UpdateTransactionRawTextById(c *gin.Context) {
 		InternalError(c, e.Error())
 		return
 	}
-	newLines := filterEmptyStrings(strings.Split(rawTextUpdateTransactionForm.RawText, "\r\n"))
+	newLines := filterEmptyStrings(strings.Split(rawTextUpdateTransactionForm.RawText, "\n"))
 	if len(newLines) > 0 {
 		lines, e = script.InsertLines(lines, startLine, newLines)
 		if e != nil {
@@ -463,7 +463,7 @@ func DeleteTransactionById(c *gin.Context) {
 		return
 	}
 
-	oldLines := filterEmptyStrings(strings.Split(result, "\r\n"))
+	oldLines := filterEmptyStrings(strings.Split(result, "\n"))
 	startLine, endLine, err := script.FindConsecutiveMultilineTextInFile(beanFilePath, oldLines)
 	if err != nil {
 		InternalError(c, err.Error())
