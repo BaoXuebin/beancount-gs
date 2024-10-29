@@ -4,6 +4,7 @@
 [![docker image size](https://img.shields.io/docker/image-size/xdbin/beancount-gs/latest?label=docker-image)](https://hub.docker.com/repository/docker/xdbin/beancount-gs/general)
 ![docker pulls](https://img.shields.io/docker/pulls/xdbin/beancount-gs)
 
+[前端项目地址](https://github.com/BaoXuebin/beancount-web)
 [演示地址](https://beancount.xdbin.com/)
 [使用文档](https://www.yuque.com/chuyi-ble7p/beancount-gs)
 
