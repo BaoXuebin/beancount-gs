@@ -2,7 +2,7 @@
 
 ![license](https://img.shields.io/github/license/BaoXuebin/beancount-gs)
 [![docker image size](https://img.shields.io/docker/image-size/xdbin/beancount-gs/latest?label=docker-image)](https://hub.docker.com/repository/docker/xdbin/beancount-gs/general)
-![docker pulls](https://img.shields.io/docker/pulls/xdbin/beancount-gs)
+[![docker pulls](https://img.shields.io/docker/pulls/xdbin/beancount-gs)](https://hub.docker.com/repository/docker/xdbin/beancount-gs/general)
 
 [前端项目地址](https://github.com/BaoXuebin/beancount-web)
 [演示地址](https://beancount.xdbin.com/)
