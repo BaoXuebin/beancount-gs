@@ -156,7 +156,12 @@ type TransactionForm struct {
 	Tags           []string               `form:"tags" json:"tags,omitempty"`
 	DivideDateList []string               `form:"divideDateList" json:"divideDateList,omitempty"`
 	Entries        []TransactionEntryForm `form:"entries" json:"entries"`
-	Raw            RawTransaction         `json:"raw,omitempty"`
+	RawText        string                 `json:"rawText,omitempty"`
+}
+
+type UpdateRawTextTransactionForm struct {
+	ID      string `form:"id" binding:"required" json:"id"`
+	RawText string `form:"rawText" json:"rawText,omitempty" binding:"required"`
 }
 
 type TransactionEntryForm struct {
@@ -391,33 +396,21 @@ func filterEmptyStrings(arr []string) []string {
 	return result
 }
 
-func DeleteTransactionById(c *gin.Context) {
-	queryParams := script.GetQueryParams(c)
-	if queryParams.ID == "" {
-		BadRequest(c, "Param 'id' must not be blank.")
-		return
-	}
-	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	transactions := make([]Transaction, 0)
-	err := script.BQLQueryList(ledgerConfig, &queryParams, &transactions)
-	if err != nil {
+func UpdateTransactionRawTextById(c *gin.Context) {
+	var rawTextUpdateTransactionForm UpdateRawTextTransactionForm
+	if err := c.ShouldBindJSON(&rawTextUpdateTransactionForm); err != nil {
 		BadRequest(c, err.Error())
 		return
 	}
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
 
-	if len(transactions) == 0 {
-		InternalError(c, "No transaction found.")
-		return
-	}
-
-	month, err := script.GetMonth(transactions[0].Date)
+	beanFilePath, err := getBeanFilePathByTransactionId(rawTextUpdateTransactionForm.ID, ledgerConfig)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
 	}
-	// 交易记录所在文件位置
-	beanFilePath := script.GetLedgerMonthFilePath(ledgerConfig.DataPath, month)
-	result, e := script.BQLPrint(ledgerConfig, queryParams.ID)
+
+	result, e := script.BQLPrint(ledgerConfig, rawTextUpdateTransactionForm.ID)
 	if e != nil {
 		InternalError(c, e.Error())
 		return
@@ -431,7 +424,54 @@ func DeleteTransactionById(c *gin.Context) {
 	}
 	lines, e := script.RemoveLines(beanFilePath, startLine, endLine)
 	if e != nil {
+		InternalError(c, e.Error())
+		return
+	}
+	newLines := filterEmptyStrings(strings.Split(rawTextUpdateTransactionForm.RawText, "\r\n"))
+	if len(newLines) > 0 {
+		lines, e = script.InsertLines(lines, startLine, newLines)
+		if e != nil {
+			InternalError(c, e.Error())
+			return
+		}
+	}
+	err = script.WriteToFile(beanFilePath, lines)
+	if err != nil {
 		InternalError(c, err.Error())
+		return
+	}
+	OK(c, true)
+}
+
+func DeleteTransactionById(c *gin.Context) {
+	queryParams := script.GetQueryParams(c)
+	if queryParams.ID == "" {
+		BadRequest(c, "Param 'id' must not be blank.")
+		return
+	}
+	ledgerConfig := script.GetLedgerConfigFromContext(c)
+
+	result, e := script.BQLPrint(ledgerConfig, queryParams.ID)
+	if e != nil {
+		InternalError(c, e.Error())
+		return
+	}
+
+	beanFilePath, err := getBeanFilePathByTransactionId(queryParams.ID, ledgerConfig)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+
+	oldLines := filterEmptyStrings(strings.Split(result, "\r\n"))
+	startLine, endLine, err := script.FindConsecutiveMultilineTextInFile(beanFilePath, oldLines)
+	if err != nil {
+		InternalError(c, err.Error())
+		return
+	}
+	lines, e := script.RemoveLines(beanFilePath, startLine, endLine)
+	if e != nil {
+		InternalError(c, e.Error())
 		return
 	}
 	err = script.WriteToFile(beanFilePath, lines)
@@ -439,8 +479,26 @@ func DeleteTransactionById(c *gin.Context) {
 		InternalError(c, err.Error())
 		return
 	}
-
 	OK(c, true)
+}
+
+func getBeanFilePathByTransactionId(transactionId string, ledgerConfig *script.Config) (string, error) {
+	queryParams := script.QueryParams{ID: transactionId, Where: true}
+	transactions := make([]Transaction, 0)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &transactions)
+	if err != nil {
+		return "", err
+	}
+	if len(transactions) == 0 {
+		return "", errors.New("no transaction found")
+	}
+	month, err := script.GetMonth(transactions[0].Date)
+	if err != nil {
+		return "", err
+	}
+	// 交易记录所在文件位置
+	beanFilePath := script.GetLedgerMonthFilePath(ledgerConfig.DataPath, month)
+	return beanFilePath, nil
 }
 
 type transactionPayee struct {

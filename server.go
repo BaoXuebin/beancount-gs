@@ -83,6 +83,7 @@ func RegisterRouter(router *gin.Engine) {
 		authorized.GET("/transaction/raw", service.QueryTransactionRawTextById)
 		authorized.GET("/transaction", service.QueryTransactions)
 		authorized.POST("/transaction", service.AddTransactions)
+		authorized.POST("/transaction/raw", service.UpdateTransactionRawTextById)
 		authorized.DELETE("/transaction", service.DeleteTransactionById)
 		authorized.POST("/transaction/batch", service.AddBatchTransactions)
 		authorized.GET("/transaction/payee", service.QueryTransactionPayees)

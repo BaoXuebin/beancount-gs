@@ -91,13 +91,8 @@ dataPath=自定义的目录
 
 [MIT](https://github.com/BaoXuebin/beancount-gs/blob/main/License) @BaoXuebin
 
-## 赞助
+## 感谢️
 
 [赞助地址](https://xdbin.com/sponsor)
 
-## 感谢
-
-<a href="https://jb.gg/OpenSourceSupport" style="display: flex; justify-content: left; align-items: center; flex-direction: row;">
-<img alt="JetBrains" src="./jb_beam.png" style="width: 120px; height: 120px;" />
-<h3>Licenses for Open Source Development</h3>
-</a>
+感谢 **@Cabin**，**@潇** 两位朋友的赞助支持❤️

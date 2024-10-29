@@ -265,7 +265,9 @@ func FindConsecutiveMultilineTextInFile(filePath string, multilineLines []string
 
 // cleanString 去除字符串中的首尾空白和中间的所有空格字符
 func cleanString(str string) string {
-	return strings.ReplaceAll(strings.TrimSpace(str), " ", "")
+	all := strings.ReplaceAll(strings.TrimSpace(str), " ", "")
+	// 去除逗号，处理金额千分位
+	return strings.ReplaceAll(all, ",", "")
 }
 
 // 删除指定行范围的内容
@@ -303,7 +305,6 @@ func InsertLines(lines []string, startLineNo int, newLines []string) ([]string, 
 	if startLineNo < 1 || startLineNo > len(lines)+1 {
 		return nil, fmt.Errorf("插入行号无效")
 	}
-
 	// 在指定位置插入新的内容
 	modifiedLines := append(lines[:startLineNo-1], append(newLines, lines[startLineNo-1:]...)...)
 	return modifiedLines, nil
