@@ -61,6 +61,10 @@ func GetQueryParams(c *gin.Context) QueryParams {
 		queryParams.Limit = 100
 		hasWhere = true
 	}
+	if c.Query("id") != "" {
+		queryParams.ID = c.Query("id")
+		hasWhere = true
+	}
 	queryParams.Where = hasWhere
 	if c.Query("path") != "" {
 		queryParams.Path = c.Query("path")
@@ -80,6 +84,19 @@ func GetQueryParams(c *gin.Context) QueryParams {
 //	}
 //	return nil
 //}
+
+func BQLPrint(ledgerConfig *Config, transactionId string) (string, error) {
+	// PRINT FROM id = 'xxx'
+	output, err := queryByBQL(ledgerConfig, "PRINT FROM id = '"+transactionId+"'")
+	if err != nil {
+		return "", err
+	}
+	utf8, err := ConvertGBKToUTF8(output)
+	if err != nil {
+		return "", err
+	}
+	return utf8, nil
+}
 
 func BQLQueryList(ledgerConfig *Config, queryParams *QueryParams, queryResultPtr interface{}) error {
 	assertQueryResultIsPointer(queryResultPtr)

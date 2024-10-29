@@ -2,6 +2,9 @@ package script
 
 import (
 	"bytes"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"os/exec"
@@ -83,4 +86,32 @@ func getMaxDate(str_date1 string, str_date2 string) string {
 		max_date = time.Now().Format(time_layout)
 	}
 	return max_date
+}
+
+// ConvertGBKToUTF8 将 GBK 编码的字符串转换为 UTF-8 编码
+func ConvertGBKToUTF8(gbkStr string) (string, error) {
+	if !isWindows() {
+		return gbkStr, nil
+	}
+	// 创建一个 GBK 到 UTF-8 的转换器
+	reader := transform.NewReader(bytes.NewReader([]byte(gbkStr)), simplifiedchinese.GBK.NewDecoder())
+
+	// 将转换后的内容读出为 UTF-8 字符串
+	utf8Bytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	return string(utf8Bytes), nil
+}
+
+func GetMonth(date string) (string, error) {
+	// 解析日期字符串
+	parsedDate, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return "", err
+	}
+	// 格式化日期为 "YYYY-MM" 格式
+	formattedDate := parsedDate.Format("2006-01")
+	return formattedDate, nil
 }
