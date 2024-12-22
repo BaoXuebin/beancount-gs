@@ -269,7 +269,8 @@ func CleanString(str string) string {
 		return ""
 	}
 	// 去除 " ", ";", "\r"
-	result := strings.ReplaceAll(str, " ", "")
+	result := strings.ReplaceAll(str, ",", "")
+	result = strings.ReplaceAll(result, " ", "")
 	result = strings.ReplaceAll(result, ";", "")
 	result = strings.ReplaceAll(result, "\r", "")
 	return result
