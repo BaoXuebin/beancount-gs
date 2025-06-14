@@ -63,7 +63,7 @@ version: "3.9"
 services:
   app:
     container_name: beancount-gs
-    image: frankwuzp/beancount-gs:latest
+    image: xdbin/beancount-gs:${tag:-latest}
     ports:
       - "10000:80"
     volumes:

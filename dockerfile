@@ -13,7 +13,7 @@ COPY public/icons ./public/default_icons
 RUN go build .
 
 # 镜像
-FROM xdbin/beancount-alpine:2.3.6
+FROM frankwuzp/beancount-gs:v1.2.2
 
 WORKDIR /app
 COPY --from=go_builder /app/beancount-gs ./

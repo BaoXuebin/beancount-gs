@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -268,12 +269,28 @@ func CleanString(str string) string {
 	if IsComment(str) {
 		return ""
 	}
+	result := getAccountWithNumber(str)
 	// 去除 " ", ";", "\r"
-	result := strings.ReplaceAll(str, ",", "")
+	result = strings.ReplaceAll(result, ",", "")
 	result = strings.ReplaceAll(result, " ", "")
+	// 过滤空白的商户信息 ““
+	result = strings.ReplaceAll(result, "\"\"", "")
 	result = strings.ReplaceAll(result, ";", "")
 	result = strings.ReplaceAll(result, "\r", "")
+	// 清楚汇率转换
+
 	return result
+}
+
+// 正则提取：
+// Assets:Flow:Cash:现金 -20.00 USD {xxx CNY, 2025-01-01} -> Assets:Flow:Cash:现金 -20.00 USD
+func getAccountWithNumber(str string) string {
+	// 定义正则表达式模式
+	pattern := `^[^\{]+`
+	// 编译正则表达式
+	re := regexp.MustCompile(pattern)
+	// 使用正则提取匹配的部分
+	return re.FindString(str)
 }
 
 func IsComment(line string) bool {
