@@ -7,7 +7,7 @@ on:
       tag:
         description: 'Tag for the Docker image'
         required: false
-        default: '2.3.6'
+        default: 'v1.2.2'
 
 jobs:
   build-and-push:
@@ -32,5 +32,5 @@ jobs:
           context: ./lib
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: xdbin/beancount-alpine:${{ github.event.inputs.tag }}
+          tags: frankwuzp/beancount-gs:${{ github.event.inputs.tag }}
           labels: ${{ steps.meta.outputs.labels }}

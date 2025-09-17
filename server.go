@@ -3,14 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/beancount-gs/script"
-	"github.com/beancount-gs/service"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/beancount-gs/script"
+	"github.com/beancount-gs/service"
+	"github.com/gin-gonic/gin"
 )
 
+var debugMode = false
+
+/*
+ * 初始化服务器文件
+ * 检查账本目录是否存在，如果不存在则创建
+ * 返回error，表示操作是否成功
+ */
 func InitServerFiles() error {
 	dataPath := script.GetServerConfig().DataPath
 	// 账本目录不存在，则创建
@@ -20,6 +28,11 @@ func InitServerFiles() error {
 	return nil
 }
 
+/*
+ * 加载服务器缓存
+ * 加载账本配置映射和账户映射
+ * 返回error，表示加载过程中是否出错
+ */
 func LoadServerCache() error {
 	err := script.LoadLedgerConfigMap()
 	if err != nil {
@@ -28,6 +41,11 @@ func LoadServerCache() error {
 	return script.LoadLedgerAccountsMap()
 }
 
+/*
+ * 授权中间件
+ * 检查请求头中的ledgerId是否有效
+ * 如果有效则继续处理请求，否则返回未授权错误
+ */
 func AuthorizedHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ledgerId := c.GetHeader("ledgerId")
@@ -42,18 +60,24 @@ func AuthorizedHandler() gin.HandlerFunc {
 	}
 }
 
+/*
+ * 注册路由
+ * 配置静态文件服务、API路由和需要授权的路由组
+ */
 func RegisterRouter(router *gin.Engine) {
 	// fix wildcard and static file router conflict, https://github.com/gin-gonic/gin/issues/360
 	router.GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/web")
 	})
 	router.StaticFS("/web", http.Dir("./public"))
+	// 公开API路由，无需授权
 	router.GET("/api/version", service.QueryVersion)
 	router.POST("/api/check", service.CheckBeancount)
 	router.GET("/api/config", service.QueryServerConfig)
 	router.POST("/api/config", service.UpdateServerConfig)
 	router.GET("/api/ledger", service.QueryLedgerList)
 	router.POST("/api/ledger", service.OpenOrCreateLedger)
+	// 需要授权的API路由组
 	authorized := router.Group("/api/auth/")
 	authorized.Use(AuthorizedHandler())
 	{
@@ -109,8 +133,11 @@ func RegisterRouter(router *gin.Engine) {
 func main() {
 	var secret string
 	var port int
+	var debugFlag bool
+
 	flag.StringVar(&secret, "secret", "", "服务器密钥")
 	flag.IntVar(&port, "p", 10000, "端口号")
+	flag.BoolVar(&debugFlag, "debug", false, "调试模式")
 	flag.Parse()
 
 	// 读取配置文件
@@ -119,6 +146,21 @@ func main() {
 		script.LogSystemError("Failed to load server config, " + err.Error())
 		return
 	}
+	// 如果命令行指定了debug参数，覆盖配置文件中的设置
+	if debugFlag {
+		err = script.SetDebugMode(true)
+		if err != nil {
+			fmt.Println("Warning: Failed to set debug mode:", err)
+		}
+	}
+
+	// 现在可以在任何地方使用 script.IsDebugMode() 来检查调试模式
+	if script.IsDebugMode() {
+		fmt.Println("调试模式已启用")
+	} else {
+		fmt.Println("调试模式未启用")
+	}
+
 	serverConfig := script.GetServerConfig()
 	// 若 DataPath == "" 则配置未初始化
 	if serverConfig.DataPath != "" {

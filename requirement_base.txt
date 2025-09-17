@@ -1,0 +1,6 @@
+dateparser==1.2.2
+debugpy==1.8.16
+fava==1.30.5
+pytest==8.4.2
+Pygments==2.19.2
+pyzipper==0.3.6

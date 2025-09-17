@@ -30,6 +30,7 @@ type Config struct {
 	IsBak             bool   `json:"isBak"`
 	OpeningBalances   string `json:"openingBalances"`
 	CreateDate        string `json:"createDate,omitempty"`
+	DebugMode         bool   `json:"debugMode"`
 }
 
 type Account struct {
@@ -91,6 +92,7 @@ func LoadServerConfig() error {
 			OperatingCurrency: "CNY",
 			StartDate:         "1970-01-01",
 			IsBak:             true,
+			DebugMode:         false, // 添加默认值
 		}
 		return nil
 	}
@@ -129,6 +131,33 @@ func LoadServerConfig() error {
 	}
 	LogSystemInfo("Success load whitelist file (" + whiteListFilePath + ")")
 	return nil
+}
+
+// 获取当前调试模式状态
+func IsDebugMode() bool {
+	return serverConfig.DebugMode
+}
+
+// 设置调试模式并保存到配置文件
+func SetDebugMode(debug bool) error {
+	serverConfig.DebugMode = debug
+	return UpdateServerConfig(serverConfig)
+}
+
+// 为方便使用，添加调试日志函数
+func DebugLog(format string, args ...interface{}) {
+	if IsDebugMode() {
+		message := fmt.Sprintf(format, args...)
+		LogSystemInfo("[DEBUG] " + message)
+	}
+}
+
+// 添加带上下文信息的调试日志
+func DebugLogWithContext(context string, format string, args ...interface{}) {
+	if IsDebugMode() {
+		message := fmt.Sprintf("[%s] "+format, append([]interface{}{context}, args...)...)
+		LogSystemInfo("[DEBUG] " + message)
+	}
 }
 
 func UpdateServerConfig(config Config) error {

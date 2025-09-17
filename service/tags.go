@@ -12,7 +12,15 @@ type Tags struct {
 func QueryTags(c *gin.Context) {
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	tags := make([]Tags, 0)
-	err := script.BQLQueryList(ledgerConfig, nil, &tags)
+	
+	// 使用 script.QueryParams 构建查询条件
+	queryParams := &script.QueryParams{
+		Where:      true,     // 启用 WHERE 子句
+		Tag:        "tags",   // tag in tags 条件
+		TagNotNull: "true",   // tag 非空条件（值可以是任意非空字符串）
+	}
+	
+	err := script.BQLQueryList(ledgerConfig, queryParams, &tags)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
