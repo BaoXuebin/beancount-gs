@@ -1,7 +1,0 @@
-{
-    "dataPath": "/workspace/data/beancount",
-    "operatingCurrency": "CNY",
-    "startDate": "2015-01-01",
-    "isBak": true,
-    "openingBalances": "Equity:Opening-Balances"
-}

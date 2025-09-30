@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
 )
@@ -40,9 +39,8 @@ func SyncCommodityPrice(c *gin.Context) {
 }
 
 func QueryAllCurrencies(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	// 查询货币获取当前汇率
-	currency := script.RefreshLedgerCurrency(debugCtx, ledgerConfig)
+	currency := script.RefreshLedgerCurrency(ledgerConfig)
 	OK(c, currency)
 }

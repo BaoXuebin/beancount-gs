@@ -3,13 +3,12 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/beancount-gs/script"
+	"github.com/gin-gonic/gin"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/beancount-gs/script"
-	"github.com/gin-gonic/gin"
 )
 
 func QueryValidAccount(c *gin.Context) {
@@ -36,13 +35,11 @@ type accountPosition struct {
 }
 
 func QueryAllAccount(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
-	defer debugCtx.FinishDebugContext()
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 
 	bql := fmt.Sprintf("select '\\', account, '\\', sum(convert(value(position), '%s')) as market_position, '\\', sum(convert(value(position), currency)) as position, '\\'", ledgerConfig.OperatingCurrency)
 	accountPositions := make([]accountPosition, 0)
-	err := script.BQLQueryListByCustomSelect(debugCtx, ledgerConfig, bql, nil, &accountPositions)
+	err := script.BQLQueryListByCustomSelect(ledgerConfig, bql, nil, &accountPositions)
 	if err != nil {
 		InternalError(c, err.Error())
 		return

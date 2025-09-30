@@ -6,15 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"log"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/beancount-gs/script"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
+	"io"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Transaction struct {
@@ -45,25 +43,6 @@ type RawTransaction struct {
 
 type TransactionSort []Transaction
 
-// 调试模式控制
-var debugMode = script.IsDebugMode() // 可以通过配置控制
-
-// // 调试日志函数
-// func debugLog(format string, args ...interface{}) {
-// 	if debugMode {
-// 		logMsg := fmt.Sprintf("DEBUG: "+format, args...)
-// 		log.Println(logMsg)
-// 	}
-// }
-
-// 详细的调试信息函数
-func debugLogDetailed(context, format string, args ...interface{}) {
-	if debugMode {
-		logMsg := fmt.Sprintf("DEBUG [%s]: "+format, append([]interface{}{context}, args...)...)
-		log.Println(logMsg)
-	}
-}
-
 func (s TransactionSort) Len() int {
 	return len(s)
 }
@@ -77,42 +56,24 @@ func (s TransactionSort) Less(i, j int) bool {
 }
 
 func QueryTransactionDetailById(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
-	defer debugCtx.FinishDebugContext()
-
-	debugLogDetailed("QueryTransactionDetailById", "函数开始执行")
-
 	queryParams := script.GetQueryParams(c)
-	debugLogDetailed("QueryTransactionDetailById", "获取查询参数: ID=%s", queryParams.ID)
-
 	if queryParams.ID == "" {
-		debugLogDetailed("QueryTransactionDetailById", "参数验证失败: ID不能为空")
-		BadRequest(c, "参数 'id' 不能为空")
+		BadRequest(c, "Param 'id' must not be blank.")
 		return
 	}
-
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	debugLogDetailed("QueryTransactionDetailById", "获取账本配置: ID=%s", ledgerConfig.Id)
-
 	transactions := make([]Transaction, 0)
-	err := script.BQLQueryList(debugCtx, ledgerConfig, &queryParams, &transactions)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &transactions)
 	if err != nil {
-		debugLogDetailed("QueryTransactionDetailById", "BQL查询失败: %v", err)
 		BadRequest(c, err.Error())
 		return
 	}
-
-	debugLogDetailed("QueryTransactionDetailById", "查询成功，返回 %d 条交易记录", len(transactions))
-
 	if len(transactions) == 0 {
-		debugLogDetailed("QueryTransactionDetailById", "未找到交易记录")
-		BadRequest(c, "未找到交易记录")
-		return
+		BadRequest(c, "No transaction found.")
 	}
 
 	transactionForm := TransactionForm{}
 	transactionForm.Entries = make([]TransactionEntryForm, 0)
-
 	for _, transaction := range transactions {
 		if transactionForm.ID == "" {
 			transactionForm.ID = transaction.Id
@@ -120,157 +81,71 @@ func QueryTransactionDetailById(c *gin.Context) {
 			transactionForm.Payee = transaction.Payee
 			transactionForm.Desc = transaction.Narration
 			transactionForm.Narration = transaction.Narration
-			debugLogDetailed("QueryTransactionDetailById", "设置交易基本信息: ID=%s, Date=%s", transaction.Id, transaction.Date)
 		}
-
 		transactionEntryForm := TransactionEntryForm{
 			Account: transaction.Account,
 		}
-
 		if transaction.Number != "" && transaction.Number != "0" {
 			transactionEntryForm.Number = decimal.RequireFromString(transaction.Number)
 			transactionEntryForm.Currency = transaction.Currency
 			transactionEntryForm.IsAnotherCurrency = transaction.IsAnotherCurrency
-			debugLogDetailed("QueryTransactionDetailById", "设置交易条目: Account=%s, Number=%s", transaction.Account, transaction.Number)
 		}
-
 		if transaction.CostPrice != "" && transaction.CostPrice != "0" {
 			transactionEntryForm.Price = decimal.RequireFromString(transaction.CostPrice)
 			transactionEntryForm.PriceCurrency = transaction.CostCurrency
-			debugLogDetailed("QueryTransactionDetailById", "设置交易价格信息: Price=%s, Currency=%s", transaction.CostPrice, transaction.CostCurrency)
 		}
-
 		transactionForm.Entries = append(transactionForm.Entries, transactionEntryForm)
 	}
-
-	debugLogDetailed("QueryTransactionDetailById", "交易表单构建完成，共 %d 个条目", len(transactionForm.Entries))
 	OK(c, transactionForm)
-	debugLogDetailed("QueryTransactionDetailById", "函数执行完成")
 }
 
 func QueryTransactionRawTextById(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
-	debugLogDetailed("QueryTransactionRawTextById", "函数开始执行")
-
 	queryParams := script.GetQueryParams(c)
-	debugLogDetailed("QueryTransactionRawTextById", "获取查询参数: ID=%s", queryParams.ID)
-
 	if queryParams.ID == "" {
-		debugLogDetailed("QueryTransactionRawTextById", "参数验证失败: ID不能为空")
-		BadRequest(c, "参数 'id' 不能为空")
-		return
+		BadRequest(c, "Param 'id' must not be blank.")
 	}
-
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	debugLogDetailed("QueryTransactionRawTextById", "获取账本配置: ID=%s", ledgerConfig.Id)
-
-	result, err := script.BQLPrint(debugCtx, ledgerConfig, queryParams.ID)
+	result, err := script.BQLPrint(ledgerConfig, queryParams.ID)
 	if err != nil {
-		debugLogDetailed("QueryTransactionRawTextById", "BQL打印失败: %v", err)
 		InternalError(c, err.Error())
 		return
 	}
-
-	debugLogDetailed("QueryTransactionRawTextById", "获取原始文本成功，长度: %d 字符", len(result))
 	OK(c, result)
-	debugLogDetailed("QueryTransactionRawTextById", "函数执行完成")
 }
 
 func QueryTransactions(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
-	defer debugCtx.FinishDebugContext()
-	// 获取账本配置
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-	debugLogDetailed("QueryTransactions", "获取账本配置 - ID: %s, 运营货币: %s", ledgerConfig.Id, ledgerConfig.OperatingCurrency)
-
 	queryParams := script.GetQueryParams(c)
-	debugLogDetailed("QueryTransactions", "初始查询参数: %+v", queryParams)
-
 	// 倒序查询
 	queryParams.OrderBy = "date desc"
-	debugLogDetailed("QueryTransactions", "设置排序方式: %s", queryParams.OrderBy)
-
 	transactions := make([]Transaction, 0)
-	debugLogDetailed("QueryTransactions", "初始化空交易切片")
-
-	err := script.BQLQueryList(debugCtx, ledgerConfig, &queryParams, &transactions)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &transactions)
 	if err != nil {
-		debugLogDetailed("QueryTransactions", "BQL查询列表失败: %v", err)
 		InternalError(c, err.Error())
 		return
 	}
-	debugLogDetailed("QueryTransactions", "BQL查询成功，返回 %d 条交易记录", len(transactions))
-
-	if len(transactions) > 0 {
-		debugLogDetailed("QueryTransactions", "第一条交易样例 - 账户: %s, 金额: %s",
-			transactions[0].Account, transactions[0].Number)
-	}
 
 	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
-	debugLogDetailed("QueryTransactions", "获取货币映射表，包含 %d 个条目", len(currencyMap))
 
 	// 格式化金额
-	debugLogDetailed("QueryTransactions", "开始格式化 %d 条交易记录", len(transactions))
-
 	for i := 0; i < len(transactions); i++ {
-		if i < 3 { // 只记录前3个交易的详细调试信息，避免日志过多
-			debugLogDetailed("QueryTransactions", "处理交易 %d - 货币: %s, 余额: %s",
-				i, transactions[i].Currency, transactions[i].Balance)
-		}
-
 		_, ok := currencyMap[transactions[i].Currency]
 		if ok {
 			transactions[i].IsAnotherCurrency = transactions[i].Currency != ledgerConfig.OperatingCurrency
-			if i < 3 {
-				debugLogDetailed("QueryTransactions", "交易 %d - 是否为其他货币: %t", i, transactions[i].IsAnotherCurrency)
-			}
-		} else {
-			if i < 3 {
-				debugLogDetailed("QueryTransactions", "交易 %d - 货币 %s 未在货币映射表中找到", i, transactions[i].Currency)
-			}
 		}
 
 		symbol := script.GetCommoditySymbol(ledgerConfig.Id, transactions[i].Currency)
 		transactions[i].CurrencySymbol = symbol
 		transactions[i].CostCurrencySymbol = symbol
-		if i < 3 {
-			debugLogDetailed("QueryTransactions", "交易 %d - 设置货币符号: %s", i, symbol)
-		}
-
 		if transactions[i].Price != "" {
-			oldPrice := transactions[i].Price
 			transactions[i].Price = strings.Fields(transactions[i].Price)[0]
-			if i < 3 {
-				debugLogDetailed("QueryTransactions", "交易 %d - 价格格式化: %s -> %s", i, oldPrice, transactions[i].Price)
-			}
 		}
-
 		if transactions[i].Balance != "" {
-			oldBalance := transactions[i].Balance
 			transactions[i].Balance = strings.Fields(transactions[i].Balance)[0]
-			if i < 3 {
-				debugLogDetailed("QueryTransactions", "交易 %d - 余额格式化: %s -> %s", i, oldBalance, transactions[i].Balance)
-			}
-		}
-
-		// 每处理100个交易记录一次进度
-		if (i+1)%100 == 0 {
-			debugLogDetailed("QueryTransactions", "已处理 %d 条交易记录", i+1)
 		}
 	}
-
-	debugLogDetailed("QueryTransactions", "完成所有 %d 条交易记录的处理", len(transactions))
-
-	if len(transactions) > 0 {
-		debugLogDetailed("QueryTransactions", "最终交易样例 - 格式化余额: %s%s",
-			transactions[0].CurrencySymbol, transactions[0].Balance)
-	}
-
 	OK(c, transactions)
-	debugLogDetailed("QueryTransactions", "函数执行完成")
 }
-
-// ... 其余代码保持不变，但可以在关键函数中添加类似的调试日志 ...
 
 type TransactionForm struct {
 	ID             string                 `form:"id" json:"id"`
@@ -334,83 +209,55 @@ func AddBatchTransactions(c *gin.Context) {
 }
 
 func AddTransactions(c *gin.Context) {
-	debugLogDetailed("AddTransactions", "函数开始执行")
-
 	var addTransactionForm TransactionForm
 	if err := c.ShouldBindJSON(&addTransactionForm); err != nil {
-		debugLogDetailed("AddTransactions", "JSON绑定失败: %v", err)
 		BadRequest(c, err.Error())
 		return
 	}
-	debugLogDetailed("AddTransactions", "成功解析交易表单: ID=%s, Date=%s", addTransactionForm.ID, addTransactionForm.Date)
-
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
-
 	// 判断是否分期
 	var err error
 	var divideCount = len(addTransactionForm.DivideDateList)
-	debugLogDetailed("AddTransactions", "分期数量: %d", divideCount)
-
 	if divideCount <= 0 {
-		debugLogDetailed("AddTransactions", "执行单次交易保存")
 		err = saveTransaction(c, addTransactionForm, ledgerConfig)
 	} else {
-		debugLogDetailed("AddTransactions", "执行分期交易保存")
 		for idx, entry := range addTransactionForm.Entries {
 			// 保留 3 位小数
 			addTransactionForm.Entries[idx].Number = entry.Number.Div(decimal.NewFromInt(int64(divideCount))).Round(3)
-			debugLogDetailed("AddTransactions", "分期计算: 条目 %d, 原金额: %s, 分期后: %s",
-				idx, entry.Number.String(), addTransactionForm.Entries[idx].Number.String())
 		}
 		for _, date := range addTransactionForm.DivideDateList {
 			addTransactionForm.Date = date
-			debugLogDetailed("AddTransactions", "保存分期交易: 日期=%s", date)
 			err = saveTransaction(c, addTransactionForm, ledgerConfig)
 			if err != nil {
-				debugLogDetailed("AddTransactions", "分期交易保存失败: %v", err)
 				break
 			}
 		}
 	}
 
 	if err != nil {
-		debugLogDetailed("AddTransactions", "交易保存失败: %v", err)
 		script.LogError(ledgerConfig.Mail, err.Error())
 		return
 	}
-
-	debugLogDetailed("AddTransactions", "交易保存成功")
 	OK(c, nil)
-	debugLogDetailed("AddTransactions", "函数执行完成")
 }
 
-// 在 saveTransaction 函数中也添加类似的调试日志
 func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerConfig *script.Config) error {
-	debugCtx := script.SetupDebugContext(c)
-	debugLogDetailed("saveTransaction", "开始保存交易: ID=%s, Date=%s", addTransactionForm.ID, addTransactionForm.Date)
-
 	// 账户是否平衡
 	sumVal := sum(addTransactionForm.Entries, ledgerConfig.OpeningBalances)
 	val, _ := decimal.NewFromString("0.1")
-	debugLogDetailed("saveTransaction", "交易余额检查: 计算总和=%s, 阈值=%s", sumVal.String(), val.String())
-
 	if sumVal.Abs().GreaterThan(val) {
-		debugLogDetailed("saveTransaction", "交易不平衡: 差异过大")
 		if c != nil {
 			TransactionNotBalance(c)
 		}
-		return errors.New("交易不平衡")
+		return errors.New("transaction not balance")
 	}
 
-	// 构建交易文本
+	// 2021-09-29 * "支付宝" "黄金补仓X元" #Invest
 	line := fmt.Sprintf("\r\n%s * \"%s\" \"%s\"", addTransactionForm.Date, addTransactionForm.Payee, addTransactionForm.Desc)
-	debugLogDetailed("saveTransaction", "构建交易头: %s", line)
-
 	if len(addTransactionForm.Tags) > 0 {
 		for _, tag := range addTransactionForm.Tags {
 			line += "#" + tag + " "
 		}
-		debugLogDetailed("saveTransaction", "添加标签: %v", addTransactionForm.Tags)
 	}
 
 	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
@@ -496,7 +343,7 @@ func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerC
 
 	beanFilePath := script.GetLedgerMonthFilePath(ledgerConfig.DataPath, monthStr)
 	if addTransactionForm.ID != "" { // 更新交易
-		result, e := script.BQLPrint(debugCtx, ledgerConfig, addTransactionForm.ID)
+		result, e := script.BQLPrint(ledgerConfig, addTransactionForm.ID)
 		if e != nil {
 			InternalError(c, e.Error())
 			return errors.New(e.Error())
@@ -534,8 +381,6 @@ func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerC
 		}
 		return errors.New("internal error")
 	}
-
-	debugLogDetailed("saveTransaction", "交易保存完成")
 	return nil
 }
 
@@ -552,7 +397,6 @@ func filterEmptyStrings(arr []string) []string {
 }
 
 func UpdateTransactionRawTextById(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
 	var rawTextUpdateTransactionForm UpdateRawTextTransactionForm
 	if err := c.ShouldBindJSON(&rawTextUpdateTransactionForm); err != nil {
 		BadRequest(c, err.Error())
@@ -566,7 +410,7 @@ func UpdateTransactionRawTextById(c *gin.Context) {
 		return
 	}
 
-	result, e := script.BQLPrint(debugCtx, ledgerConfig, rawTextUpdateTransactionForm.ID)
+	result, e := script.BQLPrint(ledgerConfig, rawTextUpdateTransactionForm.ID)
 	if e != nil {
 		InternalError(c, e.Error())
 		return
@@ -600,7 +444,6 @@ func UpdateTransactionRawTextById(c *gin.Context) {
 }
 
 func DeleteTransactionById(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
 	queryParams := script.GetQueryParams(c)
 	if queryParams.ID == "" {
 		BadRequest(c, "Param 'id' must not be blank.")
@@ -608,7 +451,7 @@ func DeleteTransactionById(c *gin.Context) {
 	}
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 
-	result, e := script.BQLPrint(debugCtx, ledgerConfig, queryParams.ID)
+	result, e := script.BQLPrint(ledgerConfig, queryParams.ID)
 	if e != nil {
 		InternalError(c, e.Error())
 		return
@@ -640,12 +483,9 @@ func DeleteTransactionById(c *gin.Context) {
 }
 
 func getBeanFilePathByTransactionId(transactionId string, ledgerConfig *script.Config) (string, error) {
-	debugCtx := script.NewDebugContext() // 不传入c参数
-	defer debugCtx.FinishDebugContext()
-
 	queryParams := script.QueryParams{ID: transactionId, Where: true}
 	transactions := make([]Transaction, 0)
-	err := script.BQLQueryList(debugCtx, ledgerConfig, &queryParams, &transactions)
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &transactions)
 	if err != nil {
 		return "", err
 	}
@@ -666,23 +506,14 @@ type transactionPayee struct {
 }
 
 func QueryTransactionPayees(c *gin.Context) {
-	debugCtx := script.SetupDebugContext(c)
 	ledgerConfig := script.GetLedgerConfigFromContext(c)
 	payeeList := make([]transactionPayee, 0)
-
-	// 使用空字符串而不是 false
-	queryParams := script.QueryParams{
-		Where:   false,
-		OrderBy: "date desc",
-		Limit:   100,
-	}
-
-	err := script.BQLQueryList(debugCtx, ledgerConfig, &queryParams, &payeeList)
+	queryParams := script.QueryParams{Where: false, OrderBy: "date desc", Limit: 100}
+	err := script.BQLQueryList(ledgerConfig, &queryParams, &payeeList)
 	if err != nil {
 		InternalError(c, err.Error())
 		return
 	}
-
 	result := make([]string, 0)
 	for _, payee := range payeeList {
 		if payee.Value != "" {

@@ -295,7 +295,10 @@ func getAccountWithNumber(str string) string {
 
 func IsComment(line string) bool {
 	trimmed := strings.TrimLeft(line, " ")
-	return strings.HasPrefix(trimmed, ";")
+	if strings.HasPrefix(trimmed, ";") {
+		return true
+	}
+	return false
 }
 
 // 删除指定行范围的内容
@@ -356,21 +359,4 @@ func WriteToFile(filePath string, lines []string) error {
 	}
 	LogSystemInfo("Success write content in file " + filePath)
 	return writer.Flush()
-}
-
-// EnsureDirExists 确保目录存在，如果不存在则创建
-func EnsureDirExists(path string) error {
-	dir := filepath.Dir(path)
-	return os.MkdirAll(dir, 0755)
-}
-
-// WriteFileWithDir 写入文件，确保目录存在
-func WriteFileWithDir(filename string, data string) error {
-	// 确保目录存在
-	if err := EnsureDirExists(filename); err != nil {
-		return err
-	}
-
-	// 写入文件
-	return WriteFile(filename, data)
 }

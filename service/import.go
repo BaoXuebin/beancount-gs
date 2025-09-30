@@ -4,14 +4,13 @@ import (
 	"bufio"
 	"encoding/csv"
 	"errors"
+	"github.com/beancount-gs/script"
+	"github.com/gin-gonic/gin"
+	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/beancount-gs/script"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 func ImportAliPayCSV(c *gin.Context) {
@@ -65,12 +64,11 @@ func importBrowserAliPayCSV(lines []string, currency string, currencySymbol stri
 	dateColumn := strings.Fields(lines[2])
 	status := strings.Trim(lines[15], " ")
 	account := ""
-	switch status {
-	case "":
+	if status == "" {
 		account = ""
-	case "已收入":
+	} else if status == "已收入" {
 		account = "Income:"
-	default:
+	} else {
 		account = "Expenses:"
 	}
 
@@ -93,12 +91,11 @@ func importMobileAliPayCSV(lines []string, currency string, currencySymbol strin
 	dateColumn := strings.Fields(lines[0])
 	status := strings.Trim(lines[5], " ")
 	account := ""
-	switch status {
-	case "":
+	if status == "" {
 		account = ""
-	case "支出":
+	} else if status == "支出" {
 		account = "Expenses:"
-	default:
+	} else {
 		account = "Income:"
 	}
 
@@ -140,12 +137,11 @@ func ImportWxPayCSV(c *gin.Context) {
 			fields := strings.Fields(lines[0])
 			status := strings.Trim(lines[4], " ")
 			account := ""
-			switch status {
-			case "收入":
+			if status == "收入" {
 				account = "Income:"
-			case "支出":
+			} else if status == "支出" {
 				account = "Expenses:"
-			default:
+			} else {
 				continue
 			}
 
