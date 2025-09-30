@@ -1,1 +1,6 @@
-%startDate% open Equity:OpeningBalances
+%startDate% open Equity:OpeningBalances %operatingCurrency%
+%startDate% open Equity:Round %operatingCurrency%  ; 四舍五入操作
+%startDate% open Equity:UFO %operatingCurrency%  ; 无法追溯的差额
+%startDate% open Equity:Insurance:MedicalInsurance %operatingCurrency% ; 医保账户
+%startDate% open Equity:Insurance:CPF %operatingCurrency% ; 公积金账户
+%startDate% open Equity:Leave DAY; 假期 [待测试]
