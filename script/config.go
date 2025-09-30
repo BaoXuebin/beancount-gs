@@ -6,8 +6,10 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/beancount-gs/utils/venv" // 添加这个导入
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +22,14 @@ var ledgerAccountTypesMap map[string]map[string]string
 var ledgerCurrencyMap map[string][]LedgerCurrency
 var whiteList []string
 
+var (
+	// 添加虚拟环境相关的变量
+	venvPath     string
+	venvExecutor *venv.VenvExecutor
+	venvPathLock sync.RWMutex
+	venvExecLock sync.RWMutex
+)
+
 type Config struct {
 	Id                string `json:"id,omitempty"`
 	Mail              string `json:"mail,omitempty"`
@@ -30,6 +40,7 @@ type Config struct {
 	IsBak             bool   `json:"isBak"`
 	OpeningBalances   string `json:"openingBalances"`
 	CreateDate        string `json:"createDate,omitempty"`
+	DebugMode         bool   `json:"debugMode"`
 }
 
 type Account struct {
@@ -85,12 +96,15 @@ func GetServerConfig() Config {
 
 func LoadServerConfig() error {
 	filePath := GetServerConfigFilePath()
+	LogSystemInfo("Load config file (" + filePath + ")")
 	if !FileIfExist(filePath) {
 		serverConfig = Config{
-			OpeningBalances:   "Equity:OpeningBalances",
+			OpeningBalances:   "Equity:Opening-Balances",
 			OperatingCurrency: "CNY",
 			StartDate:         "1970-01-01",
 			IsBak:             true,
+			DebugMode:         false,         // 添加默认值
+			DataPath:          GetDataPath(), // 添加默认值
 		}
 		return nil
 	}
@@ -131,15 +145,52 @@ func LoadServerConfig() error {
 	return nil
 }
 
+// 获取当前调试模式状态
+func IsDebugMode() bool {
+	return serverConfig.DebugMode
+}
+
+// 设置调试模式并保存到配置文件
+func SetDebugMode(debug bool) error {
+	serverConfig.DebugMode = debug
+	return UpdateServerConfig(serverConfig)
+}
+
+// 为方便使用，添加调试日志函数
+func DebugLog(format string, args ...interface{}) {
+	if IsDebugMode() {
+		message := fmt.Sprintf(format, args...)
+		LogSystemInfo("[DEBUG] " + message)
+	}
+}
+
+// 添加带上下文信息的调试日志
+func DebugLogWithContext(context string, format string, args ...interface{}) {
+	if IsDebugMode() {
+		message := fmt.Sprintf("[%s] "+format, append([]interface{}{context}, args...)...)
+		LogSystemInfo("[DEBUG] " + message)
+	}
+}
+
+// 添加带上下文信息的警告日志
+func WarnLogWithContext(context string, format string, args ...interface{}) {
+	message := fmt.Sprintf("[%s] "+format, append([]interface{}{context}, args...)...)
+	LogSystemInfo("[WARN] " + message)
+}
+
 func UpdateServerConfig(config Config) error {
 	bytes, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
-	err = WriteFile(GetServerConfigFilePath(), string(bytes))
+
+	// 使用新的带目录创建功能的写入函数
+	configPath := GetServerConfigFilePath()
+	err = WriteFileWithDir(configPath, string(bytes))
 	if err != nil {
 		return err
 	}
+
 	serverConfig = config
 	return nil
 }
@@ -335,15 +386,16 @@ func LoadLedgerAccounts(ledgerId string) error {
 						key := words[2]
 						temp = accountMap[key]
 						account := Account{Acc: key, Type: nil, StartDate: "", EndDate: ""}
-						if words[1] == "open" {
+						switch words[1] {
+						case "open":
 							// 最晚的开户日期设置为账户开户日期
 							account.StartDate = getMaxDate(words[0], temp.StartDate)
 							// 货币单位
 							if len(words) >= 4 {
 								account.Currency = words[3]
 							}
-						} else if words[1] == "close" {
-							//账户最晚的关闭日期设置为账户关闭日期
+						case "close":
+							// 账户最晚的关闭日期设置为账户关闭日期
 							account.EndDate = getMaxDate(words[0], temp.EndDate)
 						}
 						if account.EndDate != "" && account.StartDate == getMaxDate(account.StartDate, account.EndDate) {
@@ -435,6 +487,7 @@ func LoadServerCurrencyMap() {
 }
 
 func LoadLedgerCurrencyMap(config *Config) error {
+	debugCtx := NewDebugContext()
 	LoadServerCurrencyMap()
 	path := GetLedgerCurrenciesFilePath(config.DataPath)
 	if !FileIfExist(path) {
@@ -469,7 +522,7 @@ func LoadLedgerCurrencyMap(config *Config) error {
 	ledgerCurrencyMap[config.Id] = currencies
 	LogSystemInfo(fmt.Sprintf("Success load [%s] account type cache", config.Mail))
 	// 刷新汇率
-	RefreshLedgerCurrency(config)
+	RefreshLedgerCurrency(debugCtx, config)
 	return nil
 }
 
@@ -503,9 +556,9 @@ func newCommodityPriceListFromString(lines []string) []CommodityPrice {
 	return commodityPriceList
 }
 
-func RefreshLedgerCurrency(ledgerConfig *Config) []LedgerCurrency {
+func RefreshLedgerCurrency(debugCtx *DebugContext, ledgerConfig *Config) []LedgerCurrency {
 	// 查询货币获取当前汇率
-	statsPricesResultList := BeanReportAllPrices(ledgerConfig)
+	statsPricesResultList := BeanReportAllPrices(debugCtx, ledgerConfig)
 	// statsPricesResultList 转为 map
 	existCurrencyMap := make(map[string]CommodityPrice)
 	for _, statsPricesResult := range statsPricesResultList {
@@ -587,4 +640,32 @@ func GetAccountName(account string) string {
 func GetAccountIconName(account string) string {
 	nodes := strings.Split(account, ":")
 	return strings.Join(nodes, "_")
+}
+
+// 新增函数：设置虚拟环境路径
+func SetVenvPath(path string) {
+	venvPathLock.Lock()
+	defer venvPathLock.Unlock()
+	venvPath = path
+}
+
+// 新增函数：获取虚拟环境路径
+func GetVenvPath() string {
+	venvPathLock.RLock()
+	defer venvPathLock.RUnlock()
+	return venvPath
+}
+
+// 新增函数：设置虚拟环境执行器
+func SetVenvExecutor(executor *venv.VenvExecutor) {
+	venvExecLock.Lock()
+	defer venvExecLock.Unlock()
+	venvExecutor = executor
+}
+
+// 新增函数：获取虚拟环境执行器
+func GetVenvExecutor() *venv.VenvExecutor {
+	venvExecLock.RLock()
+	defer venvExecLock.RUnlock()
+	return venvExecutor
 }
