@@ -1,0 +1,75 @@
+ .cnb.yml                                           |  166 +++
+ .cnb/pipeline.yml                                  |   34 +
+ .editconfig                                        |   89 ++
+ .gitignore                                         |    3 +-
+ .ide/Dockerfile-python-go                          |   55 +
+ .ide/create_languagepacks                          |   91 ++
+ .scripts/.push_count                               |    1 +
+ .scripts/README.md                                 |   53 +
+ .scripts/add_submodule.sh                          |   31 +
+ .scripts/auto_setup.sh                             |   13 +
+ .scripts/backup/start_on_cnb-genmulu-old.sh        |  449 +++++++
+ .scripts/beancount-aliases.sh                      |   26 +
+ .scripts/dingtalk_notify.sh                        |  564 ++++++++
+ .scripts/git-tools/.push_count                     |    1 +
+ .scripts/git-tools/git_log.sh                      |   19 +
+ .scripts/git-tools/git_push.sh                     |   83 ++
+ .scripts/git-tools/git_status.sh                   |   30 +
+ .scripts/git_clone.sh                              |   57 +
+ .scripts/git_push.sh                               |   58 +
+ .scripts/run_bean.sh                               |  737 +++++++++++
+ .scripts/setup_aliases.sh                          |   74 ++
+ .scripts/setup_beancount_env.sh                    |  464 +++++++
+ .scripts/start_on_cnb.sh                           |  465 +++++++
+ .scripts/sync_to_github_gitee.sh                   |  298 +++++
+ .scripts/update_beancount_account.sh               |   98 ++
+ Dockerfile-xdbin                                   |   27 +
+ config/config.json                                 |    7 +
+ .../3978d009748ef54ad6ef7bf851bd55491b1fe6bb       |    1 +
+ data/beancount/ledger_config.json                  |   14 +
+ data/beancount/ledger_config_local.json            |   26 +
+ dockerfile => dockerfile-frankwuzp                 |   52 +-
+ ...275\277\347\224\250\350\257\264\346\230\216.md" |  166 +++
+ ...220\257\345\212\250\350\204\232\346\234\254.md" |  786 ++++++++++++
+ ...231\232\346\213\237\347\216\257\345\242\203.md" |  931 ++++++++++++++
+ ...212\200\346\234\257\346\226\207\346\241\243.md" |  243 ++++
+ ...274\200\345\217\221\350\277\207\347\250\213.md" |  217 ++++
+ ...5github\346\265\201\346\260\264\347\272\277.md" |  130 ++
+ ...275\277\347\224\250\350\257\264\346\230\216.md" |  143 +++
+ "docs/153 \350\260\203\350\257\225.md"             |  387 ++++++
+ ...250\241\345\235\227\350\264\246\347\260\277.md" |  116 ++
+ ...226\260\345\273\272\345\210\253\345\220\215.md" |  256 ++++
+ ...401 bug\345\276\205\344\277\256\345\244\215.md" |  139 ++
+ docs/CHANGELOG.md                                  |   89 ++
+ docs/dingtalk-notifications.md                     |  116 ++
+ go.mod                                             |    1 +
+ go.sum                                             |    1 +
+ logs/first-run.log                                 |  213 ++++
+ public/icons/Expenses_Traffic_ETC.png              |  Bin 7878 -> 0 bytes
+ public/icons/Liabilities_CreditCard_GuangDa.png    |  Bin 3122 -> 0 bytes
+ public/icons/Liabilities_CreditCard_XingYe.png     |  Bin 9066 -> 0 bytes
+ public/icons/Liabilities_CreditCard_YouChu.png     |  Bin 4631 -> 0 bytes
+ requirement_base.txt                               |    6 +
+ requirements-beancount-v3.txt                      |   45 +
+ requirements_dev.txt                               |   42 +
+ requirements_homepc.txt                            |   45 +
+ script/bql.go                                      | 1179 ++++++++++++++---
+ script/config.go                                   |   97 +-
+ script/file.go                                     |   22 +-
+ script/log.go                                      |  244 ++++
+ script/paths.go                                    |  218 +++-
+ server.go                                          |   92 +-
+ service/accounts.go                                |    9 +-
+ service/commodity.go                               |    4 +-
+ service/import.go                                  |   28 +-
+ service/stats.go                                   | 1340 ++++++++++++++++++--
+ service/tags.go                                    |   23 +-
+ service/transactions.go                            |  203 ++-
+ setup_env.sh                                       |    1 +
+ start_beancount.sh                                 |    1 +
+ start_dev.sh                                       |  239 ++++
+ tests.tar.gz                                       |  Bin 0 -> 16834 bytes
+ tests/main_test.go                                 |    0
+ tests/test_chinese_account.bean                    |   16 +
+ utils/venv/venv.go                                 |  124 ++
+ 74 files changed, 11616 insertions(+), 382 deletions(-)
