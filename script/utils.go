@@ -2,13 +2,14 @@ package script
 
 import (
 	"bytes"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net"
 	"os/exec"
 	"time"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 func checkCommandExists(command string) bool {
@@ -97,7 +98,7 @@ func ConvertGBKToUTF8(gbkStr string) (string, error) {
 	reader := transform.NewReader(bytes.NewReader([]byte(gbkStr)), simplifiedchinese.GBK.NewDecoder())
 
 	// 将转换后的内容读出为 UTF-8 字符串
-	utf8Bytes, err := ioutil.ReadAll(reader)
+	utf8Bytes, err := io.ReadAll(reader)
 	if err != nil {
 		return "", err
 	}
