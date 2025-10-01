@@ -1,5 +1,5 @@
-# 第一阶段：构建阶段
-FROM python:3.11.9-alpine3.19 as builder
+# 第一阶段：构建阶段 python:3.12-alpine3.22
+FROM python:3.12-alpine3.22 as builder
 
 # 设置环境变量，防止 Python 创建 .pyc 文件
 ENV PYTHONUNBUFFERED=1
@@ -20,21 +20,21 @@ WORKDIR /app
 RUN python3 -m venv /app/venv
 
 # 将 Beancount 源码压缩包复制到容器中
-COPY beancount-2.3.6.tar.gz /app
+COPY beancount-3.2.0.tar.gz /app
 
 # 解压 Beancount 源码到 /beancount 目录
 RUN mkdir /beancount && \
-    tar -xzf /app/beancount-2.3.6.tar.gz -C /beancount --strip-components=1
+    tar -xzf /app/beancount-3.2.0.tar.gz -C /beancount --strip-components=1
 
 # 激活虚拟环境并安装 Beancount
 RUN /app/venv/bin/pip install --upgrade pip -i https://mirrors.aliyun.com/pypi/simple/ && \
     /app/venv/bin/pip install /beancount -i https://mirrors.aliyun.com/pypi/simple/ && \
     # 清理不必要的文件
-    rm -rf /app/beancount-2.3.6.tar.gz && \
+    rm -rf /app/beancount-3.2.0.tar.gz && \
     find /app -name __pycache__ -exec rm -rf -v {} +
 
 # 第二阶段：运行阶段
-FROM python:3.11.9-alpine3.19
+FROM python:3.12-alpine3.22
 
 # 设置环境变量，防止 Python 创建 .pyc 文件
 ENV PYTHONUNBUFFERED=1
