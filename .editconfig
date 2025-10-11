@@ -1,0 +1,89 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# 这是顶级文件
+root = true
+
+# 所有文件的默认设置
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+# Markdown 文件特定设置
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+
+# YAML 文件特定设置
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON 文件特定设置
+[*.json]
+indent_size = 2
+
+# Python 文件特定设置
+[*.py]
+indent_size = 4
+max_line_length = 88
+
+# JavaScript/TypeScript 文件特定设置
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+max_line_length = 100
+
+# CSS/SCSS 文件特定设置
+[*.{css,scss}]
+indent_size = 2
+
+# HTML 文件特定设置
+[*.html]
+indent_size = 2
+
+# Shell 脚本特定设置
+[*.sh]
+indent_size = 2
+
+# XML 文件特定设置
+[*.xml]
+indent_size = 2
+
+# Makefile 特定设置
+[Makefile]
+indent_style = tab
+
+# Go 文件特定设置
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# Java 文件特定设置
+[*.java]
+indent_size = 4
+
+# C/C++ 文件特定设置
+[*.{c,cpp,h,hpp}]
+indent_size = 4
+
+# PHP 文件特定设置
+[*.php]
+indent_size = 4
+
+# Ruby 文件特定设置
+[*.rb]
+indent_size = 2
+
+# SQL 文件特定设置
+[*.sql]
+indent_size = 2
+
+# Dockerfile 特定设置
+[Dockerfile]
+indent_size = 4
+
+# Vue 文件特定设置
+[*.vue]
+indent_size = 2

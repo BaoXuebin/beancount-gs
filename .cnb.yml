@@ -1,0 +1,160 @@
+name: Beancount v3 云端开发环境流水线（多分支）
+description: 配置 Beancount v3 开发环境，支持 Go 构建和 Python 运行
+
+# 通用配置（适配所有分支）
+$:
+  vscode:
+    - docker:
+        # 指定云原生开发启动时的基础镜像为当前镜像
+        image: docker.cnb.cool/ysundy/images/python-3:beancount
+      services:
+        - vscode
+        - docker
+
+# main 分支专用配置
+main:
+  vscode:
+    - docker:
+        # 指定云原生开发启动时的基础镜像为当前镜像
+        image: docker.cnb.cool/ysundy/images/python-3:beancount
+      services:
+        - vscode
+        - docker
+      stages:
+        - name: 构建并运行 beancount-gs
+          script: |
+            echo "==main分支==构建Python虚拟环境===="
+            # 创建Python虚拟环境
+            python -m venv .env_beancount-v3
+            echo "==main分支==激活虚拟环境===="
+            # 激活虚拟环境
+            . .env_beancount-v3/bin/activate
+            echo "==main分支==升级 pip===="
+            # 升级 pip
+            pip install --upgrade pip
+            echo "==main分支==安装依赖===="
+            # 安装依赖
+            pip install \
+              beancount==3.1.0 \
+              fava==1.30.5 \
+              beanquery==0.2.0 \
+              beangulp==0.2.0 \
+              dateparser==1.2.2
+            echo "==main分支==查看版本===="
+            go version
+            python --version
+            pip list
+            pip freeze > requirements_main.txt
+            echo "==main分支==启动 beancount-gs===="
+            # 检查beancount-gs文件是否存在
+            if [ -f ./beancount-gs ]; then
+                echo "==main分支==找到 beancount-gs 文件，开始执行===="
+                ./beancount-gs
+            else
+                echo "==main分支==警告：beancount-gs 文件不存在，请先运行 go build . 构建===="
+                echo "流水线继续执行，但 beancount-gs 未启动"
+            fi
+
+# dev 分支专用配置
+dev:
+  push: # 指定触发事件为 push（分支 push 时触发）
+    - name: sync-to-github # 流水线名称
+      stages:
+        - name: sync-stage # 阶段名称
+          jobs:
+            - name: sync-job # 任务名称
+              imports: # 引入外部配置
+                - https://cnb.cool/ysundy/secrets/-/blob/main/envs/gitee_auth.yml # 引入 Gitee 密钥配置
+                - https://cnb.cool/ysundy/secrets/-/blob/main/envs/dingtalk-robots.yml # 引入钉钉通知配置
+              script: |
+                # 检查提交信息是否包含特定关键字
+                if ! echo "$CNB_COMMIT_MESSAGE_TITLE" | grep -q "\[sync\]"; then
+                  echo "提交信息不包含 [sync] 关键字，跳过同步操作"
+                  exit 0
+                fi
+
+                echo "检测到 [sync] 关键字，开始同步到 Gitee..."
+
+                # 配置Git用户信息
+                git config user.name "CNB-GitHub-Sync"
+                git config user.email "sync-bot@cnb.cool"
+
+                if [ -z "$GIT_USERNAME" ] || [ -z "$GIT_ACCESS_TOKEN" ]; then
+                  echo "错误：GIT_USERNAME 或 GIT_ACCESS_TOKEN 未设置！"
+                  exit 1
+                fi
+
+                # 检查是否已经设置了gitee远程库
+                if git remote | grep -q "gitee"; then
+                    echo "Gitee remote already exists, updating URL..."
+                    git remote set-url gitee "https://$GIT_USERNAME:$GIT_ACCESS_TOKEN@gitee.com/renlangman2/beancount-gs-v3.git"
+                else
+                    echo "Adding Gitee remote..."
+                    git remote add gitee "https://$GIT_USERNAME:$GIT_ACCESS_TOKEN@gitee.com/renlangman2/beancount-gs-v3.git"
+                fi
+
+
+                # 推送dev分支到Gitee的feat-beanquery-cnb/dev分支
+                echo "Pushing to Gitee..."
+                git push gitee dev:feat-beanquery-cnb/dev
+
+                # 同步成功后发送钉钉通知
+                if [ -n "$DINGTALK_WEBHOOK" ]; then
+                  echo "发送钉钉通知..."
+                  
+                  export NOTIFICATION_TYPE="sync"
+                  export NOTIFICATION_STATUS="success"
+                  export TARGET_REPO_NAME="Gitee/beancount-gs"
+                  export TARGET_GIT_BRANCH="feat-beanquery-cnb/dev"
+                  export TARGET_REPO_URL="https://gitee.com/renlangman2/beancount-gs-v3.git"
+                  
+                  /workspace/.scripts/dingtalk_notify.sh
+                else
+                  echo "DINGTALK_WEBHOOK 未设置，跳过发送通知"
+                fi
+
+                echo "Sync completed successfully!"
+  vscode:
+    - docker:
+        # 指定云原生开发启动时的基础镜像为当前镜像
+        image: docker.cnb.cool/ysundy/images/python-3:beancount
+      services:
+        - vscode
+        - docker
+      stages:
+        - name: 构建并运行开发模式
+          script: |
+            echo "==dev分支==构建Python虚拟环境===="
+            # 创建Python虚拟环境
+            python -m venv .env_beancount-v3
+            echo "==dev分支==激活虚拟环境===="
+            . .env_beancount-v3/bin/activate
+            echo "==dev分支==升级 pip===="
+            # 安装开发依赖
+            pip install --upgrade pip
+            echo "==dev分支==安装依赖===="
+            pip install \
+              beancount==3.1.0 \
+              fava==1.30.5 \
+              beanquery==0.2.0 \
+              beangulp==0.2.0 \
+              dateparser==1.2.2 \
+              debugpy==1.8.16 \
+              pytest==8.4.2
+            echo "==dev分支==查看版本===="
+            go version
+            python --version
+            pip list
+            pip freeze > requirements_dev.txt
+            echo "==dev分支==启动开发模式===="
+            # 检查beancount-gs文件是否存在
+            if [ -f ./beancount-gs ]; then
+                echo "==dev分支==找到 beancount-gs 文件，可以执行以下命令启动===="
+                echo "运行 ./beancount-gs 以启动 beancount-gs"
+            else
+                echo "==dev分支==提示：beancount-gs 文件不存在，请先运行以下命令构建===="
+                echo "运行 go build . 以构建 beancount-gs"
+            fi
+
+            echo "==dev分支==其他开发命令===="
+            echo "运行 fava --debug your_file.bean 以调试模式运行 fava"
