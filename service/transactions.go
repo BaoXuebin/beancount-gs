@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -260,6 +261,15 @@ func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerC
 		}
 	}
 
+	// 更新交易时，保留原交易的交易级元数据（交易头之后、第一个账户行之前的 key: value 行）
+	if addTransactionForm.ID != "" {
+		if oldRawText, e := script.BQLPrint(ledgerConfig, addTransactionForm.ID); e == nil {
+			for _, meta := range extractTransactionMetadata(oldRawText) {
+				line += "\r\n  " + meta
+			}
+		}
+	}
+
 	currencyMap := script.GetLedgerCurrencyMap(ledgerConfig.Id)
 
 	var autoBalance bool
@@ -382,6 +392,38 @@ func saveTransaction(c *gin.Context, addTransactionForm TransactionForm, ledgerC
 		return errors.New("internal error")
 	}
 	return nil
+}
+
+// 交易头行：以日期开头，例如 2021-09-29 * "支付宝" "黄金补仓"
+var transactionHeaderRegexp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}\s`)
+
+// 元数据行：以小写字母开头的 key，后跟冒号，例如 trip: "2021-japan"
+var metadataLineRegexp = regexp.MustCompile(`^[a-z][a-zA-Z0-9_-]*:`)
+
+// extractTransactionMetadata 从交易原文（bean-query PRINT 输出）中提取交易级元数据行。
+// 交易级元数据位于交易头之后、第一个账户行之前；账户行以大写字母开头，元数据行以小写字母开头，据此区分。
+func extractTransactionMetadata(rawText string) []string {
+	metas := make([]string, 0)
+	headerFound := false
+	for _, raw := range strings.Split(rawText, "\n") {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			continue
+		}
+		if !headerFound {
+			if transactionHeaderRegexp.MatchString(trimmed) {
+				headerFound = true
+			}
+			continue
+		}
+		// 交易头之后：遇到第一个非元数据行（账户行）即停止收集
+		if metadataLineRegexp.MatchString(trimmed) {
+			metas = append(metas, trimmed)
+		} else {
+			break
+		}
+	}
+	return metas
 }
 
 // 过滤字符串数组中的空字符串
