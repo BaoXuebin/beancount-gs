@@ -51,15 +51,10 @@ export function UserMenu({ align = 'start' }: { align?: 'start' | 'end' }) {
               className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent data-popup-open:bg-accent"
               title={name}
             >
-              <Avatar size="sm">
-                <AvatarFallback>{initials(name)}</AvatarFallback>
-              </Avatar>
-              <span className="flex min-w-0 max-w-[150px] flex-col leading-tight">
-                <span className="truncate text-sm font-medium">{name}</span>
-                <span className="truncate text-[10px] text-muted-foreground">
-                  {user?.github_login ? `@${user.github_login}` : ''}
-                </span>
-              </span>
+            <Avatar size="sm">
+              <AvatarFallback>{initials(name)}</AvatarFallback>
+            </Avatar>
+            <span className="max-w-[120px] truncate text-sm font-medium">{name}</span>
             </button>
           }
         />
