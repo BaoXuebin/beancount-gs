@@ -157,6 +157,7 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/stats/payee", statsHandlers.Payee)
 	authed.GET("/ledgers/:ledger_id/stats/account-trend", statsHandlers.Trend)
 	authed.GET("/ledgers/:ledger_id/stats/account-flow", statsHandlers.Flow)
+	authed.GET("/ledgers/:ledger_id/months", statsHandlers.Months)
 
 	importHandlers := &httpapi.ImportHandlers{Store: store, Service: ledgerService}
 	authed.POST("/ledgers/:ledger_id/imports/:source", importHandlers.Preview)

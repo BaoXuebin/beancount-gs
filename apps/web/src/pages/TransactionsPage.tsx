@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -40,16 +40,6 @@ const PAGE_SIZE = 50
 function currentMonth(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
-function recentMonths(count = 12): string[] {
-  const now = new Date()
-  const list: string[] = []
-  for (let i = 0; i < count; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    list.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-  }
-  return list
 }
 
 function postingsSummary(t: Transaction): string {
@@ -96,6 +86,20 @@ export function TransactionsPage() {
   // 通过 key 变化触发 useFetch 重新请求，避免本地缓存
   const txns = useFetch<TransactionListResponse>(url, undefined, reloadKey)
   const ledger = useFetch<Ledger>(`/ledgers/${ledgerId}`)
+  const months = useFetch<string[]>(`/ledgers/${ledgerId}/months`)
+  const [monthsAdjusted, setMonthsAdjusted] = useState(false)
+
+  // 默认当月；若账本没有当月交易，则回退到最近一个有交易的月份
+  useEffect(() => {
+    if (monthsAdjusted || !months.data || months.data.length === 0) return
+    const current = currentMonth()
+    if (filters.month === current && !months.data.includes(current)) {
+      const fallback = months.data[0]
+      setMonth(fallback)
+      setFilters((f) => ({ ...f, month: fallback }))
+    }
+    setMonthsAdjusted(true)
+  }, [months.data, monthsAdjusted, filters.month])
 
   const applyFilters = () => {
     setFilters({ q: q.trim(), month, account: account.trim(), tag: tag.trim() })
@@ -190,7 +194,7 @@ export function TransactionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">全部月份</SelectItem>
-                {recentMonths().map((m) => (
+                {(months.data ?? []).map((m) => (
                   <SelectItem key={m} value={m}>
                     {m}
                   </SelectItem>

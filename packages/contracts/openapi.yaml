@@ -311,6 +311,21 @@ paths:
                 properties:
                   ledger_id: { type: string }
                   revision: { type: integer, example: 128 }
+  /ledgers/{ledger_id}/months:
+    get:
+      tags: [ledgers]
+      summary: 有交易的月份列表（最近在前）
+      description: 供前端月份筛选下拉使用，数据来自账本实际交易（distinct year/month）。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 月份列表，如 ["2026-08","2026-07"]
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string, example: "2026-08" }
   /ledgers/{ledger_id}/accounts:
     get:
       tags: [accounts]

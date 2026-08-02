@@ -112,6 +112,9 @@ type ServerInterface interface {
 	// 邀请成员（owner）
 	// (POST /ledgers/{ledger_id}/members)
 	PostLedgersLedgerIdMembers(c *gin.Context, ledgerId LedgerId)
+	// 有交易的月份列表（最近在前）
+	// (GET /ledgers/{ledger_id}/months)
+	GetLedgersLedgerIdMonths(c *gin.Context, ledgerId LedgerId)
 	// 当前修订号（写操作前检查）
 	// (GET /ledgers/{ledger_id}/revision)
 	GetLedgersLedgerIdRevision(c *gin.Context, ledgerId LedgerId)
@@ -1309,6 +1312,34 @@ func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdMembers(c *gin.Context) {
 	siw.Handler.PostLedgersLedgerIdMembers(c, ledgerId)
 }
 
+// GetLedgersLedgerIdMonths operation middleware
+func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdMonths(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "ledger_id" -------------
+	var ledgerId LedgerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ledger_id", c.Param("ledger_id"), &ledgerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ledger_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetLedgersLedgerIdMonths(c, ledgerId)
+}
+
 // GetLedgersLedgerIdRevision operation middleware
 func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdRevision(c *gin.Context) {
 
@@ -2471,6 +2502,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/imports/:source/confirm", wrapper.PostLedgersLedgerIdImportsSourceConfirm)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/members", wrapper.GetLedgersLedgerIdMembers)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/members", wrapper.PostLedgersLedgerIdMembers)
+	router.GET(options.BaseURL+"/ledgers/:ledger_id/months", wrapper.GetLedgersLedgerIdMonths)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/revision", wrapper.GetLedgersLedgerIdRevision)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/source-files", wrapper.GetLedgersLedgerIdSourceFiles)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/source-files/:path", wrapper.GetLedgersLedgerIdSourceFilesPath)

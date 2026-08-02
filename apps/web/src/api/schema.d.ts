@@ -680,6 +680,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledgers/{ledger_id}/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 有交易的月份列表（最近在前）
+         * @description 供前端月份筛选下拉使用，数据来自账本实际交易（distinct year/month）。
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 月份列表，如 ["2026-08","2026-07"] */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ledgers/{ledger_id}/accounts": {
         parameters: {
             query?: never;

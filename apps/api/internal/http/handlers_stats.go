@@ -96,3 +96,18 @@ func (h *StatsHandlers) Flow(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"nodes": nodes, "links": links})
 }
+
+// Months 账本有交易的月份列表（最近在前），供前端月份筛选下拉使用。
+func (h *StatsHandlers) Months(c *gin.Context) {
+	l, ok := requireLedger(c, h.Store, "")
+	if !ok {
+		return
+	}
+	months, err := h.Service.Months(c.Request.Context(), *l)
+	if err != nil {
+		slog.Error("list months failed", "err", err)
+		Error(c, http.StatusInternalServerError, "INTERNAL", "查询月份失败", nil)
+		return
+	}
+	c.JSON(http.StatusOK, months)
+}
