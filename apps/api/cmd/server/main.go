@@ -120,6 +120,12 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/account-types", accountHandlers.ListTypes)
 	authed.POST("/ledgers/:ledger_id/account-types", accountHandlers.AddType)
 
+	statsHandlers := &httpapi.StatsHandlers{Store: store, Service: ledgerService}
+	authed.GET("/ledgers/:ledger_id/stats/total", statsHandlers.Total)
+	authed.GET("/ledgers/:ledger_id/stats/payee", statsHandlers.Payee)
+	authed.GET("/ledgers/:ledger_id/stats/account-trend", statsHandlers.Trend)
+	authed.GET("/ledgers/:ledger_id/stats/account-flow", statsHandlers.Flow)
+
 	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}
 

@@ -552,6 +552,10 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
         - { $ref: "#/components/parameters/Month" }
+        - name: account
+          in: query
+          schema: { type: string }
+          description: 账户前缀过滤，如 Expenses
       responses:
         "200":
           description: 类型 → 金额
@@ -567,6 +571,10 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
         - { $ref: "#/components/parameters/Month" }
+        - name: account
+          in: query
+          schema: { type: string }
+          description: 账户前缀过滤，如 Expenses
         - name: type
           in: query
           schema: { type: string, enum: [total, count, avg] }
@@ -585,6 +593,10 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
         - { $ref: "#/components/parameters/Month" }
+        - name: account
+          in: query
+          schema: { type: string }
+          description: 账户前缀过滤，如 Assets
         - name: type
           in: query
           schema: { type: string, enum: [day, month, year, sum] }
@@ -603,6 +615,10 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
         - { $ref: "#/components/parameters/Month" }
+        - name: account
+          in: query
+          schema: { type: string }
+          description: 账户前缀过滤，如 Expenses
       responses:
         "200":
           description: 节点与边

@@ -122,6 +122,24 @@ func TestBeanQueryIntegration(t *testing.T) {
 		t.Fatalf("raw update not applied: %v %+v", err, afterRaw)
 	}
 
+	// 统计（真实 bean-query）
+	total, err := svc.StatsTotal(ctx, ledgerRow, "2026-08", "Expenses")
+	if err != nil || total["Expenses"] != "-15.00" {
+		t.Fatalf("stats total: %v %+v", err, total)
+	}
+	payees, err := svc.StatsPayee(ctx, ledgerRow, "2026-08", "Expenses", "total")
+	if err != nil || len(payees) == 0 || payees[0].Payee != "盒马鲜生" || payees[0].Amount != "-15.00" {
+		t.Fatalf("stats payee: %v %+v", err, payees)
+	}
+	points, err := svc.StatsTrend(ctx, ledgerRow, "2026-08", "Expenses", "day")
+	if err != nil || len(points) == 0 {
+		t.Fatalf("stats trend: %v %+v", err, points)
+	}
+	flow, err := svc.StatsFlow(ctx, ledgerRow, "2026-08", "")
+	if err != nil || len(flow.Nodes) == 0 || len(flow.Links) == 0 {
+		t.Fatalf("stats flow: %v %+v", err, flow)
+	}
+
 	// 删除
 	if err := svc.Delete(ctx, ledgerRow, list2[0].ID, 3, Actor{UserID: user.ID, Login: "alice"}); err != nil {
 		t.Fatalf("delete: %v", err)
