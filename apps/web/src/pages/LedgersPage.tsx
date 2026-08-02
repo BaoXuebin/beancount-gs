@@ -81,7 +81,12 @@ export function LedgersPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <BrandBar title="账本" backTo="/workspaces" backLabel="返回工作区" />
+      <BrandBar
+        crumbs={[
+          { label: '工作区', to: '/workspaces' },
+          { label: '账本' },
+        ]}
+      />
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="flex items-center justify-between">
           <div>

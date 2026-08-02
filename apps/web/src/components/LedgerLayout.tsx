@@ -1,11 +1,10 @@
-import { Link, NavLink, Outlet, useParams } from 'react-router-dom'
+import { NavLink, Outlet, useParams } from 'react-router-dom'
 import {
   BarChart3,
   CalendarDays,
   FileCode,
   LayoutDashboard,
   ListOrdered,
-  ListRestart,
   Settings,
   Sparkles,
   Upload,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserMenu } from '@/components/UserMenu'
+import { Breadcrumb } from '@/components/Breadcrumb'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger } from '@/api/types'
 import { cn } from '@/lib/utils'
@@ -38,29 +38,21 @@ export function LedgerLayout() {
       {/* 顶部栏：左侧账本信息 + 返回账本列表，右侧用户 */}
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
-          <div className="flex min-w-0 items-center gap-3">
-            <Link
-              to="/ledgers"
-              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ListRestart className="size-3.5" /> 账本列表
-            </Link>
-            <div className="min-w-0 border-l pl-3">
-              {ledger.loading ? (
-                <Skeleton className="h-4 w-28" />
-              ) : (
-                <p className="truncate text-sm font-semibold">{ledger.data?.name ?? '账本'}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                {ledger.loading ? (
-                  <Skeleton className="mt-1 h-3 w-20" />
-                ) : (
-                  <>
-                    本位币 {ledger.data?.operating_currency} · 修订 #{ledger.data?.revision ?? 0}
-                  </>
-                )}
-              </p>
-            </div>
+          <div className="flex min-w-0 items-center gap-2">
+            <Breadcrumb
+              items={[
+                { label: '工作区', to: '/workspaces' },
+                { label: '账本', to: '/ledgers' },
+                { label: ledger.data?.name ?? (ledger.loading ? '加载中…' : '账本') },
+              ]}
+            />
+            {ledger.loading ? (
+              <Skeleton className="h-3 w-24 shrink-0" />
+            ) : ledger.data ? (
+              <span className="hidden shrink-0 border-l pl-2 text-xs text-muted-foreground sm:inline">
+                本位币 {ledger.data.operating_currency} · 修订 #{ledger.data.revision}
+              </span>
+            ) : null}
           </div>
           <UserMenu align="end" />
         </div>
