@@ -39,6 +39,7 @@ db_path: data/beancount-gs.db  # SQLite 路径
 data_root: data                # 账本文件根目录
 template_dir: ../../template   # 账本模板目录
 public_url: http://localhost:10000
+frontend_url: http://localhost:5173  # 登录成功后的跳转；开发模式填前端地址，生产同域留空
 session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
 github_client_id: ""           # GitHub OAuth

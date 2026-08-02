@@ -32,6 +32,9 @@ ai_model: qwen2.5
 	if cfg.DataRoot != "data" || cfg.PublicURL != "http://localhost:8080" {
 		t.Fatalf("defaults not applied: %+v", cfg)
 	}
+	if cfg.FrontendURL != "http://localhost:8080" {
+		t.Fatalf("frontend_url should default to public_url: %+v", cfg)
+	}
 }
 
 func TestLoadCreatesDefaultFile(t *testing.T) {

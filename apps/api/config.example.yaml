@@ -4,6 +4,9 @@ db_path: data/beancount-gs.db
 data_root: data
 template_dir: ../../template
 public_url: http://localhost:10000
+# 登录成功后的跳转地址：开发模式填前端 http://localhost:5173；
+# 生产环境同域部署时留空即可（默认跟随 public_url）
+frontend_url: http://localhost:5173
 session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
 

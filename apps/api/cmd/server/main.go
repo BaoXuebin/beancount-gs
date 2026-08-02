@@ -98,6 +98,7 @@ func main() {
 		Store:       store,
 		OAuth:       oauth,
 		PublicURL:   cfg.PublicURL,
+		FrontendURL: cfg.FrontendURL,
 		CookieName:  cfg.SessionCookie,
 		StateCookie: cfg.StateCookie,
 		SessionTTL:  30 * 24 * time.Hour,

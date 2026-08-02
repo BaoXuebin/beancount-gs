@@ -13,6 +13,7 @@ type Config struct {
 	DataRoot           string `yaml:"data_root"`
 	TemplateDir        string `yaml:"template_dir"`
 	PublicURL          string `yaml:"public_url"`
+	FrontendURL        string `yaml:"frontend_url"`
 	SessionCookie      string `yaml:"session_cookie"`
 	StateCookie        string `yaml:"oauth_state_cookie"`
 	GitHubClientID     string `yaml:"github_client_id"`
@@ -31,6 +32,7 @@ func Defaults() Config {
 		DataRoot:      "data",
 		TemplateDir:   "../../template",
 		PublicURL:     "http://localhost:10000",
+		FrontendURL:   "",
 		SessionCookie: "bgs_session",
 		StateCookie:   "bgs_oauth_state",
 	}
@@ -42,6 +44,7 @@ db_path: data/beancount-gs.db
 data_root: data
 template_dir: ../../template
 public_url: http://localhost:10000
+frontend_url: ""
 session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
 
@@ -95,6 +98,11 @@ func (c *Config) applyDefaults() {
 	}
 	if c.PublicURL == "" {
 		c.PublicURL = fmt.Sprintf("http://localhost:%d", c.Port)
+	}
+	if c.FrontendURL == "" {
+		// 生产环境同域时前端与后端同址，登录后跳 public_url；
+		// 开发模式（Vite 5173）请显式设置 frontend_url
+		c.FrontendURL = c.PublicURL
 	}
 	if c.SessionCookie == "" {
 		c.SessionCookie = def.SessionCookie

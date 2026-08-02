@@ -243,7 +243,7 @@ services:
 
 - 本地开发：Go 直接跑（SQLite 自动初始化）+ Vite dev server 代理 `/api`，无需额外依赖。
 - 生产：单实例 docker-compose，一个容器跑全部；SQLite 文件与账本文件落在挂载卷。
-- GitHub OAuth 所需环境变量：`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`、`APP_PUBLIC_URL`（用于拼回调地址），部署域名需为 GitHub OAuth App 配置回调。
+- GitHub OAuth 配置在 `apps/api/config.yaml`：`github_client_id` / `github_client_secret` / `public_url`（用于拼回调地址，如 `https://your.domain/api/v2/auth/github/callback`）与 `frontend_url`（登录成功后的跳转地址；开发模式填 `http://localhost:5173`，生产同域可留空）。部署域名需为 GitHub OAuth App 配置回调。
 - 备份：账本文件沿用 bak 机制，SQLite 用 `sqlite3 .backup` 定时快照（WAL 模式下安全）。
 - 多实例/对象存储不在 V2 范围内，架构上通过 repository 接口隔离，后续可平滑升级。
 - 日志：Go `log/slog` 结构化输出（request_id、ledger_id、user_id），替代 v1 的 `fmt.Printf` + 裸文件。

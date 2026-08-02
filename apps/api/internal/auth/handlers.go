@@ -2,9 +2,11 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/beancount-gs/api/internal/db"
@@ -18,6 +20,7 @@ type Handlers struct {
 	Store       *db.Store
 	OAuth       *GitHubOAuth
 	PublicURL   string
+	FrontendURL string
 	CookieName  string
 	StateCookie string
 	SessionTTL  time.Duration
@@ -25,8 +28,23 @@ type Handlers struct {
 
 func (h *Handlers) Login(c *gin.Context) {
 	if h.OAuth.ClientID == "" || h.OAuth.ClientSecret == "" {
+		if strings.Contains(c.GetHeader("Accept"), "text/html") {
+			page := fmt.Sprintf(`<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>配置提示</title></head>
+<body style="font-family:system-ui;max-width:560px;margin:80px auto;padding:0 20px;line-height:1.7">
+<h1>GitHub OAuth 尚未配置</h1>
+<p>请编辑后端 <code>config.yaml</code>，填写：</p>
+<pre>github_client_id: "你的ClientID"
+github_client_secret: "你的ClientSecret"
+frontend_url: http://localhost:5173</pre>
+<p>保存后重启后端服务，再点击登录。</p>
+<p><a href="%s">← 返回登录页</a></p>
+</body></html>`, h.FrontendURL)
+			c.Data(http.StatusServiceUnavailable, "text/html; charset=utf-8", []byte(page))
+			return
+		}
 		httpapi.Error(c, http.StatusServiceUnavailable, "GITHUB_NOT_CONFIGURED",
-			"服务端未配置 GitHub OAuth（GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET）", nil)
+			"服务端未配置 GitHub OAuth（config.yaml 中 github_client_id / github_client_secret）", nil)
 		return
 	}
 	state := security.RandomHex(16)
@@ -99,7 +117,7 @@ func (h *Handlers) Callback(c *gin.Context) {
 		Expires:  expires,
 		MaxAge:   int(h.SessionTTL.Seconds()),
 	})
-	c.Redirect(http.StatusFound, h.PublicURL)
+	c.Redirect(http.StatusFound, h.FrontendURL)
 }
 
 func (h *Handlers) Logout(c *gin.Context) {
