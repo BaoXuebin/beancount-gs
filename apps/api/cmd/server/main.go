@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -88,11 +89,12 @@ func main() {
 		c.JSON(http.StatusOK, swagger)
 	})
 
+	outbound := newHTTPClient(cfg.HTTPProxy, 15*time.Second)
 	oauth := &auth.GitHubOAuth{
 		ClientID:     cfg.GitHubClientID,
 		ClientSecret: cfg.GitHubClientSecret,
 		RedirectURL:  cfg.PublicURL + "/api/v2/auth/github/callback",
-		HTTP:         &http.Client{Timeout: 15 * time.Second},
+		HTTP:         outbound,
 	}
 	authHandlers := &auth.Handlers{
 		Store:       store,
@@ -125,7 +127,8 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/revision", ledgerHandlers.Revision)
 
 	aiClient := ai.NewClient(ai.Config{
-		Provider: cfg.AIProvider, APIKey: cfg.AIAPIKey, Model: cfg.AIModel, BaseURL: cfg.AIBaseURL,
+		Provider: cfg.AIProvider, APIKey: cfg.AIAPIKey, Model: cfg.AIModel,
+		BaseURL: cfg.AIBaseURL, HTTPClient: outbound,
 	})
 	ledgerService := &ledger.Service{Store: store, Engine: beancount.CmdEngine{}, AI: aiClient}
 	txnHandlers := &httpapi.TransactionHandlers{Store: store, Service: ledgerService}
@@ -206,4 +209,15 @@ func usersMe(c *gin.Context) {
 		"email":         user.Email,
 		"created_at":    user.CreatedAt,
 	})
+}
+
+// newHTTPClient 创建带可选代理与超时的出站 HTTP 客户端。
+func newHTTPClient(proxy string, timeout time.Duration) *http.Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	if proxy != "" {
+		if u, err := url.Parse(proxy); err == nil {
+			transport.Proxy = http.ProxyURL(u)
+		}
+	}
+	return &http.Client{Transport: transport, Timeout: timeout}
 }

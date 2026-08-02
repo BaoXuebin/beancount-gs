@@ -16,6 +16,7 @@ type Config struct {
 	FrontendURL        string `yaml:"frontend_url"`
 	SessionCookie      string `yaml:"session_cookie"`
 	StateCookie        string `yaml:"oauth_state_cookie"`
+	HTTPProxy          string `yaml:"http_proxy"`
 	GitHubClientID     string `yaml:"github_client_id"`
 	GitHubClientSecret string `yaml:"github_client_secret"`
 	AIProvider         string `yaml:"ai_provider"`
@@ -47,6 +48,10 @@ public_url: http://localhost:10000
 frontend_url: ""
 session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
+
+# 出站 HTTP 代理（可选）：访问 GitHub / AI 服务超时时使用，
+# 例如本地代理 http://127.0.0.1:7890
+http_proxy: ""
 
 # GitHub OAuth（在 https://github.com/settings/developers 创建 OAuth App，
 # 回调地址为 public_url + /api/v2/auth/github/callback）

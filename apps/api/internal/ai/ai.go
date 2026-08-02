@@ -15,10 +15,11 @@ import (
 var ErrNotConfigured = errors.New("AI 未配置：请设置 AI_PROVIDER / AI_API_KEY / AI_MODEL")
 
 type Config struct {
-	Provider string // openai | compatible | ollama
-	APIKey   string
-	Model    string
-	BaseURL  string
+	Provider   string // openai | compatible | ollama | deepseek
+	APIKey     string
+	Model      string
+	BaseURL    string
+	HTTPClient *http.Client
 }
 
 func (c Config) Enabled() bool {
@@ -47,7 +48,13 @@ func NewClient(cfg Config) *Client {
 		}
 	}
 	cfg.BaseURL = base
-	return &Client{cfg: cfg, http: &http.Client{Timeout: 60 * time.Second}}
+	c := &Client{cfg: cfg}
+	if cfg.HTTPClient != nil {
+		c.http = cfg.HTTPClient
+	} else {
+		c.http = &http.Client{Timeout: 60 * time.Second}
+	}
+	return c
 }
 
 func (c *Client) Enabled() bool {

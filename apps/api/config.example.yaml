@@ -10,6 +10,10 @@ frontend_url: http://localhost:5173
 session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
 
+# 出站 HTTP 代理（可选）：访问 GitHub / AI 服务超时时使用，
+# 例如本地代理 http://127.0.0.1:7890
+http_proxy: ""
+
 # GitHub OAuth（回调地址为 public_url + /api/v2/auth/github/callback）
 github_client_id: ""
 github_client_secret: ""

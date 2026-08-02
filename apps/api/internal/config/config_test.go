@@ -10,6 +10,7 @@ func TestLoadFromFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	content := `port: 8080
 db_path: /data/test.db
+http_proxy: http://127.0.0.1:7890
 github_client_id: cid
 github_client_secret: secret
 ai_provider: ollama
@@ -27,6 +28,9 @@ ai_model: qwen2.5
 	}
 	if cfg.GitHubClientID != "cid" || cfg.AIProvider != "ollama" || cfg.AIModel != "qwen2.5" {
 		t.Fatalf("secrets not applied: %+v", cfg)
+	}
+	if cfg.HTTPProxy != "http://127.0.0.1:7890" {
+		t.Fatalf("http_proxy not applied: %+v", cfg)
 	}
 	// 未填字段补默认
 	if cfg.DataRoot != "data" || cfg.PublicURL != "http://localhost:8080" {

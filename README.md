@@ -42,6 +42,7 @@ public_url: http://localhost:10000
 frontend_url: http://localhost:5173  # 登录成功后的跳转；开发模式填前端地址，生产同域留空
 session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
+http_proxy: ""                 # 出站代理（可选）：访问 GitHub / AI 服务超时时使用，如 http://127.0.0.1:7890
 github_client_id: ""           # GitHub OAuth
 github_client_secret: ""
 ai_provider: ""                # openai | compatible | ollama | deepseek（可选）
