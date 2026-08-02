@@ -27,11 +27,7 @@ import { WorkspacesPage } from '@/pages/WorkspacesPage'
 import { IntegrationsPage } from '@/pages/IntegrationsPage'
 
 function AppLayout() {
-  return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
-      <Outlet />
-    </main>
-  )
+  return <Outlet />
 }
 
 function FullScreenLoader() {

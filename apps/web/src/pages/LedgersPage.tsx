@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -80,121 +80,133 @@ export function LedgersPage() {
     !ledgers.loading && !ledgers.error && ledgers.data != null && ledgers.data.length === 0
 
   return (
-    <div>
-      <BrandBar />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">账本</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            账本归属工作区，多人协作编辑，修订号控制并发
-          </p>
-        </div>
-        <Button onClick={openDialog}>
-          <Plus /> 新建账本
-        </Button>
-      </div>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {ledgers.loading &&
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
-        {ledgers.error && <p className="text-sm text-destructive">加载失败：{ledgers.error}</p>}
-        {ledgers.data?.map((ledger) => (
-          <Link key={ledger.id} to={`/ledgers/${ledger.id}/transactions`}>
-            <Card className="h-full transition-colors hover:border-primary">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{ledger.name}</CardTitle>
-                  <Badge variant="outline">{ledger.operating_currency}</Badge>
-                </div>
-                <CardDescription>
-                  修订 #{ledger.revision} · 成员 {ledger.member_count ?? 0}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <span className="text-sm text-primary">打开账本 →</span>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {isEmpty && (
-        <Card className="mt-6">
-          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <p className="text-sm text-muted-foreground">还没有账本，先创建第一个账本开始记账</p>
-            <Button onClick={openDialog}>
-              <Plus /> 创建账本
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>新建账本</DialogTitle>
-            <DialogDescription>账本创建在你拥有 editor 及以上权限的工作区</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-1.5">
-              <Label>工作区</Label>
-              <Select
-                value={form.team_id ?? null}
-                onValueChange={(value) => value && setForm((prev) => ({ ...prev, team_id: value }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="选择工作区" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teams.data?.map((team) => (
-                    <SelectItem key={team.id} value={team.id}>
-                      {team.name}（{team.role}）
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {teams.error && (
-                <p className="text-xs text-destructive">工作区加载失败：{teams.error}</p>
-              )}
-            </div>
-            <div className="grid gap-1.5">
-              <Label>账本名称</Label>
-              <Input
-                value={form.name ?? ''}
-                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="如：家庭账本"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label>记账币种</Label>
-              <Input
-                value={form.operating_currency ?? ''}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, operating_currency: e.target.value }))
-                }
-                placeholder="CNY"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label>起始日期（可选）</Label>
-              <Input
-                type="date"
-                value={form.start_date ?? ''}
-                onChange={(e) => setForm((prev) => ({ ...prev, start_date: e.target.value }))}
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+    <div className="flex min-h-screen flex-col">
+      <BrandBar title="账本" />
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">账本</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              账本归属工作区，多人协作编辑，修订号控制并发
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={create} disabled={busy}>
-              {busy ? '创建中…' : '创建'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <button type="button" className={buttonVariants()} onClick={openDialog}>
+            <Plus /> 新建账本
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {ledgers.loading &&
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          {ledgers.error && <p className="text-sm text-destructive">加载失败：{ledgers.error}</p>}
+          {ledgers.data?.map((ledger) => (
+            <Link key={ledger.id} to={`/ledgers/${ledger.id}/transactions`}>
+              <Card className="h-full transition-colors hover:border-primary">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">{ledger.name}</CardTitle>
+                    <Badge variant="outline">{ledger.operating_currency}</Badge>
+                  </div>
+                  <CardDescription>
+                    修订 #{ledger.revision} · 成员 {ledger.member_count ?? 0}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <span className="text-sm text-primary">打开账本 →</span>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        {isEmpty && (
+          <Card className="mt-6">
+            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                还没有账本，先创建第一个账本开始记账
+              </p>
+              <button type="button" className={buttonVariants()} onClick={openDialog}>
+                <Plus /> 创建账本
+              </button>
+            </CardContent>
+          </Card>
+        )}
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>新建账本</DialogTitle>
+              <DialogDescription>账本创建在你拥有 editor 及以上权限的工作区</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="grid gap-1.5">
+                <Label>工作区</Label>
+                <Select
+                  value={form.team_id ?? null}
+                  onValueChange={(value) =>
+                    value && setForm((prev) => ({ ...prev, team_id: value }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="选择工作区" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teams.data?.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        {team.name}（{team.role}）
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {teams.error && (
+                  <p className="text-xs text-destructive">工作区加载失败：{teams.error}</p>
+                )}
+              </div>
+              <div className="grid gap-1.5">
+                <Label>账本名称</Label>
+                <Input
+                  value={form.name ?? ''}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="如：家庭账本"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>记账币种</Label>
+                <Input
+                  value={form.operating_currency ?? ''}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, operating_currency: e.target.value }))
+                  }
+                  placeholder="CNY"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>起始日期（可选）</Label>
+                <Input
+                  type="date"
+                  value={form.start_date ?? ''}
+                  onChange={(e) => setForm((prev) => ({ ...prev, start_date: e.target.value }))}
+                />
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </div>
+            <DialogFooter>
+              <button
+                type="button"
+                className={buttonVariants({ variant: 'outline' })}
+                onClick={() => setOpen(false)}
+              >
+                取消
+              </button>
+              <button type="button" className={buttonVariants()} disabled={busy} onClick={create}>
+                {busy ? '创建中…' : '创建'}
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   )
 }
