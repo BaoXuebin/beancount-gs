@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { LedgerNav } from '@/components/LedgerNav'
 import { request } from '@/api/client'
 import type { ImportResult, ImportRow } from '@/api/types'
 
@@ -92,7 +91,6 @@ export function ImportPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold">导入账单</h1>
-      <LedgerNav />
 
       <Card className="mt-6">
         <CardHeader>

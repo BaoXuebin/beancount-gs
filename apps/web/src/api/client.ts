@@ -49,7 +49,11 @@ async function doFetch<T>(url: string, init: RequestInit): Promise<T> {
   if (res.status === 204) {
     return undefined as T
   }
-  return (await res.json()) as T
+  const contentType = res.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) {
+    return (await res.json()) as T
+  }
+  return (await res.text()) as T
 }
 
 export async function request<T>(

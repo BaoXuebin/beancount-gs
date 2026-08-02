@@ -3,9 +3,25 @@ import type { components } from './schema'
 export type Ledger = components['schemas']['Ledger']
 export type LedgerCreate = components['schemas']['LedgerCreate']
 export type Team = components['schemas']['Team']
+export type TeamCreate = components['schemas']['TeamCreate']
 export type User = components['schemas']['User']
 export type Transaction = components['schemas']['Transaction']
+export type TransactionCreate = components['schemas']['TransactionCreate']
 export type Posting = components['schemas']['Posting']
+export type Amount = components['schemas']['Amount']
+export type Cost = components['schemas']['Cost']
+export type Account = components['schemas']['Account']
+export type AccountOpen = components['schemas']['AccountOpen']
+export type AccountDetail = components['schemas']['AccountDetail']
+export type AccountTypeMapping = components['schemas']['AccountTypeMapping']
+export type Event = components['schemas']['Event']
+export type Currency = components['schemas']['Currency']
+export type TransactionTemplate = components['schemas']['TransactionTemplate']
+export type ApiKey = components['schemas']['ApiKey']
+export type AuditLog = components['schemas']['AuditLog']
+export type Membership = components['schemas']['Membership']
+export type StatsPayee = components['schemas']['StatsPayee']
+export type AiRecordResult = components['schemas']['AiRecordResult']
 
 export interface TransactionListResponse {
   items: Transaction[]
@@ -21,6 +37,10 @@ export interface StatsPoint {
 export interface Insight {
   type: string
   message: string
+}
+
+export interface InsightsResponse {
+  insights: Insight[]
 }
 
 export interface ImportRow {
