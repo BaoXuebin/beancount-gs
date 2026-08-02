@@ -8,6 +8,8 @@ import (
 type Config struct {
 	Port               int
 	DBPath             string
+	DataRoot           string
+	TemplateDir        string
 	GitHubClientID     string
 	GitHubClientSecret string
 	AppPublicURL       string
@@ -20,6 +22,8 @@ func Load() Config {
 	return Config{
 		Port:               port,
 		DBPath:             envStr("DB_PATH", "data/beancount-gs.db"),
+		DataRoot:           envStr("DATA_ROOT", "data"),
+		TemplateDir:        envStr("TEMPLATE_DIR", "../../template"),
 		GitHubClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 		GitHubClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
 		AppPublicURL:       envStr("APP_PUBLIC_URL", "http://localhost:"+strconv.Itoa(port)),

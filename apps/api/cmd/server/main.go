@@ -17,6 +17,7 @@ import (
 	"github.com/beancount-gs/api/internal/db"
 	httpapi "github.com/beancount-gs/api/internal/http"
 	"github.com/beancount-gs/api/internal/http/gen"
+	"github.com/beancount-gs/api/internal/repository"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,6 +38,10 @@ func main() {
 	}
 	defer store.Close()
 	slog.Info("database ready", "path", cfg.DBPath)
+	if err := repository.EnsureDataRoot(cfg.DataRoot); err != nil {
+		slog.Error("failed to prepare data root", "path", cfg.DataRoot, "err", err)
+		os.Exit(1)
+	}
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -80,6 +85,19 @@ func main() {
 
 	authed := api.Group("", httpapi.RequireSession(store, cfg.SessionCookie))
 	authed.GET("/users/me", usersMe)
+
+	teamsHandlers := &httpapi.TeamsHandlers{Store: store}
+	ledgerHandlers := &httpapi.LedgerHandlers{
+		Store:       store,
+		DataRoot:    cfg.DataRoot,
+		TemplateDir: cfg.TemplateDir,
+	}
+	authed.GET("/teams", teamsHandlers.List)
+	authed.POST("/teams", teamsHandlers.Create)
+	authed.GET("/ledgers", ledgerHandlers.List)
+	authed.POST("/ledgers", ledgerHandlers.Create)
+	authed.GET("/ledgers/:ledger_id", ledgerHandlers.Get)
+	authed.GET("/ledgers/:ledger_id/revision", ledgerHandlers.Revision)
 
 	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}
