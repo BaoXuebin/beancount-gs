@@ -1,7 +1,7 @@
 import { LogOut } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { request } from '@/api/client'
-import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -16,15 +16,11 @@ function initials(name: string): string {
   return name.trim().charAt(0).toUpperCase() || '?'
 }
 
-export function UserMenu({
-  align = 'start',
-  compact = false,
-}: {
-  align?: 'start' | 'end'
-  compact?: boolean
-}) {
+export function UserMenu({ align = 'start' }: { align?: 'start' | 'end' }) {
   const { user } = useAuth()
   const name = user?.display_name || user?.github_login || '用户'
+  const [open, setOpen] = useState(false)
+  const closeTimer = useRef<number | undefined>(undefined)
 
   const logout = async () => {
     try {
@@ -35,51 +31,64 @@ export function UserMenu({
     window.location.href = '/login'
   }
 
+  const openMenu = () => {
+    if (closeTimer.current !== undefined) window.clearTimeout(closeTimer.current)
+    setOpen(true)
+  }
+
+  const closeMenu = () => {
+    closeTimer.current = window.setTimeout(() => setOpen(false), 150)
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            className={cn(
-              'flex items-center gap-2 rounded-lg text-left transition-colors hover:bg-accent data-popup-open:bg-accent',
-              compact ? 'px-1 py-1' : 'w-full px-2 py-2',
-            )}
-            title={name}
-          >
-            <Avatar size="sm">
-              <AvatarFallback>{initials(name)}</AvatarFallback>
-            </Avatar>
-            {!compact && (
-              <span className="flex min-w-0 flex-1 flex-col">
+    <div onMouseEnter={openMenu} onMouseLeave={closeMenu}>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent data-popup-open:bg-accent"
+              title={name}
+            >
+              <Avatar size="sm">
+                <AvatarFallback>{initials(name)}</AvatarFallback>
+              </Avatar>
+              <span className="flex min-w-0 max-w-[150px] flex-col leading-tight">
                 <span className="truncate text-sm font-medium">{name}</span>
                 <span className="truncate text-[10px] text-muted-foreground">
-                  {user?.github_login ?? ''}
+                  {user?.github_login ? `@${user.github_login}` : ''}
                 </span>
               </span>
-            )}
-          </button>
-        }
-      />
-      <DropdownMenuContent align={align} side="top" sideOffset={8} className="w-60">
-        <DropdownMenuLabel>用户信息</DropdownMenuLabel>
-        <div className="flex items-center gap-2 px-1.5 py-1.5">
-          <Avatar>
-            <AvatarFallback>{initials(name)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{name}</p>
-            <p className="truncate text-xs text-muted-foreground">@{user?.github_login}</p>
+            </button>
+          }
+        />
+        <DropdownMenuContent
+          align={align}
+          side="bottom"
+          sideOffset={6}
+          className="w-60"
+          onMouseEnter={openMenu}
+          onMouseLeave={closeMenu}
+        >
+          <DropdownMenuLabel>用户信息</DropdownMenuLabel>
+          <div className="flex items-center gap-2 px-1.5 py-1.5">
+            <Avatar>
+              <AvatarFallback>{initials(name)}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{name}</p>
+              <p className="truncate text-xs text-muted-foreground">@{user?.github_login}</p>
+            </div>
           </div>
-        </div>
-        {user?.email && (
-          <p className="px-1.5 pb-1 text-xs text-muted-foreground">{user.email}</p>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={logout}>
-          <LogOut /> 退出登录
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {user?.email && (
+            <p className="truncate px-1.5 pb-1 text-xs text-muted-foreground">{user.email}</p>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={logout}>
+            <LogOut /> 退出登录
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }

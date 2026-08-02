@@ -62,7 +62,7 @@ export function LedgerLayout() {
               </p>
             </div>
           </div>
-          <UserMenu align="end" compact />
+          <UserMenu align="end" />
         </div>
       </header>
 
