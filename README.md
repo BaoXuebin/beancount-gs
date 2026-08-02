@@ -27,9 +27,29 @@ cd apps/api
 go run ./cmd/server
 ```
 
-环境变量：`GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` / `APP_PUBLIC_URL`（OAuth 回调），
-`DB_PATH`（SQLite 路径，默认 `data/beancount-gs.db`），`DATA_ROOT`（账本文件根目录），
-`AI_PROVIDER` / `AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL`（AI，可省略）。
+首次启动会自动生成 `config.yaml`，编辑其中的
+`github_client_id` / `github_client_secret`（回调地址为 `public_url + /api/v2/auth/github/callback`）
+与 AI 配置（可选）后重启即可。也可参考 [config.example.yaml](apps/api/config.example.yaml)。
+
+配置文件支持的全部字段：
+
+```yaml
+port: 10000                    # 服务端口
+db_path: data/beancount-gs.db  # SQLite 路径
+data_root: data                # 账本文件根目录
+template_dir: ../../template   # 账本模板目录
+public_url: http://localhost:10000
+session_cookie: bgs_session
+oauth_state_cookie: bgs_oauth_state
+github_client_id: ""           # GitHub OAuth
+github_client_secret: ""
+ai_provider: ""                # openai | compatible | ollama（可选）
+ai_api_key: ""
+ai_model: ""
+ai_base_url: ""
+```
+
+命令行参数 `-p` / `-db` / `-config` 可覆盖配置文件；`BGS_CONFIG` 环境变量可指定配置文件路径。
 
 **前端**
 

@@ -29,10 +29,30 @@ import (
 var version = "v2.0.0-dev"
 
 func main() {
-	cfg := config.Load()
-	flag.IntVar(&cfg.Port, "p", cfg.Port, "服务端口")
-	flag.StringVar(&cfg.DBPath, "db", cfg.DBPath, "SQLite 数据库路径")
+	var configPath string
+	var port int
+	var dbPath string
+	flag.StringVar(&configPath, "config", "", "配置文件路径（默认 ./config.yaml，不存在则自动生成）")
+	flag.IntVar(&port, "p", 0, "服务端口（覆盖配置文件）")
+	flag.StringVar(&dbPath, "db", "", "SQLite 数据库路径（覆盖配置文件）")
 	flag.Parse()
+	if configPath == "" {
+		configPath = os.Getenv("BGS_CONFIG")
+	}
+	if configPath == "" {
+		configPath = "config.yaml"
+	}
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		slog.Error("failed to load config", "path", configPath, "err", err)
+		os.Exit(1)
+	}
+	if port != 0 {
+		cfg.Port = port
+	}
+	if dbPath != "" {
+		cfg.DBPath = dbPath
+	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
 	store, err := db.Open(cfg.DBPath)
@@ -71,13 +91,13 @@ func main() {
 	oauth := &auth.GitHubOAuth{
 		ClientID:     cfg.GitHubClientID,
 		ClientSecret: cfg.GitHubClientSecret,
-		RedirectURL:  cfg.AppPublicURL + "/api/v2/auth/github/callback",
+		RedirectURL:  cfg.PublicURL + "/api/v2/auth/github/callback",
 		HTTP:         &http.Client{Timeout: 15 * time.Second},
 	}
 	authHandlers := &auth.Handlers{
 		Store:       store,
 		OAuth:       oauth,
-		PublicURL:   cfg.AppPublicURL,
+		PublicURL:   cfg.PublicURL,
 		CookieName:  cfg.SessionCookie,
 		StateCookie: cfg.StateCookie,
 		SessionTTL:  30 * 24 * time.Hour,

@@ -1,0 +1,18 @@
+# beancount-gs 服务配置示例：复制为 config.yaml 后按需修改
+port: 10000
+db_path: data/beancount-gs.db
+data_root: data
+template_dir: ../../template
+public_url: http://localhost:10000
+session_cookie: bgs_session
+oauth_state_cookie: bgs_oauth_state
+
+# GitHub OAuth（回调地址为 public_url + /api/v2/auth/github/callback）
+github_client_id: ""
+github_client_secret: ""
+
+# AI（可选；provider: openai | compatible | ollama）
+ai_provider: ""
+ai_api_key: ""
+ai_model: ""
+ai_base_url: ""
