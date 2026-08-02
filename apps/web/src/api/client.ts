@@ -26,20 +26,12 @@ export interface ApiErrorBody {
   details?: Record<string, unknown>
 }
 
-export async function request<T>(
-  path: string,
-  init: RequestInit & RequestOptions = {},
-): Promise<T> {
-  const { ledgerId, revision, token, ...rest } = init
-  const headers = new Headers(rest.headers)
-  if (ledgerId) headers.set('ledger-id', ledgerId)
-  if (revision !== undefined) headers.set('If-Revision-Match', String(revision))
-  if (token) headers.set('Authorization', `Bearer ${token}`)
-  if (rest.body != null && !(rest.body instanceof FormData) && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json')
-  }
+// 相同 GET 请求在途去重：React StrictMode 开发模式下 effect 会执行两次，
+// 去重后同一请求只真正发出一次，避免网络面板出现重复请求。
+const inFlight = new Map<string, Promise<unknown>>()
 
-  const res = await fetch(`${API_BASE}${path}`, { ...rest, headers })
+async function doFetch<T>(url: string, init: RequestInit): Promise<T> {
+  const res = await fetch(url, init)
   if (!res.ok) {
     let body: ApiErrorBody | undefined
     try {
@@ -58,6 +50,37 @@ export async function request<T>(
     return undefined as T
   }
   return (await res.json()) as T
+}
+
+export async function request<T>(
+  path: string,
+  init: RequestInit & RequestOptions = {},
+): Promise<T> {
+  const { ledgerId, revision, token, ...rest } = init
+  const headers = new Headers(rest.headers)
+  if (ledgerId) headers.set('ledger-id', ledgerId)
+  if (revision !== undefined) headers.set('If-Revision-Match', String(revision))
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  if (rest.body != null && !(rest.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+
+  const url = `${API_BASE}${path}`
+  const method = (rest.method ?? 'GET').toUpperCase()
+
+  if (method === 'GET') {
+    const key = JSON.stringify({ method, url, ledgerId, revision, token })
+    let pending = inFlight.get(key) as Promise<T> | undefined
+    if (!pending) {
+      pending = doFetch<T>(url, { ...rest, headers }).finally(() => {
+        inFlight.delete(key)
+      })
+      inFlight.set(key, pending)
+    }
+    return pending
+  }
+
+  return doFetch<T>(url, { ...rest, headers })
 }
 
 export const api = {

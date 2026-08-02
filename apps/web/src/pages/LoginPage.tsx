@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { API_BASE } from '@/api/client'
+import { API_BASE, request } from '@/api/client'
 
 export function LoginPage() {
   const { loading, loggedIn } = useAuth()
@@ -12,9 +12,17 @@ export function LoginPage() {
   const [backendOk, setBackendOk] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch(`${API_BASE}/health`, { credentials: 'include' })
-      .then((res) => setBackendOk(res.ok))
-      .catch(() => setBackendOk(false))
+    let cancelled = false
+    request('/health')
+      .then(() => {
+        if (!cancelled) setBackendOk(true)
+      })
+      .catch(() => {
+        if (!cancelled) setBackendOk(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = async () => {
