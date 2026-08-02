@@ -483,6 +483,11 @@ export interface paths {
                         /** @default CNY */
                         operating_currency?: string;
                         /**
+                         * @description 跳过 bean-check 语法校验（用于迁移非标准语法的历史账本）
+                         * @default false
+                         */
+                        skip_validation?: boolean;
+                        /**
                          * Format: binary
                          * @description 账本备份 zip
                          */
@@ -538,6 +543,11 @@ export interface paths {
             requestBody: {
                 content: {
                     "multipart/form-data": {
+                        /**
+                         * @description 跳过 bean-check 语法校验（用于迁移非标准语法的历史账本）
+                         * @default false
+                         */
+                        skip_validation?: boolean;
                         /**
                          * Format: binary
                          * @description 账本备份 zip

@@ -110,3 +110,54 @@ func TestCopyTree(t *testing.T) {
 		t.Fatalf("copy failed: %v %q", err, content)
 	}
 }
+
+func TestFindLedgerRoot(t *testing.T) {
+	// 根目录直接是账本
+	dest := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dest, "index.bean"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root, err := FindLedgerRoot(dest)
+	if err != nil || root != dest {
+		t.Fatalf("expected dest as root, got %q err=%v", root, err)
+	}
+
+	// 单层目录包装
+	wrapped := t.TempDir()
+	inner := filepath.Join(wrapped, "家庭账本")
+	if err := os.MkdirAll(inner, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(inner, "index.bean"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root, err = FindLedgerRoot(wrapped)
+	if err != nil || root != inner {
+		t.Fatalf("expected inner dir as root, got %q err=%v", root, err)
+	}
+
+	// 找不到
+	if _, err := FindLedgerRoot(t.TempDir()); err == nil {
+		t.Fatal("expected error for missing index.bean")
+	}
+}
+
+func TestListFiles(t *testing.T) {
+	dest := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dest, "index.bean"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dest, "month"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dest, "month", "2026-08.bean"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, err := ListFiles(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) != 2 || files[1] != "month/2026-08.bean" {
+		t.Fatalf("unexpected files: %v", files)
+	}
+}

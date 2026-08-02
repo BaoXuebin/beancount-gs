@@ -2,6 +2,7 @@ package repository
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -147,4 +148,50 @@ func copyFile(src, dst string) error {
 		return err
 	}
 	return out.Close()
+}
+
+// FindLedgerRoot 返回包含 index.bean 的账本根目录：
+// 优先 dest 本身；若 dest 下没有 index.bean 且只有一个顶层目录（该目录内含 index.bean），
+// 则兼容「zip 整体包了一层目录」的备份，返回该子目录。
+func FindLedgerRoot(dest string) (string, error) {
+	if _, err := os.Stat(filepath.Join(dest, "index.bean")); err == nil {
+		return dest, nil
+	}
+	entries, err := os.ReadDir(dest)
+	if err != nil {
+		return "", err
+	}
+	dirs := make([]string, 0, 1)
+	for _, e := range entries {
+		if e.IsDir() {
+			dirs = append(dirs, e.Name())
+		}
+	}
+	if len(dirs) == 1 {
+		sub := filepath.Join(dest, dirs[0])
+		if _, err := os.Stat(filepath.Join(sub, "index.bean")); err == nil {
+			return sub, nil
+		}
+	}
+	return "", errors.New("zip 中找不到 index.bean（请确认备份包含账本根目录，或仅包了一层目录）")
+}
+
+// ListFiles 返回目录下所有文件的相对路径（/ 分隔），用于汇总导入结果。
+func ListFiles(dir string) ([]string, error) {
+	files := make([]string, 0)
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		files = append(files, filepath.ToSlash(rel))
+		return nil
+	})
+	return files, err
 }

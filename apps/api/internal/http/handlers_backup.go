@@ -26,34 +26,54 @@ type BackupHandlers struct {
 	DataRoot string
 }
 
-// validateAndExtract 解压 zip 到 dest 并校验：必须含根目录 index.bean，且 bean-check 通过。
-func (h *BackupHandlers) validateAndExtract(ctx context.Context, file io.Reader, dest string) ([]string, error) {
+// extractBackup 解压 zip 到 dest 并归一化：
+//   - 兼容整体包了一层目录的备份（自动展开到 dest 根）；
+//   - 必须包含根目录 index.bean；
+//   - 默认执行 bean-check 校验，skipCheck=true 时跳过（返回 warnings 说明）。
+func (h *BackupHandlers) extractBackup(ctx context.Context, file io.Reader, dest string, skipCheck bool) (files []string, warnings []string, err error) {
 	data, err := io.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("读取备份文件失败: %w", err)
+		return nil, nil, fmt.Errorf("读取备份文件失败: %w", err)
 	}
 	if len(data) == 0 {
-		return nil, errors.New("备份文件为空")
+		return nil, nil, errors.New("备份文件为空")
 	}
-	files, err := repository.ExtractZip(bytes.NewReader(data), int64(len(data)), dest)
+	if _, err := repository.ExtractZip(bytes.NewReader(data), int64(len(data)), dest); err != nil {
+		return nil, nil, err
+	}
+	root, err := repository.FindLedgerRoot(dest)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	if _, err := os.Stat(filepath.Join(dest, "index.bean")); err != nil {
-		return nil, errors.New("备份缺少根目录 index.bean")
-	}
-	lines, err := h.Service.Engine.Check(ctx, filepath.Join(dest, "index.bean"))
-	if err != nil {
-		return nil, fmt.Errorf("bean-check 执行失败: %w", err)
-	}
-	if len(lines) > 0 {
-		limit := lines
-		if len(limit) > 3 {
-			limit = limit[:3]
+	if root != dest {
+		// 去掉单层目录包装：把子目录内容上移一层
+		entries, err := os.ReadDir(root)
+		if err != nil {
+			return nil, nil, err
 		}
-		return nil, fmt.Errorf("bean-check 校验失败: %s", strings.Join(limit, "；"))
+		for _, e := range entries {
+			if err := os.Rename(filepath.Join(root, e.Name()), filepath.Join(dest, e.Name())); err != nil {
+				return nil, nil, fmt.Errorf("展开根目录失败: %w", err)
+			}
+		}
+		_ = os.Remove(root)
 	}
-	return files, nil
+	if !skipCheck {
+		lines, err := h.Service.Engine.Check(ctx, filepath.Join(dest, "index.bean"))
+		if err != nil {
+			return nil, nil, fmt.Errorf("bean-check 执行失败: %w", err)
+		}
+		if len(lines) > 0 {
+			return nil, nil, fmt.Errorf("bean-check 校验失败：\n%s", strings.Join(lines, "\n"))
+		}
+	} else {
+		warnings = append(warnings, "已跳过 bean-check 语法校验")
+	}
+	files, err = repository.ListFiles(dest)
+	if err != nil {
+		return nil, nil, fmt.Errorf("汇总导入文件失败: %w", err)
+	}
+	return files, warnings, nil
 }
 
 // ImportAsNew 从备份 zip 导入并新建账本：POST /api/v2/ledgers/import
@@ -73,6 +93,8 @@ func (h *BackupHandlers) ImportAsNew(c *gin.Context) {
 	if currency == "" {
 		currency = "CNY"
 	}
+	skipCheck := c.Request.FormValue("skip_validation") == "1" ||
+		c.Request.FormValue("skip_validation") == "true"
 	if name == "" {
 		BadRequest(c, "账本名称不能为空")
 		return
@@ -93,7 +115,7 @@ func (h *BackupHandlers) ImportAsNew(c *gin.Context) {
 
 	ledgerID := uuid.NewString()
 	dataPath := filepath.Join(h.DataRoot, "teams", teamID, "ledgers", ledgerID)
-	files, err := h.validateAndExtract(ctx, file, dataPath)
+	files, warnings, err := h.extractBackup(ctx, file, dataPath, skipCheck)
 	if err != nil {
 		_ = os.RemoveAll(dataPath)
 		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "备份校验失败："+err.Error(), nil)
@@ -120,7 +142,7 @@ func (h *BackupHandlers) ImportAsNew(c *gin.Context) {
 	}); err != nil {
 		slog.Warn("audit log failed", "err", err)
 	}
-	c.JSON(http.StatusCreated, gin.H{"ledger": toGenLedger(l), "files": files})
+	c.JSON(http.StatusCreated, gin.H{"ledger": toGenLedger(l), "files": files, "warnings": warnings})
 }
 
 // ImportInto 导入备份 zip 到已有账本：POST /api/v2/ledgers/{ledger_id}/import
@@ -149,11 +171,13 @@ func (h *BackupHandlers) ImportInto(c *gin.Context) {
 		return
 	}
 	defer file.Close()
+	skipCheck := c.Request.FormValue("skip_validation") == "1" ||
+		c.Request.FormValue("skip_validation") == "true"
 
 	ctx := c.Request.Context()
 	tmp := filepath.Join(h.DataRoot, ".tmp-import", uuid.NewString())
 	defer os.RemoveAll(tmp)
-	files, err := h.validateAndExtract(ctx, file, tmp)
+	files, warnings, err := h.extractBackup(ctx, file, tmp, skipCheck)
 	if err != nil {
 		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "备份校验失败："+err.Error(), nil)
 		return
@@ -180,5 +204,6 @@ func (h *BackupHandlers) ImportInto(c *gin.Context) {
 		"ledger":   toGenLedger(*l2),
 		"revision": newRev,
 		"files":    files,
+		"warnings": warnings,
 	})
 }

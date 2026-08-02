@@ -548,7 +548,10 @@ type PostLedgersImportMultipartBody struct {
 	// Name 新账本名称
 	Name              string  `json:"name"`
 	OperatingCurrency *string `json:"operating_currency,omitempty"`
-	TeamId            string  `json:"team_id"`
+
+	// SkipValidation 跳过 bean-check 语法校验（用于迁移非标准语法的历史账本）
+	SkipValidation *bool  `json:"skip_validation,omitempty"`
+	TeamId         string `json:"team_id"`
 }
 
 // DeleteLedgersLedgerIdParams defines parameters for DeleteLedgersLedgerId.
@@ -621,6 +624,9 @@ type PostLedgersLedgerIdEventsParams struct {
 type PostLedgersLedgerIdImportMultipartBody struct {
 	// File 账本备份 zip
 	File openapi_types.File `json:"file"`
+
+	// SkipValidation 跳过 bean-check 语法校验（用于迁移非标准语法的历史账本）
+	SkipValidation *bool `json:"skip_validation,omitempty"`
 }
 
 // PostLedgersLedgerIdImportParams defines parameters for PostLedgersLedgerIdImport.

@@ -226,6 +226,10 @@ paths:
                 team_id: { type: string }
                 name: { type: string, description: 新账本名称 }
                 operating_currency: { type: string, default: CNY }
+                skip_validation:
+                  type: boolean
+                  default: false
+                  description: 跳过 bean-check 语法校验（用于迁移非标准语法的历史账本）
                 file: { type: string, format: binary, description: 账本备份 zip }
       responses:
         "201":
@@ -251,6 +255,10 @@ paths:
               type: object
               required: [file]
               properties:
+                skip_validation:
+                  type: boolean
+                  default: false
+                  description: 跳过 bean-check 语法校验（用于迁移非标准语法的历史账本）
                 file: { type: string, format: binary, description: 账本备份 zip }
       responses:
         "200":

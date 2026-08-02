@@ -45,6 +45,7 @@ export function BackupImportDialog({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<BackupImportResult | null>(null)
+  const [skipValidation, setSkipValidation] = useState(false)
 
   const openChange = (next: boolean) => {
     if (!next) {
@@ -59,6 +60,7 @@ export function BackupImportDialog({
     setLedgerId(ledgers[0]?.id ?? '')
     setName('')
     setCurrency('CNY')
+    setSkipValidation(false)
     onOpenChange(true)
   }
 
@@ -90,11 +92,13 @@ export function BackupImportDialog({
         form.append('team_id', teamId)
         form.append('name', name.trim())
         form.append('operating_currency', currency.trim() || 'CNY')
+        if (skipValidation) form.append('skip_validation', '1')
         res = await request<BackupImportResult>('/ledgers/import', {
           method: 'POST',
           body: form,
         })
       } else {
+        if (skipValidation) form.append('skip_validation', '1')
         const rev = await request<{ revision: number }>(`/ledgers/${ledgerId}/revision`)
         res = await request<BackupImportResult>(`/ledgers/${ledgerId}/import`, {
           method: 'POST',
@@ -226,7 +230,26 @@ export function BackupImportDialog({
             />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4"
+              checked={skipValidation}
+              onChange={(e) => setSkipValidation(e.target.checked)}
+            />
+            <span>
+              跳过 bean-check 语法校验
+              <span className="block text-xs text-muted-foreground">
+                备份包含非标准语法（如历史账本迁移）时勾选，仍要求包含 index.bean
+              </span>
+            </span>
+          </label>
+
+          {error && (
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-destructive/40 bg-destructive/5 p-3 font-mono text-xs text-destructive">
+              {error}
+            </pre>
+          )}
           {result && (
             <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm">
               <p className="font-medium">导入成功</p>
@@ -241,6 +264,9 @@ export function BackupImportDialog({
               <p className="mt-1 text-xs text-muted-foreground">
                 写入 {result.files?.length ?? 0} 个文件：
               </p>
+              {result.warnings?.length ? (
+                <p className="mt-1 text-xs text-amber-600">{result.warnings.join('；')}</p>
+              ) : null}
               <ul className="mt-0.5 max-h-24 overflow-auto font-mono text-[11px] text-muted-foreground">
                 {(result.files ?? []).slice(0, 20).map((f) => (
                   <li key={f}>{f}</li>
