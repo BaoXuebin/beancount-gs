@@ -14,6 +14,7 @@ import {
 import { useFetch } from '@/api/useFetch'
 import type { AuditLog } from '@/api/types'
 import { NotImplemented } from '@/components/NotImplemented'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function AuditPage() {
   const { ledgerId = '' } = useParams()
@@ -22,6 +23,7 @@ export function AuditPage() {
 
   return (
     <div>
+      {logs.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">审计日志</h1>

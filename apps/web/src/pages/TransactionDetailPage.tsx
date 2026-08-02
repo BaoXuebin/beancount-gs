@@ -23,6 +23,7 @@ import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Transaction } from '@/api/types'
 import { cn } from '@/lib/utils'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function TransactionDetailPage() {
   const { ledgerId = '', transactionId = '' } = useParams()
@@ -56,7 +57,12 @@ export function TransactionDetailPage() {
   }
 
   if (txn.loading) {
-    return <Skeleton className="h-96" />
+    return (
+      <div>
+        <LoadingHint className="mb-3" />
+        <Skeleton className="h-96" />
+      </div>
+    )
   }
 
   const t = txn.data

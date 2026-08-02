@@ -15,6 +15,7 @@ import {
 import { useFetch } from '@/api/useFetch'
 import type { StatsPayee, StatsPoint } from '@/api/types'
 import { cn } from '@/lib/utils'
+import { LoadingHint } from '@/components/LoadingHint'
 
 type Tab = 'trend' | 'share' | 'payee' | 'sankey'
 
@@ -51,6 +52,9 @@ export function StatsPage() {
 
   return (
     <div>
+      {(total.loading || trend.loading || payees.loading || flow.loading) && (
+        <LoadingHint className="mb-2" />
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">统计</h1>

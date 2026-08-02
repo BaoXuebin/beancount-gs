@@ -7,6 +7,7 @@ import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import { NotImplemented } from '@/components/NotImplemented'
 import { cn } from '@/lib/utils'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function SourceFilesPage() {
   const { ledgerId = '' } = useParams()
@@ -63,6 +64,7 @@ export function SourceFilesPage() {
 
   return (
     <div>
+      {files.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">源文件</h1>

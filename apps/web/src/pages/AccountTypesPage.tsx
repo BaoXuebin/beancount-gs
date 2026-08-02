@@ -25,6 +25,7 @@ import {
 import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { AccountTypeMapping } from '@/api/types'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function AccountTypesPage() {
   const { ledgerId = '' } = useParams()
@@ -66,6 +67,7 @@ export function AccountTypesPage() {
 
   return (
     <div>
+      {types.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">账户类型</h1>

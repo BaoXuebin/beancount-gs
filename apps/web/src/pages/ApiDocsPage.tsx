@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { API_BASE } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
+import { LoadingHint } from '@/components/LoadingHint'
 
 const methodColors: Record<string, string> = {
   GET: 'bg-emerald-500/15 text-emerald-700',
@@ -80,6 +81,7 @@ export function ApiDocsPage() {
 
   return (
     <div>
+      {spec.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">API 文档与调试</h1>

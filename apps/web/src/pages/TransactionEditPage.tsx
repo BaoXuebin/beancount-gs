@@ -17,6 +17,7 @@ import {
 import { ApiError, request } from '@/api/client'
 import type { AiRecordResult, Amount, Posting, Transaction } from '@/api/types'
 import { cn } from '@/lib/utils'
+import { LoadingHint } from '@/components/LoadingHint'
 
 interface PostingRow {
   account: string
@@ -206,7 +207,12 @@ export function TransactionEditPage() {
   }
 
   if (loading) {
-    return <Skeleton className="h-96" />
+    return (
+      <div>
+        <LoadingHint className="mb-3" />
+        <Skeleton className="h-96" />
+      </div>
+    )
   }
 
   return (

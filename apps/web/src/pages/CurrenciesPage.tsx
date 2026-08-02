@@ -13,6 +13,7 @@ import {
 import { useFetch } from '@/api/useFetch'
 import type { Currency } from '@/api/types'
 import { NotImplemented } from '@/components/NotImplemented'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function CurrenciesPage() {
   const { ledgerId = '' } = useParams()
@@ -21,6 +22,7 @@ export function CurrenciesPage() {
 
   return (
     <div>
+      {currencies.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">币种与汇率</h1>

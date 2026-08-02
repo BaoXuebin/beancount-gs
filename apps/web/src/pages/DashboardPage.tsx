@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useFetch } from '@/api/useFetch'
 import type { InsightsResponse, Ledger, Transaction, TransactionListResponse } from '@/api/types'
 import { cn } from '@/lib/utils'
+import { LoadingHint } from '@/components/LoadingHint'
 
 function currentMonth(): string {
   const now = new Date()
@@ -50,6 +51,7 @@ export function DashboardPage() {
 
   return (
     <div>
+      {totals.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">仪表盘</h1>

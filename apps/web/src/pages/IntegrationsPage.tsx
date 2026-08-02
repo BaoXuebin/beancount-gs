@@ -33,6 +33,7 @@ import {
 import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { ApiKey } from '@/api/types'
+import { LoadingHint } from '@/components/LoadingHint'
 
 const tools = [
   ['list_ledgers', '列出当前用户可访问的账本', '只读'],
@@ -111,6 +112,7 @@ export function IntegrationsPage() {
 
   return (
     <div>
+      {keys.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">集成与 MCP</h1>

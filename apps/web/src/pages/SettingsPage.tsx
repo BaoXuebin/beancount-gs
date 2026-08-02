@@ -25,6 +25,7 @@ import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger, Membership } from '@/api/types'
 import { NotImplemented } from '@/components/NotImplemented'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function SettingsPage() {
   const { ledgerId = '' } = useParams()
@@ -86,6 +87,7 @@ export function SettingsPage() {
 
   return (
     <div>
+      {ledger.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">设置</h1>

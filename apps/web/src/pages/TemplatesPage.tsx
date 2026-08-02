@@ -18,6 +18,7 @@ import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { TransactionTemplate } from '@/api/types'
 import { NotImplemented } from '@/components/NotImplemented'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function TemplatesPage() {
   const { ledgerId = '' } = useParams()
@@ -61,6 +62,7 @@ export function TemplatesPage() {
 
   return (
     <div>
+      {templates.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">交易模板</h1>

@@ -25,6 +25,7 @@ import {
 import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Account } from '@/api/types'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function AccountDetailPage() {
   const { ledgerId = '', account = '' } = useParams()
@@ -92,7 +93,14 @@ export function AccountDetailPage() {
     }
   }
 
-  if (data.loading) return <Skeleton className="h-96" />
+  if (data.loading) {
+    return (
+      <div>
+        <LoadingHint className="mb-3" />
+        <Skeleton className="h-96" />
+      </div>
+    )
+  }
   if (data.error || !data.data) {
     return <p className="text-sm text-destructive">加载失败：{data.error}</p>
   }

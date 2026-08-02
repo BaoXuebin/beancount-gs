@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -25,30 +24,22 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Account } from '@/api/types'
+import { AccountTree } from '@/components/AccountTree'
+import { LoadingHint } from '@/components/LoadingHint'
+import { cn } from '@/lib/utils'
 
-const typeLabels: Record<string, string> = {
-  Assets: '资产',
-  Liabilities: '负债',
-  Income: '收入',
-  Expenses: '费用',
-  Equity: '权益',
-}
-
-function displayName(account: string): string {
-  return account.split(':').pop() ?? account
-}
-
-function amountText(a: Account): string {
-  if (a.market_number) return `${a.market_number} ${a.market_currency ?? ''}`.trim()
-  if (a.positions?.length) {
-    return a.positions.map((p) => `${p.number} ${p.currency}`).join(' · ')
-  }
-  return '0'
-}
+const typeTabs = [
+  { key: 'Assets', label: '资产' },
+  { key: 'Liabilities', label: '负债' },
+  { key: 'Income', label: '收入' },
+  { key: 'Expenses', label: '费用' },
+  { key: 'Equity', label: '权益' },
+]
 
 export function AccountsPage() {
   const { ledgerId = '' } = useParams()
   const accounts = useFetch<Account[]>(`/ledgers/${ledgerId}/accounts?status=open`)
+  const [tab, setTab] = useState('Assets')
 
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -60,12 +51,11 @@ export function AccountsPage() {
     booking: 'none',
   })
 
-  const groups = ['Assets', 'Liabilities', 'Income', 'Expenses', 'Equity']
-    .map((type) => ({
-      type,
-      items: (accounts.data ?? []).filter((a) => a.type === type),
-    }))
-    .filter((g) => g.items.length > 0)
+  const byType = (accounts.data ?? []).filter((a) => a.type === tab)
+  const counts = typeTabs.reduce<Record<string, number>>((acc, t) => {
+    acc[t.key] = (accounts.data ?? []).filter((a) => a.type === t.key).length
+    return acc
+  }, {})
 
   const createAccount = async () => {
     if (!form.account.trim()) {
@@ -110,13 +100,13 @@ export function AccountsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">账户</h1>
-          <p className="mt-1 text-sm text-muted-foreground">资产 / 负债 / 收入 / 费用 / 权益</p>
+          <p className="mt-1 text-sm text-muted-foreground">按类型展示，层级结构体现账户归属关系</p>
         </div>
         <div className="flex gap-2">
-          <Link to={`/ledgers/${ledgerId}/account-types`} className={buttonVariants({ variant: 'outline' })}>
+          <Link to="account-types" className={buttonVariants({ variant: 'outline' })}>
             账户类型
           </Link>
-          <Link to={`/ledgers/${ledgerId}/currencies`} className={buttonVariants({ variant: 'outline' })}>
+          <Link to="currencies" className={buttonVariants({ variant: 'outline' })}>
             币种与汇率
           </Link>
           <button type="button" className={buttonVariants()} onClick={() => setOpen(true)}>
@@ -125,54 +115,56 @@ export function AccountsPage() {
         </div>
       </div>
 
-      {accounts.loading && (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
-          ))}
+      {accounts.loading && accounts.data == null && (
+        <div className="mt-3">
+          <LoadingHint />
         </div>
       )}
-      {accounts.error && <p className="mt-6 text-sm text-destructive">加载失败：{accounts.error}</p>}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {groups.map((group) => (
-          <Card key={group.type}>
-            <CardHeader>
-              <CardTitle className="text-base">
-                {typeLabels[group.type] ?? group.type}{' '}
-                <span className="text-sm font-normal text-muted-foreground">({group.type})</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col">
-              {group.items.map((a) => (
-                <Link
-                  key={a.account}
-                  to={`/ledgers/${ledgerId}/accounts/${encodeURIComponent(a.account)}`}
-                  className="flex items-center justify-between border-b py-2 text-sm last:border-0 hover:text-primary"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate font-mono">{displayName(a.account)}</span>
-                    <Badge variant="outline" className="hidden font-mono text-[10px] sm:inline-flex">
-                      {a.account}
-                    </Badge>
-                  </span>
-                  <span className="ml-3 shrink-0 font-mono tabular-nums">{amountText(a)}</span>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
+      <div className="mt-4 flex flex-wrap gap-1 rounded-lg border bg-muted/40 p-1">
+        {typeTabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            className={cn(
+              'flex-1 rounded-md px-3 py-1.5 text-sm transition-colors sm:flex-none sm:px-4',
+              tab === t.key
+                ? 'bg-background font-medium shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+            <span className="ml-1 text-xs text-muted-foreground">
+              {counts[t.key] ?? 0}
+            </span>
+          </button>
         ))}
       </div>
-      {!accounts.loading && !accounts.error && groups.length === 0 && (
-        <Card className="mt-6">
-          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <p className="text-sm text-muted-foreground">还没有账户，先开第一个账户</p>
-            <button type="button" className={buttonVariants()} onClick={() => setOpen(true)}>
-              <Plus /> 开户
-            </button>
-          </CardContent>
-        </Card>
-      )}
+
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="text-base">
+            {typeTabs.find((t) => t.key === tab)?.label}账户
+          </CardTitle>
+          <CardDescription>
+            按「{tab}」前缀的层级关系展开，点击账户名查看详情
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {accounts.loading && accounts.data == null ? (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-7 rounded-md" style={{ marginLeft: (i % 4) * 18 }} />
+              ))}
+            </div>
+          ) : accounts.error ? (
+            <p className="text-sm text-destructive">加载失败：{accounts.error}</p>
+          ) : (
+            <AccountTree accounts={byType} ledgerId={ledgerId} />
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={open} onOpenChange={(o) => !o && setOpen(false)}>
         <DialogContent>
@@ -188,6 +180,9 @@ export function AccountsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, account: e.target.value }))}
                 placeholder="Assets:Bank:招商银行"
               />
+              <p className="text-xs text-muted-foreground">
+                使用冒号层级，如 Assets:Bank:招商银行，将自动归入对应类型树
+              </p>
             </div>
             <div className="grid gap-1.5">
               <Label>开户日期</Label>

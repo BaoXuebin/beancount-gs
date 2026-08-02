@@ -19,6 +19,7 @@ import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Event } from '@/api/types'
 import { NotImplemented } from '@/components/NotImplemented'
+import { LoadingHint } from '@/components/LoadingHint'
 
 export function EventsPage() {
   const { ledgerId = '' } = useParams()
@@ -64,6 +65,7 @@ export function EventsPage() {
 
   return (
     <div>
+      {events.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">事件</h1>

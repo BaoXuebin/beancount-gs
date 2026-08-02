@@ -34,6 +34,7 @@ import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger, Transaction, TransactionListResponse } from '@/api/types'
 import { cn } from '@/lib/utils'
+import { LoadingHint } from '@/components/LoadingHint'
 
 const PAGE_SIZE = 50
 
@@ -138,6 +139,7 @@ export function TransactionsPage() {
 
   return (
     <div>
+      {txns.loading && <LoadingHint className="mb-2" />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">交易</h1>
