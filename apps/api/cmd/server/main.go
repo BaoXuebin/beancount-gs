@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/beancount-gs/api/internal/auth"
+	"github.com/beancount-gs/api/internal/config"
+	"github.com/beancount-gs/api/internal/db"
+	httpapi "github.com/beancount-gs/api/internal/http"
 	"github.com/beancount-gs/api/internal/http/gen"
 	"github.com/gin-gonic/gin"
 )
@@ -20,13 +24,21 @@ import (
 var version = "v2.0.0-dev"
 
 func main() {
-	var port int
-	flag.IntVar(&port, "p", 10000, "服务端口")
+	cfg := config.Load()
+	flag.IntVar(&cfg.Port, "p", cfg.Port, "服务端口")
+	flag.StringVar(&cfg.DBPath, "db", cfg.DBPath, "SQLite 数据库路径")
 	flag.Parse()
-
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
-	gin.SetMode(gin.ReleaseMode)
 
+	store, err := db.Open(cfg.DBPath)
+	if err != nil {
+		slog.Error("failed to open database", "path", cfg.DBPath, "err", err)
+		os.Exit(1)
+	}
+	defer store.Close()
+	slog.Info("database ready", "path", cfg.DBPath)
+
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
 
@@ -47,7 +59,29 @@ func main() {
 		c.JSON(http.StatusOK, swagger)
 	})
 
-	addr := ":" + strconv.Itoa(port)
+	oauth := &auth.GitHubOAuth{
+		ClientID:     cfg.GitHubClientID,
+		ClientSecret: cfg.GitHubClientSecret,
+		RedirectURL:  cfg.AppPublicURL + "/api/v2/auth/github/callback",
+		HTTP:         &http.Client{Timeout: 15 * time.Second},
+	}
+	authHandlers := &auth.Handlers{
+		Store:       store,
+		OAuth:       oauth,
+		PublicURL:   cfg.AppPublicURL,
+		CookieName:  cfg.SessionCookie,
+		StateCookie: cfg.StateCookie,
+		SessionTTL:  30 * 24 * time.Hour,
+	}
+
+	api.GET("/auth/github/login", authHandlers.Login)
+	api.GET("/auth/github/callback", authHandlers.Callback)
+	api.POST("/auth/logout", authHandlers.Logout)
+
+	authed := api.Group("", httpapi.RequireSession(store, cfg.SessionCookie))
+	authed.GET("/users/me", usersMe)
+
+	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}
 
 	go func() {
@@ -68,4 +102,19 @@ func main() {
 		slog.Error("shutdown error", "err", err)
 	}
 	slog.Info("server stopped")
+}
+
+func usersMe(c *gin.Context) {
+	user := httpapi.CurrentUser(c)
+	if user == nil {
+		httpapi.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未登录", nil)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"id":            user.ID,
+		"github_login":  user.GitHubLogin,
+		"display_name":  user.DisplayName,
+		"email":         user.Email,
+		"created_at":    user.CreatedAt,
+	})
 }
