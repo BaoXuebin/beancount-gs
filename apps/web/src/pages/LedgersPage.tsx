@@ -21,11 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger, LedgerCreate, Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
+import { PageLoading } from '@/components/PageLoading'
 
 export function LedgersPage() {
   const ledgers = useFetch<Ledger[]>('/ledgers')
@@ -100,53 +100,57 @@ export function LedgersPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {ledgers.loading &&
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
-            ))}
-          {ledgers.error && <p className="text-sm text-destructive">加载失败：{ledgers.error}</p>}
-          {ledgers.data?.map((ledger) => (
-            <Link key={ledger.id} to={`/ledgers/${ledger.id}/transactions`} className="group">
-              <Card className="h-full transition-colors hover:border-primary">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{ledger.name}</CardTitle>
-                    <Badge variant="outline">{ledger.operating_currency}</Badge>
-                  </div>
-                  <CardDescription>
-                    {ledger.start_date
-                      ? `${ledger.start_date} 至今`
-                      : `创建于 ${ledger.created_at?.slice(0, 10) ?? '—'}`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {teams.data?.find((t) => t.id === ledger.team_id)?.name
-                      ? `${teams.data.find((t) => t.id === ledger.team_id)?.name} · `
-                      : ''}
-                    成员 {ledger.member_count ?? 0} · 修订 #{ledger.revision}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
-                    打开 <ArrowRight className="size-3" />
-                  </span>
+        {ledgers.loading && ledgers.data == null ? (
+          <div className="mt-6">
+            <PageLoading />
+          </div>
+        ) : (
+          <>
+            {ledgers.error && <p className="text-sm text-destructive">加载失败：{ledgers.error}</p>}
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {ledgers.data?.map((ledger) => (
+                <Link key={ledger.id} to={`/ledgers/${ledger.id}/transactions`} className="group">
+                  <Card className="h-full transition-colors hover:border-primary">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{ledger.name}</CardTitle>
+                        <Badge variant="outline">{ledger.operating_currency}</Badge>
+                      </div>
+                      <CardDescription>
+                        {ledger.start_date
+                          ? `${ledger.start_date} 至今`
+                          : `创建于 ${ledger.created_at?.slice(0, 10) ?? '—'}`}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {teams.data?.find((t) => t.id === ledger.team_id)?.name
+                          ? `${teams.data.find((t) => t.id === ledger.team_id)?.name} · `
+                          : ''}
+                        成员 {ledger.member_count ?? 0} · 修订 #{ledger.revision}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
+                        打开 <ArrowRight className="size-3" />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {isEmpty && (
+              <Card className="mt-6">
+                <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    还没有账本，先创建第一个账本开始记账
+                  </p>
+                  <button type="button" className={buttonVariants()} onClick={openDialog}>
+                    <Plus /> 创建账本
+                  </button>
                 </CardContent>
               </Card>
-            </Link>
-          ))}
-        </div>
-
-        {isEmpty && (
-          <Card className="mt-6">
-            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                还没有账本，先创建第一个账本开始记账
-              </p>
-              <button type="button" className={buttonVariants()} onClick={openDialog}>
-                <Plus /> 创建账本
-              </button>
-            </CardContent>
-          </Card>
+            )}
+          </>
         )}
 
         <Dialog open={open} onOpenChange={setOpen}>

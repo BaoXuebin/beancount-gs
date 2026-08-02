@@ -14,11 +14,11 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
 import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
+import { PageLoading } from '@/components/PageLoading'
 
 export function WorkspacesPage() {
   const teams = useFetch<Team[]>('/teams')
@@ -65,46 +65,50 @@ export function WorkspacesPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {teams.loading &&
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
-            ))}
+        {teams.loading && teams.data == null ? (
+          <div className="mt-6">
+            <PageLoading />
+          </div>
+        ) : (
+          <>
           {teams.error && <p className="text-sm text-destructive">加载失败：{teams.error}</p>}
-          {teams.data?.map((team) => (
-            <Link key={team.id} to="/ledgers" className="group">
-              <Card className="h-full transition-colors hover:border-primary">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{team.name}</CardTitle>
-                    <Badge variant={team.role === 'owner' ? 'default' : 'secondary'}>
-                      {team.role}
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    {team.member_count ?? 0} 位成员 · {team.ledger_count ?? 0} 个账本
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-end">
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
-                    进入 <ArrowRight className="size-3" />
-                  </span>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-        {!teams.loading && !teams.error && teams.data && teams.data.length === 0 && (
-          <Card className="mt-6">
-            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                还没有工作区（首次登录会自动创建个人工作区），也可以手动创建
-              </p>
-              <button type="button" className={buttonVariants()} onClick={() => setOpen(true)}>
-                <Plus /> 新建工作区
-              </button>
-            </CardContent>
-          </Card>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {teams.data?.map((team) => (
+              <Link key={team.id} to="/ledgers" className="group">
+                <Card className="h-full transition-colors hover:border-primary">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{team.name}</CardTitle>
+                      <Badge variant={team.role === 'owner' ? 'default' : 'secondary'}>
+                        {team.role}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      {team.member_count ?? 0} 位成员 · {team.ledger_count ?? 0} 个账本
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex justify-end">
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
+                      进入 <ArrowRight className="size-3" />
+                    </span>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+          {!teams.loading && !teams.error && teams.data && teams.data.length === 0 && (
+            <Card className="mt-6">
+              <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  还没有工作区（首次登录会自动创建个人工作区），也可以手动创建
+                </p>
+                <button type="button" className={buttonVariants()} onClick={() => setOpen(true)}>
+                  <Plus /> 新建工作区
+                </button>
+              </CardContent>
+            </Card>
+          )}
+          </>
         )}
 
         <Dialog open={open} onOpenChange={(o) => !o && setOpen(false)}>
