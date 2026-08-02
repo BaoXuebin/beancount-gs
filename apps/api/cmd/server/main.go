@@ -19,6 +19,7 @@ import (
 	httpapi "github.com/beancount-gs/api/internal/http"
 	"github.com/beancount-gs/api/internal/http/gen"
 	"github.com/beancount-gs/api/internal/ledger"
+	mcpapi "github.com/beancount-gs/api/internal/mcp"
 	"github.com/beancount-gs/api/internal/repository"
 	"github.com/gin-gonic/gin"
 )
@@ -125,6 +126,15 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/stats/payee", statsHandlers.Payee)
 	authed.GET("/ledgers/:ledger_id/stats/account-trend", statsHandlers.Trend)
 	authed.GET("/ledgers/:ledger_id/stats/account-flow", statsHandlers.Flow)
+
+	keyHandlers := &httpapi.KeyHandlers{Store: store}
+	authed.GET("/api-keys", keyHandlers.List)
+	authed.POST("/api-keys", keyHandlers.Create)
+	authed.DELETE("/api-keys/:key_id", keyHandlers.Revoke)
+
+	// MCP Server（Streamable HTTP，Bearer API Key 认证）
+	mcpServer := mcpapi.New(store, ledgerService, cfg.DataRoot)
+	api.Any("/mcp", httpapi.RequireApiKey(store), gin.WrapH(mcpServer))
 
 	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}

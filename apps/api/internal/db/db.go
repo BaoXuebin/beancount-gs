@@ -128,6 +128,7 @@ var migrations = []string{
 		name TEXT NOT NULL,
 		PRIMARY KEY (ledger_id, prefix)
 	);`,
+	`ALTER TABLE api_keys ADD COLUMN prefix TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
