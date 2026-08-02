@@ -1,0 +1,59 @@
+package ledger
+
+import (
+	"time"
+
+	"github.com/beancount-gs/api/internal/beancount"
+	"github.com/beancount-gs/api/internal/db"
+)
+
+type Amount struct {
+	Number   string
+	Currency string
+}
+
+type Cost struct {
+	Number   string
+	Currency string
+	Date     string
+	Label    string
+}
+
+type Posting struct {
+	Account string
+	Units   *Amount
+	Cost    *Cost
+	Price   *Amount
+}
+
+type Transaction struct {
+	ID        string
+	Date      string
+	Flag      string
+	Payee     string
+	Narration string
+	Tags      []string
+	Links     []string
+	Postings  []Posting
+}
+
+type Filters struct {
+	From    string
+	To      string
+	Month   string
+	Account string
+	Tag     string
+	Q       string
+	Order   string // asc | desc
+}
+
+type Actor struct {
+	UserID string
+	Login  string
+}
+
+type Service struct {
+	Store  *db.Store
+	Engine beancount.QueryEngine
+	Now    func() time.Time
+}

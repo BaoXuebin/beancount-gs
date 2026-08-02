@@ -13,10 +13,12 @@ import (
 	"time"
 
 	"github.com/beancount-gs/api/internal/auth"
+	"github.com/beancount-gs/api/internal/beancount"
 	"github.com/beancount-gs/api/internal/config"
 	"github.com/beancount-gs/api/internal/db"
 	httpapi "github.com/beancount-gs/api/internal/http"
 	"github.com/beancount-gs/api/internal/http/gen"
+	"github.com/beancount-gs/api/internal/ledger"
 	"github.com/beancount-gs/api/internal/repository"
 	"github.com/gin-gonic/gin"
 )
@@ -98,6 +100,12 @@ func main() {
 	authed.POST("/ledgers", ledgerHandlers.Create)
 	authed.GET("/ledgers/:ledger_id", ledgerHandlers.Get)
 	authed.GET("/ledgers/:ledger_id/revision", ledgerHandlers.Revision)
+
+	ledgerService := &ledger.Service{Store: store, Engine: beancount.CmdEngine{}}
+	txnHandlers := &httpapi.TransactionHandlers{Store: store, Service: ledgerService}
+	authed.GET("/ledgers/:ledger_id/transactions", txnHandlers.List)
+	authed.POST("/ledgers/:ledger_id/transactions", txnHandlers.Create)
+	authed.GET("/ledgers/:ledger_id/transactions/:transaction_id", txnHandlers.Get)
 
 	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}

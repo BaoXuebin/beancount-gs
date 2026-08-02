@@ -11,8 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beancount-gs/api/internal/beancount"
 	"github.com/beancount-gs/api/internal/db"
 	"github.com/beancount-gs/api/internal/http/gen"
+	"github.com/beancount-gs/api/internal/ledger"
 	"github.com/beancount-gs/api/internal/security"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -112,5 +114,119 @@ func TestLedgerFlow(t *testing.T) {
 	router.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("other user should get 404, got %d", w.Code)
+	}
+}
+
+type txnFakeEngine struct {
+	rows []beancount.Row
+}
+
+func (f *txnFakeEngine) QueryCSV(_ context.Context, _, _ string) ([]beancount.Row, error) {
+	return f.rows, nil
+}
+func (f *txnFakeEngine) Print(_ context.Context, _, _ string) (string, error) { return "", nil }
+func (f *txnFakeEngine) Check(_ context.Context, _ string) ([]string, error)  { return nil, nil }
+
+func TestTransactionFlow(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctx := context.Background()
+	store, err := db.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+	defer store.Close()
+
+	user, err := store.UpsertGitHubUser(ctx, "1", "alice", "", "Alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	team, err := store.CreateTeamWithOwner(ctx, uuid.NewString(), "家庭", user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token := "session-token"
+	if err := store.CreateSession(ctx, uuid.NewString(), user.ID, security.HashToken(token), time.Now().Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	ledgerRow, err := store.CreateLedgerWithOwner(ctx, db.NewLedgerParams{
+		ID: uuid.NewString(), TeamID: team.ID, Name: "家庭账本",
+		DataPath: filepath.Join(t.TempDir(), "ledger"), OperatingCurrency: "CNY",
+	}, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	engine := &txnFakeEngine{rows: []beancount.Row{
+		{"id": "txn-abc", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购",
+			"account": "Expenses:Food", "number": "-120.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+		{"id": "txn-abc", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购",
+			"account": "Assets:Cash", "number": "120.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+	}}
+	svc := &ledger.Service{Store: store, Engine: engine}
+	router := gin.New()
+	authed := router.Group("/api/v2", RequireSession(store, "bgs_session"))
+	h := &TransactionHandlers{Store: store, Service: svc}
+	authed.POST("/ledgers/:ledger_id/transactions", h.Create)
+	authed.GET("/ledgers/:ledger_id/transactions", h.List)
+	authed.GET("/ledgers/:ledger_id/transactions/:transaction_id", h.Get)
+
+	body := `{"date":"2026-08-02","payee":"盒马鲜生","narration":"日常采购","tags":["Food"],"postings":[
+		{"account":"Expenses:Food","units":{"number":"-120.00","currency":"CNY"}},
+		{"account":"Assets:Cash","units":{"number":"120.00","currency":"CNY"}}]}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v2/ledgers/"+ledgerRow.ID+"/transactions", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("If-Revision-Match", "0")
+	req.AddCookie(&http.Cookie{Name: "bgs_session", Value: token})
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create txn status %d body=%s", w.Code, w.Body.String())
+	}
+	var created gen.Transaction
+	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+		t.Fatal(err)
+	}
+	if created.Narration == nil || *created.Narration != "日常采购" || len(created.Postings) != 2 {
+		t.Fatalf("unexpected transaction: %+v", created)
+	}
+
+	// 缺少修订号 → 422
+	req = httptest.NewRequest(http.MethodPost, "/api/v2/ledgers/"+ledgerRow.ID+"/transactions", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: "bgs_session", Value: token})
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("missing revision should 422, got %d", w.Code)
+	}
+
+	// 列表
+	req = httptest.NewRequest(http.MethodGet, "/api/v2/ledgers/"+ledgerRow.ID+"/transactions", nil)
+	req.AddCookie(&http.Cookie{Name: "bgs_session", Value: token})
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("list status %d", w.Code)
+	}
+	var listResp struct {
+		Items []gen.Transaction `json:"items"`
+		Total int               `json:"total"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &listResp); err != nil {
+		t.Fatal(err)
+	}
+	if listResp.Total != 1 || len(listResp.Items) != 1 {
+		t.Fatalf("unexpected list: %+v", listResp)
+	}
+
+	// 详情
+	req = httptest.NewRequest(http.MethodGet, "/api/v2/ledgers/"+ledgerRow.ID+"/transactions/txn-abc", nil)
+	req.AddCookie(&http.Cookie{Name: "bgs_session", Value: token})
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("detail status %d", w.Code)
 	}
 }
