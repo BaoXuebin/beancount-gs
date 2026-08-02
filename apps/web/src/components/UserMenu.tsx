@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react'
+import { AtSign, LogOut, Mail } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { request } from '@/api/client'
@@ -73,15 +73,25 @@ export function UserMenu({ align = 'start' }: { align?: 'start' | 'end' }) {
             <Avatar>
               <AvatarFallback>{initials(name)}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{name}</p>
-              <p className="truncate text-xs text-muted-foreground">@{user?.github_login}</p>
-            </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{name}</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5 px-1.5 pb-1.5">
+          <div className="flex items-center gap-1.5 text-xs">
+            <AtSign className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="w-10 shrink-0 text-muted-foreground">账户名</span>
+            <span className="truncate">@{user?.github_login}</span>
           </div>
           {user?.email && (
-            <p className="truncate px-1.5 pb-1 text-xs text-muted-foreground">{user.email}</p>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Mail className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="w-10 shrink-0 text-muted-foreground">邮箱</span>
+              <span className="truncate">{user.email}</span>
+            </div>
           )}
-          <DropdownMenuSeparator />
+        </div>
+        <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={logout}>
             <LogOut /> 退出登录
           </DropdownMenuItem>
