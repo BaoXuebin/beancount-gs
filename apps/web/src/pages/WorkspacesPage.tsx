@@ -19,7 +19,6 @@ import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
-import { FlowSteps } from '@/components/FlowSteps'
 
 export function WorkspacesPage() {
   const teams = useFetch<Team[]>('/teams')
@@ -60,7 +59,6 @@ export function WorkspacesPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               团队是权限边界：账本归属工作区，成员按角色协作
             </p>
-            <FlowSteps current={1} />
           </div>
           <button type="button" className={buttonVariants()} onClick={() => setOpen(true)}>
             <Plus /> 新建工作区

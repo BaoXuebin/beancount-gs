@@ -26,7 +26,6 @@ import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger, LedgerCreate, Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
-import { FlowSteps } from '@/components/FlowSteps'
 
 export function LedgersPage() {
   const ledgers = useFetch<Ledger[]>('/ledgers')
@@ -90,7 +89,6 @@ export function LedgersPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               账本归属工作区，多人协作编辑，修订号控制并发
             </p>
-            <FlowSteps current={2} />
           </div>
           <button type="button" className={buttonVariants()} onClick={openDialog}>
             <Plus /> 新建账本
