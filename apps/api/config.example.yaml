@@ -11,7 +11,12 @@ oauth_state_cookie: bgs_oauth_state
 github_client_id: ""
 github_client_secret: ""
 
-# AI（可选；provider: openai | compatible | ollama）
+# AI（可选；provider: openai | compatible | ollama | deepseek）
+# 示例（DeepSeek）：
+#   ai_provider: deepseek
+#   ai_api_key: sk-xxx
+#   ai_model: deepseek-chat
+#   # ai_base_url 可省略（默认 https://api.deepseek.com/v1）
 ai_provider: ""
 ai_api_key: ""
 ai_model: ""

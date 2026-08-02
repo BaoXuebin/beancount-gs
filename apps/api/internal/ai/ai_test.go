@@ -43,3 +43,10 @@ func TestNotConfigured(t *testing.T) {
 		t.Fatal("empty config should be disabled")
 	}
 }
+
+func TestDeepseekDefaultBaseURL(t *testing.T) {
+	c := NewClient(Config{Provider: "deepseek", APIKey: "sk-test", Model: "deepseek-chat"})
+	if c.cfg.BaseURL != "https://api.deepseek.com/v1" {
+		t.Fatalf("deepseek base url wrong: %s", c.cfg.BaseURL)
+	}
+}

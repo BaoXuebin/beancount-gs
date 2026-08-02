@@ -50,7 +50,8 @@ oauth_state_cookie: bgs_oauth_state
 github_client_id: ""
 github_client_secret: ""
 
-# AI（可选；provider: openai | compatible | ollama）
+# AI（可选；provider: openai | compatible | ollama | deepseek，
+# deepseek 与 ollama 可不填 ai_base_url，会自动使用官方默认端点）
 ai_provider: ""
 ai_api_key: ""
 ai_model: ""

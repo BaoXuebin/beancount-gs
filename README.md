@@ -43,11 +43,14 @@ session_cookie: bgs_session
 oauth_state_cookie: bgs_oauth_state
 github_client_id: ""           # GitHub OAuth
 github_client_secret: ""
-ai_provider: ""                # openai | compatible | ollama（可选）
+ai_provider: ""                # openai | compatible | ollama | deepseek（可选）
 ai_api_key: ""
 ai_model: ""
 ai_base_url: ""
 ```
+
+DeepSeek 示例：`ai_provider: deepseek`、`ai_api_key: sk-xxx`、`ai_model: deepseek-chat`，
+`ai_base_url` 可省略（默认 `https://api.deepseek.com/v1`）。
 
 命令行参数 `-p` / `-db` / `-config` 可覆盖配置文件；`BGS_CONFIG` 环境变量可指定配置文件路径。
 

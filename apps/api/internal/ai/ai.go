@@ -37,11 +37,16 @@ func NewClient(cfg Config) *Client {
 		if base == "" {
 			base = "http://localhost:11434/v1"
 		}
+	case "deepseek":
+		if base == "" {
+			base = "https://api.deepseek.com/v1"
+		}
 	default:
 		if base == "" {
 			base = "https://api.openai.com/v1"
 		}
 	}
+	cfg.BaseURL = base
 	return &Client{cfg: cfg, http: &http.Client{Timeout: 60 * time.Second}}
 }
 
