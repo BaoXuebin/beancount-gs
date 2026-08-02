@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { ArrowRight, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +19,7 @@ import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
+import { FlowSteps } from '@/components/FlowSteps'
 
 export function WorkspacesPage() {
   const teams = useFetch<Team[]>('/teams')
@@ -59,6 +60,7 @@ export function WorkspacesPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               团队是权限边界：账本归属工作区，成员按角色协作
             </p>
+            <FlowSteps current={1} />
           </div>
           <button type="button" className={buttonVariants()} onClick={() => setOpen(true)}>
             <Plus /> 新建工作区
@@ -72,7 +74,7 @@ export function WorkspacesPage() {
             ))}
           {teams.error && <p className="text-sm text-destructive">加载失败：{teams.error}</p>}
           {teams.data?.map((team) => (
-            <Link key={team.id} to="/ledgers">
+            <Link key={team.id} to="/ledgers" className="group">
               <Card className="h-full transition-colors hover:border-primary">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -82,11 +84,13 @@ export function WorkspacesPage() {
                     </Badge>
                   </div>
                   <CardDescription>
-                    成员 {team.member_count ?? 0} · 账本 {team.ledger_count ?? 0}
+                    {team.member_count ?? 0} 位成员 · {team.ledger_count ?? 0} 个账本
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <span className="text-sm text-primary">进入 →</span>
+                <CardContent className="flex justify-end">
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
+                    进入 <ArrowRight className="size-3" />
+                  </span>
                 </CardContent>
               </Card>
             </Link>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { ArrowRight, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,6 +26,7 @@ import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger, LedgerCreate, Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
+import { FlowSteps } from '@/components/FlowSteps'
 
 export function LedgersPage() {
   const ledgers = useFetch<Ledger[]>('/ledgers')
@@ -89,6 +90,7 @@ export function LedgersPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               账本归属工作区，多人协作编辑，修订号控制并发
             </p>
+            <FlowSteps current={2} />
           </div>
           <button type="button" className={buttonVariants()} onClick={openDialog}>
             <Plus /> 新建账本
@@ -102,7 +104,7 @@ export function LedgersPage() {
             ))}
           {ledgers.error && <p className="text-sm text-destructive">加载失败：{ledgers.error}</p>}
           {ledgers.data?.map((ledger) => (
-            <Link key={ledger.id} to={`/ledgers/${ledger.id}/transactions`}>
+            <Link key={ledger.id} to={`/ledgers/${ledger.id}/transactions`} className="group">
               <Card className="h-full transition-colors hover:border-primary">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -110,11 +112,21 @@ export function LedgersPage() {
                     <Badge variant="outline">{ledger.operating_currency}</Badge>
                   </div>
                   <CardDescription>
-                    修订 #{ledger.revision} · 成员 {ledger.member_count ?? 0}
+                    {ledger.start_date
+                      ? `${ledger.start_date} 至今`
+                      : `创建于 ${ledger.created_at?.slice(0, 10) ?? '—'}`}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <span className="text-sm text-primary">打开账本 →</span>
+                <CardContent className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {teams.data?.find((t) => t.id === ledger.team_id)?.name
+                      ? `${teams.data.find((t) => t.id === ledger.team_id)?.name} · `
+                      : ''}
+                    成员 {ledger.member_count ?? 0} · 修订 #{ledger.revision}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
+                    打开 <ArrowRight className="size-3" />
+                  </span>
                 </CardContent>
               </Card>
             </Link>
