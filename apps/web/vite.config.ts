@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // 后端地址：可通过环境变量 VITE_PROXY_TARGET 覆盖（如改端口时），默认 localhost:10000
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -14,7 +15,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:10000',
+        target: process.env.VITE_PROXY_TARGET ?? 'http://localhost:10000',
         changeOrigin: true,
       },
     },

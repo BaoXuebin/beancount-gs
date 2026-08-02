@@ -63,6 +63,9 @@ pnpm install
 pnpm dev        # http://localhost:5173，/api 代理到后端
 ```
 
+> 后端端口不是默认的 10000（例如被其他程序占用而改用了 10010）时，用环境变量指定代理目标：
+> `$env:VITE_PROXY_TARGET='http://localhost:10010'`，再执行 `pnpm dev`。
+
 **API 文档**：后端启动后 `GET /api/v2/openapi.json` 返回契约；原型中的调试页见
 `prototype/pages/api-docs.html`。
 
