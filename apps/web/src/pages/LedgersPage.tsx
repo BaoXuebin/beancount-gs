@@ -25,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger, LedgerCreate, Team } from '@/api/types'
+import { BrandBar } from '@/components/BrandBar'
 
 export function LedgersPage() {
   const ledgers = useFetch<Ledger[]>('/ledgers')
@@ -80,6 +81,7 @@ export function LedgersPage() {
 
   return (
     <div>
+      <BrandBar />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">账本</h1>

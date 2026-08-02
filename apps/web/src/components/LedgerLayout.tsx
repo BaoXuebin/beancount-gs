@@ -5,12 +5,14 @@ import {
   FileCode,
   LayoutDashboard,
   ListOrdered,
+  ListRestart,
   Settings,
   Sparkles,
   Upload,
   Wallet,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { UserMenu } from '@/components/UserMenu'
 import { useFetch } from '@/api/useFetch'
 import type { Ledger } from '@/api/types'
 import { cn } from '@/lib/utils'
@@ -33,9 +35,15 @@ export function LedgerLayout() {
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
-      <aside className="w-full shrink-0 lg:w-52">
-        <div className="mb-4 rounded-xl border p-3">
-          <p className="text-sm font-medium">{ledger.data?.name ?? '账本'}</p>
+      <aside className="flex w-full shrink-0 flex-col gap-4 lg:sticky lg:top-0 lg:h-screen lg:w-56 lg:py-6">
+        {/* 我的账本卡片 */}
+        <div className="rounded-xl border bg-card p-3">
+          <p className="text-[10px] tracking-wide text-muted-foreground uppercase">我的账本</p>
+          {ledger.loading ? (
+            <Skeleton className="mt-2 h-4 w-24" />
+          ) : (
+            <p className="mt-1 truncate text-sm font-semibold">{ledger.data?.name ?? '账本'}</p>
+          )}
           <p className="mt-0.5 text-xs text-muted-foreground">
             {ledger.loading ? (
               <Skeleton className="mt-1 h-3 w-20" />
@@ -45,33 +53,51 @@ export function LedgerLayout() {
               </>
             )}
           </p>
+          <Link
+            to="/ledgers"
+            className="mt-2 flex items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
+          >
+            <ListRestart className="size-3.5" /> 返回账本列表
+          </Link>
         </div>
-        <nav className="flex flex-wrap gap-1 lg:flex-col">
+
+        {/* 菜单 */}
+        <nav className="flex flex-1 flex-wrap gap-1 lg:flex-col">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={`/ledgers/${ledgerId}/${item.to}`}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-                  isActive && 'bg-accent font-medium text-foreground',
+                  'relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+                  isActive && 'bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary',
                 )
               }
             >
-              <item.icon className="size-4 shrink-0" />
-              <span className="flex flex-col">
-                <span>{item.label}</span>
-                <span className="hidden text-[10px] text-muted-foreground/70 lg:inline">
-                  {item.desc}
-                </span>
-              </span>
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={cn(
+                      'absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-opacity',
+                      isActive ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                  <item.icon className="size-4 shrink-0" />
+                  <span className="flex flex-col">
+                    <span>{item.label}</span>
+                    <span className="hidden text-[10px] text-muted-foreground/70 lg:inline">
+                      {item.desc}
+                    </span>
+                  </span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
-        <div className="mt-4 text-xs text-muted-foreground">
-          <Link to="/ledgers" className="hover:text-foreground">
-            ← 返回账本列表
-          </Link>
+
+        {/* 用户信息 */}
+        <div className="border-t pt-2 lg:mt-auto">
+          <UserMenu />
         </div>
       </aside>
       <main className="min-w-0 flex-1">

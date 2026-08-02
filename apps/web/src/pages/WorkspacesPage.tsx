@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
 import type { Team } from '@/api/types'
+import { BrandBar } from '@/components/BrandBar'
 
 export function WorkspacesPage() {
   const teams = useFetch<Team[]>('/teams')
@@ -50,6 +51,7 @@ export function WorkspacesPage() {
 
   return (
     <div>
+      <BrandBar />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">工作区</h1>
