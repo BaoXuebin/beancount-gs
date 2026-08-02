@@ -66,31 +66,31 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route path="/workspaces" element={<WorkspacesPage />} />
               <Route path="/ledgers" element={<LedgersPage />} />
-              <Route path="/ledgers/:ledgerId" element={<Navigate to="dashboard" replace />} />
-              <Route path="/ledgers/:ledgerId/*" element={<LedgerLayout />}>
-                <Route path="dashboard" element={<DashboardPage />} />
-                <Route path="transactions" element={<TransactionsPage />} />
-                <Route path="transactions/new" element={<TransactionEditPage />} />
-                <Route path="transactions/:transactionId" element={<TransactionDetailPage />} />
-                <Route path="transactions/:transactionId/edit" element={<TransactionEditPage />} />
-                <Route path="accounts" element={<AccountsPage />} />
-                <Route path="accounts/:account" element={<AccountDetailPage />} />
-                <Route path="account-types" element={<AccountTypesPage />} />
-                <Route path="currencies" element={<CurrenciesPage />} />
-                <Route path="stats" element={<StatsPage />} />
-                <Route path="import" element={<ImportPage />} />
-                <Route path="events" element={<EventsPage />} />
-                <Route path="source" element={<SourceFilesPage />} />
-                <Route path="templates" element={<TemplatesPage />} />
-                <Route path="ai" element={<AIAssistantPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="settings/ai" element={<AISettingsPage />} />
-                <Route path="settings/integrations" element={<IntegrationsPage />} />
-                <Route path="settings/api-docs" element={<ApiDocsPage />} />
-                <Route path="settings/audit" element={<AuditPage />} />
-                <Route path="settings/export" element={<ExportPage />} />
-                <Route path="*" element={<ErrorPage code={404} />} />
-              </Route>
+            </Route>
+            <Route path="/ledgers/:ledgerId" element={<Navigate to="dashboard" replace />} />
+            <Route path="/ledgers/:ledgerId/*" element={<LedgerLayout />}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="transactions" element={<TransactionsPage />} />
+              <Route path="transactions/new" element={<TransactionEditPage />} />
+              <Route path="transactions/:transactionId" element={<TransactionDetailPage />} />
+              <Route path="transactions/:transactionId/edit" element={<TransactionEditPage />} />
+              <Route path="accounts" element={<AccountsPage />} />
+              <Route path="accounts/:account" element={<AccountDetailPage />} />
+              <Route path="account-types" element={<AccountTypesPage />} />
+              <Route path="currencies" element={<CurrenciesPage />} />
+              <Route path="stats" element={<StatsPage />} />
+              <Route path="import" element={<ImportPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="source" element={<SourceFilesPage />} />
+              <Route path="templates" element={<TemplatesPage />} />
+              <Route path="ai" element={<AIAssistantPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="settings/ai" element={<AISettingsPage />} />
+              <Route path="settings/integrations" element={<IntegrationsPage />} />
+              <Route path="settings/api-docs" element={<ApiDocsPage />} />
+              <Route path="settings/audit" element={<AuditPage />} />
+              <Route path="settings/export" element={<ExportPage />} />
+              <Route path="*" element={<ErrorPage code={404} />} />
             </Route>
           </Route>
           <Route path="/403" element={<ErrorPage code={403} />} />
