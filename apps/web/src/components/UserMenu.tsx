@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -70,7 +71,9 @@ export function UserMenu({ align = 'start' }: { align?: 'start' | 'end' }) {
           onMouseEnter={openMenu}
           onMouseLeave={closeMenu}
         >
-          <DropdownMenuLabel>用户信息</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>用户信息</DropdownMenuLabel>
+          </DropdownMenuGroup>
           <div className="flex items-center gap-2 px-1.5 py-1.5">
             <Avatar>
               <AvatarFallback>{initials(name)}</AvatarFallback>
