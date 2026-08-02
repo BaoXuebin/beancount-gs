@@ -272,12 +272,28 @@ func (s *Server) writeSourceFile(ctx context.Context, args map[string]any) (any,
 	return map[string]bool{"written": true}, nil
 }
 
-func (s *Server) aiRecord(_ context.Context, _ map[string]any) (any, error) {
-	return nil, errors.New("AI 能力尚未启用：请先在 AI 设置中配置模型提供方（OpenAI / 兼容 API / Ollama）")
+func (s *Server) aiRecord(ctx context.Context, args map[string]any) (any, error) {
+	l, _, err := s.requireLedger(ctx, strArg(args, "ledger_id"), false)
+	if err != nil {
+		return nil, err
+	}
+	txn, notes, err := s.Service.AiRecord(ctx, l, strArg(args, "text"))
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"draft": txn, "notes": notes}, nil
 }
 
-func (s *Server) aiSummarize(_ context.Context, _ map[string]any) (any, error) {
-	return nil, errors.New("AI 能力尚未启用：请先在 AI 设置中配置模型提供方（OpenAI / 兼容 API / Ollama）")
+func (s *Server) aiSummarize(ctx context.Context, args map[string]any) (any, error) {
+	l, _, err := s.requireLedger(ctx, strArg(args, "ledger_id"), false)
+	if err != nil {
+		return nil, err
+	}
+	summary, err := s.Service.AiSummarize(ctx, l, strArg(args, "month"))
+	if err != nil {
+		return nil, err
+	}
+	return map[string]string{"summary": summary}, nil
 }
 
 func (s *Server) requireLedger(ctx context.Context, ledgerID string, write bool) (db.Ledger, db.User, error) {

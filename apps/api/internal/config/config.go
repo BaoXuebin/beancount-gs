@@ -15,6 +15,10 @@ type Config struct {
 	AppPublicURL       string
 	SessionCookie      string
 	StateCookie        string
+	AIProvider         string
+	AIAPIKey           string
+	AIModel            string
+	AIBaseURL          string
 }
 
 func Load() Config {
@@ -29,6 +33,10 @@ func Load() Config {
 		AppPublicURL:       envStr("APP_PUBLIC_URL", "http://localhost:"+strconv.Itoa(port)),
 		SessionCookie:      envStr("SESSION_COOKIE", "bgs_session"),
 		StateCookie:        envStr("OAUTH_STATE_COOKIE", "bgs_oauth_state"),
+		AIProvider:         os.Getenv("AI_PROVIDER"),
+		AIAPIKey:           os.Getenv("AI_API_KEY"),
+		AIModel:            os.Getenv("AI_MODEL"),
+		AIBaseURL:          os.Getenv("AI_BASE_URL"),
 	}
 }
 

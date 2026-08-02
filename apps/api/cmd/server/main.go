@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/beancount-gs/api/internal/ai"
 	"github.com/beancount-gs/api/internal/auth"
 	"github.com/beancount-gs/api/internal/beancount"
 	"github.com/beancount-gs/api/internal/config"
@@ -102,7 +103,10 @@ func main() {
 	authed.GET("/ledgers/:ledger_id", ledgerHandlers.Get)
 	authed.GET("/ledgers/:ledger_id/revision", ledgerHandlers.Revision)
 
-	ledgerService := &ledger.Service{Store: store, Engine: beancount.CmdEngine{}}
+	aiClient := ai.NewClient(ai.Config{
+		Provider: cfg.AIProvider, APIKey: cfg.AIAPIKey, Model: cfg.AIModel, BaseURL: cfg.AIBaseURL,
+	})
+	ledgerService := &ledger.Service{Store: store, Engine: beancount.CmdEngine{}, AI: aiClient}
 	txnHandlers := &httpapi.TransactionHandlers{Store: store, Service: ledgerService}
 	authed.GET("/ledgers/:ledger_id/transactions", txnHandlers.List)
 	authed.POST("/ledgers/:ledger_id/transactions", txnHandlers.Create)
@@ -126,6 +130,15 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/stats/payee", statsHandlers.Payee)
 	authed.GET("/ledgers/:ledger_id/stats/account-trend", statsHandlers.Trend)
 	authed.GET("/ledgers/:ledger_id/stats/account-flow", statsHandlers.Flow)
+
+	importHandlers := &httpapi.ImportHandlers{Store: store, Service: ledgerService}
+	authed.POST("/ledgers/:ledger_id/imports/:source", importHandlers.Preview)
+	authed.POST("/ledgers/:ledger_id/imports/:source/confirm", importHandlers.Confirm)
+
+	aiHandlers := &httpapi.AIHandlers{Store: store, Service: ledgerService}
+	authed.POST("/ledgers/:ledger_id/ai/record", aiHandlers.Record)
+	authed.POST("/ledgers/:ledger_id/ai/summarize", aiHandlers.Summarize)
+	authed.GET("/ledgers/:ledger_id/ai/insights", aiHandlers.Insights)
 
 	keyHandlers := &httpapi.KeyHandlers{Store: store}
 	authed.GET("/api-keys", keyHandlers.List)
