@@ -21,7 +21,7 @@ type TransactionHandlers struct {
 }
 
 func (h *TransactionHandlers) List(c *gin.Context) {
-	l, ok := h.requireLedger(c, "")
+	l, ok := requireLedger(c, h.Store, "")
 	if !ok {
 		return
 	}
@@ -48,7 +48,7 @@ func (h *TransactionHandlers) List(c *gin.Context) {
 }
 
 func (h *TransactionHandlers) Get(c *gin.Context) {
-	l, ok := h.requireLedger(c, "")
+	l, ok := requireLedger(c, h.Store, "")
 	if !ok {
 		return
 	}
@@ -66,7 +66,7 @@ func (h *TransactionHandlers) Get(c *gin.Context) {
 }
 
 func (h *TransactionHandlers) Create(c *gin.Context) {
-	l, ok := h.requireLedger(c, "editor")
+	l, ok := requireLedger(c, h.Store, "editor")
 	if !ok {
 		return
 	}
@@ -91,7 +91,7 @@ func (h *TransactionHandlers) Create(c *gin.Context) {
 }
 
 func (h *TransactionHandlers) Update(c *gin.Context) {
-	l, ok := h.requireLedger(c, "editor")
+	l, ok := requireLedger(c, h.Store, "editor")
 	if !ok {
 		return
 	}
@@ -116,7 +116,7 @@ func (h *TransactionHandlers) Update(c *gin.Context) {
 }
 
 func (h *TransactionHandlers) Delete(c *gin.Context) {
-	l, ok := h.requireLedger(c, "editor")
+	l, ok := requireLedger(c, h.Store, "editor")
 	if !ok {
 		return
 	}
@@ -136,7 +136,7 @@ func (h *TransactionHandlers) Delete(c *gin.Context) {
 }
 
 func (h *TransactionHandlers) RawText(c *gin.Context) {
-	l, ok := h.requireLedger(c, "")
+	l, ok := requireLedger(c, h.Store, "")
 	if !ok {
 		return
 	}
@@ -154,7 +154,7 @@ func (h *TransactionHandlers) RawText(c *gin.Context) {
 }
 
 func (h *TransactionHandlers) UpdateRawText(c *gin.Context) {
-	l, ok := h.requireLedger(c, "editor")
+	l, ok := requireLedger(c, h.Store, "editor")
 	if !ok {
 		return
 	}
@@ -199,13 +199,13 @@ func (h *TransactionHandlers) writeCreateError(c *gin.Context, l db.Ledger, err 
 	}
 }
 
-func (h *TransactionHandlers) requireLedger(c *gin.Context, minRole string) (*db.Ledger, bool) {
+func requireLedger(c *gin.Context, store *db.Store, minRole string) (*db.Ledger, bool) {
 	user := CurrentUser(c)
 	if user == nil {
 		Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未登录", nil)
 		return nil, false
 	}
-	l, err := h.Store.GetLedgerForUser(c.Request.Context(), c.Param("ledger_id"), user.ID)
+	l, err := store.GetLedgerForUser(c.Request.Context(), c.Param("ledger_id"), user.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			Error(c, http.StatusNotFound, "NOT_FOUND", "账本不存在或无权访问", nil)

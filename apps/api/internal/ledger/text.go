@@ -13,6 +13,7 @@ var (
 	ErrNotBalanced = errors.New("transaction not balanced")
 	ErrInvalidDate = errors.New("invalid transaction date")
 	ErrNoPostings  = errors.New("transaction requires at least two postings")
+	ErrDuplicateAccount = errors.New("account already exists")
 )
 
 // Validate 校验交易结构：日期、分录数量、借贷平衡。

@@ -111,6 +111,15 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/transactions/:transaction_id/raw", txnHandlers.RawText)
 	authed.PUT("/ledgers/:ledger_id/transactions/:transaction_id/raw", txnHandlers.UpdateRawText)
 
+	accountHandlers := &httpapi.AccountHandlers{Store: store, Service: ledgerService}
+	authed.GET("/ledgers/:ledger_id/accounts", accountHandlers.List)
+	authed.POST("/ledgers/:ledger_id/accounts", accountHandlers.Open)
+	authed.GET("/ledgers/:ledger_id/accounts/:account", accountHandlers.Get)
+	authed.POST("/ledgers/:ledger_id/accounts/:account", accountHandlers.Close)
+	authed.POST("/ledgers/:ledger_id/accounts/:account/balance", accountHandlers.Balance)
+	authed.GET("/ledgers/:ledger_id/account-types", accountHandlers.ListTypes)
+	authed.POST("/ledgers/:ledger_id/account-types", accountHandlers.AddType)
+
 	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}
 

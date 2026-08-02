@@ -3,8 +3,8 @@ package httpapi
 import (
 	"time"
 
-	"github.com/beancount-gs/api/internal/http/gen"
 	"github.com/beancount-gs/api/internal/ledger"
+	"github.com/beancount-gs/api/internal/http/gen"
 	"github.com/oapi-codegen/runtime/types"
 )
 
@@ -116,4 +116,52 @@ func optionalList(items []string) *[]string {
 		return nil
 	}
 	return &items
+}
+
+func toGenAccount(a ledger.Account) gen.Account {
+	var openedOn, closedOn *types.Date
+	if a.OpenedOn != "" {
+		if d, err := time.Parse("2006-01-02", a.OpenedOn); err == nil {
+			openedOn = &types.Date{Time: d}
+		}
+	}
+	if a.ClosedOn != "" {
+		if d, err := time.Parse("2006-01-02", a.ClosedOn); err == nil {
+			closedOn = &types.Date{Time: d}
+		}
+	}
+	var positions *[]struct {
+		Currency       *string `json:"currency,omitempty"`
+		CurrencySymbol *string `json:"currency_symbol,omitempty"`
+		Number         *string `json:"number,omitempty"`
+	}
+	if len(a.Positions) > 0 {
+		list := make([]struct {
+			Currency       *string `json:"currency,omitempty"`
+			CurrencySymbol *string `json:"currency_symbol,omitempty"`
+			Number         *string `json:"number,omitempty"`
+		}, 0, len(a.Positions))
+		for _, p := range a.Positions {
+			list = append(list, struct {
+				Currency       *string `json:"currency,omitempty"`
+				CurrencySymbol *string `json:"currency_symbol,omitempty"`
+				Number         *string `json:"number,omitempty"`
+			}{
+				Number:   strPtr(p.Number),
+				Currency: strPtr(p.Currency),
+			})
+		}
+		positions = &list
+	}
+	return gen.Account{
+		Account:        a.Name,
+		Type:           gen.AccountType(a.Type),
+		Status:         gen.AccountStatus(a.Status),
+		OpenedOn:       openedOn,
+		ClosedOn:       closedOn,
+		Currency:       optionalStr(a.Currency),
+		Positions:      positions,
+		MarketNumber:   optionalStr(a.MarketNumber),
+		MarketCurrency: optionalStr(a.MarketCurrency),
+	}
 }

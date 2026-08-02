@@ -122,6 +122,12 @@ var migrations = []string{
 	CREATE INDEX IF NOT EXISTS idx_ledger_members_user ON ledger_members(user_id);
 	CREATE INDEX IF NOT EXISTS idx_ledgers_team ON ledgers(team_id);
 	CREATE INDEX IF NOT EXISTS idx_audit_ledger ON audit_logs(ledger_id);`,
+	`CREATE TABLE IF NOT EXISTS account_types (
+		ledger_id TEXT NOT NULL REFERENCES ledgers(id) ON DELETE CASCADE,
+		prefix TEXT NOT NULL,
+		name TEXT NOT NULL,
+		PRIMARY KEY (ledger_id, prefix)
+	);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

@@ -130,6 +130,49 @@ func TestBeanQueryIntegration(t *testing.T) {
 	if err != nil || len(list3) != 0 {
 		t.Fatalf("list after delete: %v %d", err, len(list3))
 	}
+
+	// 账户：开户 → 列表（含持仓）→ 关闭
+	if _, err := svc.OpenAccount(ctx, ledgerRow, OpenAccount{
+		Account: "Assets:Cash", OpenedOn: "2026-08-02", Currency: "CNY",
+	}, 4, Actor{UserID: user.ID, Login: "alice"}); err != nil {
+		t.Fatalf("open account: %v", err)
+	}
+	accounts, err := svc.ListAccounts(ctx, ledgerRow, false)
+	if err != nil {
+		t.Fatalf("list accounts: %v", err)
+	}
+	openFound := false
+	for _, a := range accounts {
+		if a.Name == "Assets:Cash" {
+			openFound = true
+			if a.Status != "open" {
+				t.Fatalf("Assets:Cash should be open: %+v", a)
+			}
+		}
+	}
+	if !openFound {
+		t.Fatalf("Assets:Cash not in open accounts")
+	}
+	closed, err := svc.CloseAccount(ctx, ledgerRow, "Assets:Cash", "2026-09-01", 5, Actor{UserID: user.ID, Login: "alice"})
+	if err != nil || closed.Status != "closed" {
+		t.Fatalf("close account: %v %+v", err, closed)
+	}
+	closedList, err := svc.ListAccounts(ctx, ledgerRow, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	closedFound := false
+	for _, a := range closedList {
+		if a.Name == "Assets:Cash" {
+			closedFound = true
+			if a.Status != "closed" {
+				t.Fatalf("Assets:Cash should be closed: %+v", a)
+			}
+		}
+	}
+	if !closedFound {
+		t.Fatalf("Assets:Cash not in closed accounts")
+	}
 }
 
 // findTemplateDir 从测试工作目录向上查找仓库根目录的 template 目录。
