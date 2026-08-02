@@ -35,6 +35,18 @@ func TestParseCSVEmpty(t *testing.T) {
 	}
 }
 
+func TestParseCSVLazyQuotes(t *testing.T) {
+	// bean-query 偶发输出不闭合引号的字段（如账户名/金额含引号），LazyQuotes 应容忍
+	in := "account,market_position,position\n\"Assets:\"Cash\",\"1234.00 CNY\",\"1234.00 CNY\"\n"
+	rows, err := parseCSV(in)
+	if err != nil {
+		t.Fatalf("lazy quotes parse failed: %v", err)
+	}
+	if len(rows) != 1 || rows[0]["account"] != "Assets:\"Cash" || rows[0]["market_position"] != "1234.00 CNY" {
+		t.Fatalf("unexpected rows: %+v", rows)
+	}
+}
+
 func TestDecodeOutput(t *testing.T) {
 	if got := decodeOutput([]byte("hello")); got != "hello" {
 		t.Fatalf("utf8 passthrough failed: %q", got)

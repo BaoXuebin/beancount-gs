@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -30,6 +37,21 @@ import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 50
 
+function currentMonth(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function recentMonths(count = 12): string[] {
+  const now = new Date()
+  const list: string[] = []
+  for (let i = 0; i < count; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    list.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  return list
+}
+
 function postingsSummary(t: Transaction): string {
   return t.postings.map((p) => p.account).join(' / ')
 }
@@ -43,10 +65,15 @@ function amountSummary(t: Transaction): string {
 export function TransactionsPage() {
   const { ledgerId = '' } = useParams()
   const [q, setQ] = useState('')
-  const [month, setMonth] = useState('')
+  const [month, setMonth] = useState(currentMonth())
   const [account, setAccount] = useState('')
   const [tag, setTag] = useState('')
-  const [filters, setFilters] = useState({ q: '', month: '', account: '', tag: '' })
+  const [filters, setFilters] = useState({
+    q: '',
+    month: currentMonth(),
+    account: '',
+    tag: '',
+  })
   const [offset, setOffset] = useState(0)
   const [conflict, setConflict] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<Transaction | null>(null)
@@ -144,67 +171,73 @@ export function TransactionsPage() {
       )}
 
       <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="text-base">筛选</CardTitle>
-          <CardDescription>收款方 / 描述 / 金额模糊搜索，按月份或账户精确过滤</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-end gap-3">
-          <div className="grid gap-1.5">
+        <CardContent className="flex flex-wrap items-end gap-2 pt-4">
+          <div className="grid gap-1">
             <Label>搜索</Label>
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="收款方 / 描述 / 金额"
-              className="w-48"
+              className="w-44"
               onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
-          <div className="grid gap-1.5">
+          <div className="grid gap-1">
             <Label>月份</Label>
-            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-36" />
+            <Select value={month} onValueChange={(value) => value != null && setMonth(value)}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">全部月份</SelectItem>
+                {recentMonths().map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="grid gap-1.5">
+          <div className="grid gap-1">
             <Label>账户</Label>
             <Input
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               placeholder="如 Expenses:Food"
-              className="w-48"
+              className="w-44"
               onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
-          <div className="grid gap-1.5">
+          <div className="grid gap-1">
             <Label>标签</Label>
             <Input
               value={tag}
               onChange={(e) => setTag(e.target.value)}
               placeholder="如 Food"
-              className="w-36"
+              className="w-32"
               onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
-          <button
-            type="button"
-            className={buttonVariants({ variant: 'outline' })}
-            onClick={applyFilters}
-          >
-            应用筛选
-          </button>
-          <button
-            type="button"
-            className={buttonVariants({ variant: 'ghost' })}
-            onClick={() => {
-              setQ('')
-              setMonth('')
-              setAccount('')
-              setTag('')
-              setFilters({ q: '', month: '', account: '', tag: '' })
-              setOffset(0)
-              setReloadKey((k) => k + 1)
-            }}
-          >
-            清除
-          </button>
+          <div className="flex shrink-0 gap-2">
+            <button type="button" className={buttonVariants()} onClick={applyFilters}>
+              应用
+            </button>
+            <button
+              type="button"
+              className={buttonVariants({ variant: 'ghost' })}
+              onClick={() => {
+                setQ('')
+                setMonth(currentMonth())
+                setAccount('')
+                setTag('')
+                setFilters({ q: '', month: currentMonth(), account: '', tag: '' })
+                setOffset(0)
+                setReloadKey((k) => k + 1)
+              }}
+            >
+              清除
+            </button>
+          </div>
         </CardContent>
       </Card>
 

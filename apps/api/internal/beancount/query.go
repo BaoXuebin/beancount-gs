@@ -83,6 +83,9 @@ func envWithUTF8() []string {
 func parseCSV(s string) ([]Row, error) {
 	r := csv.NewReader(strings.NewReader(s))
 	r.TrimLeadingSpace = true
+	// bean-query 输出的字段偶发不闭合引号（账户名/金额含引号时），
+	// 用 LazyQuotes 容忍这类格式问题，避免整行解析失败。
+	r.LazyQuotes = true
 	header, err := r.Read()
 	if err != nil {
 		if errors.Is(err, io.EOF) {
