@@ -1,4 +1,5 @@
-import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { request } from '@/api/client'
 import { LedgersPage } from '@/pages/LedgersPage'
@@ -9,14 +10,13 @@ import { TransactionsPage } from '@/pages/TransactionsPage'
 import { WorkspacesPage } from '@/pages/WorkspacesPage'
 
 function AppLayout() {
-  const navigate = useNavigate()
   const logout = async () => {
     try {
       await request('/auth/logout', { method: 'POST' })
     } catch {
       // 忽略登出错误
     }
-    navigate('/login')
+    window.location.href = '/login'
   }
 
   return (
@@ -38,20 +38,46 @@ function AppLayout() {
   )
 }
 
+function FullScreenLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+      加载中…
+    </div>
+  )
+}
+
+function HomeRedirect() {
+  const { loading, loggedIn } = useAuth()
+  if (loading) return <FullScreenLoader />
+  return <Navigate to={loggedIn ? '/workspaces' : '/login'} replace />
+}
+
+function RequireAuth() {
+  const { loading, loggedIn } = useAuth()
+  if (loading) return <FullScreenLoader />
+  if (!loggedIn) return <Navigate to="/login" replace />
+  return <Outlet />
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<AppLayout />}>
-          <Route path="/workspaces" element={<WorkspacesPage />} />
-          <Route path="/ledgers" element={<LedgersPage />} />
-          <Route path="/ledgers/:ledgerId/transactions" element={<TransactionsPage />} />
-          <Route path="/ledgers/:ledgerId/stats" element={<StatsPage />} />
-          <Route path="/ledgers/:ledgerId/import" element={<ImportPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomeRedirect />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<RequireAuth />}>
+            <Route element={<AppLayout />}>
+              <Route path="/workspaces" element={<WorkspacesPage />} />
+              <Route path="/ledgers" element={<LedgersPage />} />
+              <Route path="/ledgers/:ledgerId/transactions" element={<TransactionsPage />} />
+              <Route path="/ledgers/:ledgerId/stats" element={<StatsPage />} />
+              <Route path="/ledgers/:ledgerId/import" element={<ImportPage />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

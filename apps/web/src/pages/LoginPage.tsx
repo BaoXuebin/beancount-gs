@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { API_BASE } from '@/api/client'
 
 export function LoginPage() {
+  const { loading, loggedIn } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [backendOk, setBackendOk] = useState<boolean | null>(null)
@@ -42,6 +45,17 @@ export function LoginPage() {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        加载中…
+      </div>
+    )
+  }
+  if (loggedIn) {
+    return <Navigate to="/workspaces" replace />
   }
 
   return (
