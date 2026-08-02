@@ -454,6 +454,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledgers/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 从备份 zip 导入并新建账本
+         * @description 解压校验（目录结构 + bean-check）后创建新账本；zip 必须包含根目录 index.bean。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        team_id: string;
+                        /** @description 新账本名称 */
+                        name: string;
+                        /** @default CNY */
+                        operating_currency?: string;
+                        /**
+                         * Format: binary
+                         * @description 账本备份 zip
+                         */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 导入并创建成功 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BackupImportResult"];
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Unprocessable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ledgers/{ledger_id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 导入备份 zip 到已有账本
+         * @description 覆盖账本文件（被覆盖文件先快照到 bak/），通过 bean-check 校验后写入并递增修订号。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description 当前账本修订号；不匹配时返回 409 LEDGER_STALE */
+                    "If-Revision-Match": components["parameters"]["IfRevisionMatch"];
+                };
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description 账本备份 zip
+                         */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 导入成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BackupImportResult"];
+                    };
+                };
+                409: components["responses"]["Conflict"];
+                422: components["responses"]["Unprocessable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ledgers/{ledger_id}/members": {
         parameters: {
             query?: never;
@@ -1157,6 +1269,8 @@ export interface paths {
             parameters: {
                 query?: {
                     month?: components["parameters"]["Month"];
+                    /** @description 账户前缀过滤，如 Expenses */
+                    account?: string;
                 };
                 header?: never;
                 path: {
@@ -1199,6 +1313,8 @@ export interface paths {
             parameters: {
                 query?: {
                     month?: components["parameters"]["Month"];
+                    /** @description 账户前缀过滤，如 Expenses */
+                    account?: string;
                     type?: "total" | "count" | "avg";
                 };
                 header?: never;
@@ -1240,6 +1356,8 @@ export interface paths {
             parameters: {
                 query?: {
                     month?: components["parameters"]["Month"];
+                    /** @description 账户前缀过滤，如 Assets */
+                    account?: string;
                     type?: "day" | "month" | "year" | "sum";
                 };
                 header?: never;
@@ -1281,6 +1399,8 @@ export interface paths {
             parameters: {
                 query?: {
                     month?: components["parameters"]["Month"];
+                    /** @description 账户前缀过滤，如 Expenses */
+                    account?: string;
                 };
                 header?: never;
                 path: {
@@ -2148,6 +2268,14 @@ export interface components {
             opening_balances: string;
             /** @default true */
             is_bak: boolean;
+        };
+        BackupImportResult: {
+            ledger?: components["schemas"]["Ledger"];
+            /** @description 导入后修订号（导入已有账本时返回） */
+            revision?: number;
+            /** @description 写入的文件相对路径列表 */
+            files: string[];
+            warnings?: string[];
         };
         Account: {
             /** @example Assets:Cash */

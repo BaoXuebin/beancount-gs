@@ -277,6 +277,17 @@ type AuditLog struct {
 	UserId    *string                 `json:"user_id,omitempty"`
 }
 
+// BackupImportResult defines model for BackupImportResult.
+type BackupImportResult struct {
+	// Files 写入的文件相对路径列表
+	Files  []string `json:"files"`
+	Ledger *Ledger  `json:"ledger,omitempty"`
+
+	// Revision 导入后修订号（导入已有账本时返回）
+	Revision *int      `json:"revision,omitempty"`
+	Warnings *[]string `json:"warnings,omitempty"`
+}
+
 // Cost defines model for Cost.
 type Cost struct {
 	Currency *string             `json:"currency,omitempty"`
@@ -529,6 +540,17 @@ type GetAuthGithubCallbackParams struct {
 	State *string `form:"state,omitempty" json:"state,omitempty"`
 }
 
+// PostLedgersImportMultipartBody defines parameters for PostLedgersImport.
+type PostLedgersImportMultipartBody struct {
+	// File 账本备份 zip
+	File openapi_types.File `json:"file"`
+
+	// Name 新账本名称
+	Name              string  `json:"name"`
+	OperatingCurrency *string `json:"operating_currency,omitempty"`
+	TeamId            string  `json:"team_id"`
+}
+
 // DeleteLedgersLedgerIdParams defines parameters for DeleteLedgersLedgerId.
 type DeleteLedgersLedgerIdParams struct {
 	Confirm bool `form:"confirm" json:"confirm"`
@@ -595,6 +617,18 @@ type PostLedgersLedgerIdEventsParams struct {
 	IfRevisionMatch IfRevisionMatch `json:"If-Revision-Match"`
 }
 
+// PostLedgersLedgerIdImportMultipartBody defines parameters for PostLedgersLedgerIdImport.
+type PostLedgersLedgerIdImportMultipartBody struct {
+	// File 账本备份 zip
+	File openapi_types.File `json:"file"`
+}
+
+// PostLedgersLedgerIdImportParams defines parameters for PostLedgersLedgerIdImport.
+type PostLedgersLedgerIdImportParams struct {
+	// IfRevisionMatch 当前账本修订号；不匹配时返回 409 LEDGER_STALE
+	IfRevisionMatch IfRevisionMatch `json:"If-Revision-Match"`
+}
+
 // PostLedgersLedgerIdImportsSourceMultipartBody defines parameters for PostLedgersLedgerIdImportsSource.
 type PostLedgersLedgerIdImportsSourceMultipartBody struct {
 	File openapi_types.File `json:"file"`
@@ -629,12 +663,18 @@ type PutLedgersLedgerIdSourceFilesPathParams struct {
 // GetLedgersLedgerIdStatsAccountFlowParams defines parameters for GetLedgersLedgerIdStatsAccountFlow.
 type GetLedgersLedgerIdStatsAccountFlowParams struct {
 	Month *Month `form:"month,omitempty" json:"month,omitempty"`
+
+	// Account 账户前缀过滤，如 Expenses
+	Account *string `form:"account,omitempty" json:"account,omitempty"`
 }
 
 // GetLedgersLedgerIdStatsAccountTrendParams defines parameters for GetLedgersLedgerIdStatsAccountTrend.
 type GetLedgersLedgerIdStatsAccountTrendParams struct {
-	Month *Month                                         `form:"month,omitempty" json:"month,omitempty"`
-	Type  *GetLedgersLedgerIdStatsAccountTrendParamsType `form:"type,omitempty" json:"type,omitempty"`
+	Month *Month `form:"month,omitempty" json:"month,omitempty"`
+
+	// Account 账户前缀过滤，如 Assets
+	Account *string                                        `form:"account,omitempty" json:"account,omitempty"`
+	Type    *GetLedgersLedgerIdStatsAccountTrendParamsType `form:"type,omitempty" json:"type,omitempty"`
 }
 
 // GetLedgersLedgerIdStatsAccountTrendParamsType defines parameters for GetLedgersLedgerIdStatsAccountTrend.
@@ -642,8 +682,11 @@ type GetLedgersLedgerIdStatsAccountTrendParamsType string
 
 // GetLedgersLedgerIdStatsPayeeParams defines parameters for GetLedgersLedgerIdStatsPayee.
 type GetLedgersLedgerIdStatsPayeeParams struct {
-	Month *Month                                  `form:"month,omitempty" json:"month,omitempty"`
-	Type  *GetLedgersLedgerIdStatsPayeeParamsType `form:"type,omitempty" json:"type,omitempty"`
+	Month *Month `form:"month,omitempty" json:"month,omitempty"`
+
+	// Account 账户前缀过滤，如 Expenses
+	Account *string                                 `form:"account,omitempty" json:"account,omitempty"`
+	Type    *GetLedgersLedgerIdStatsPayeeParamsType `form:"type,omitempty" json:"type,omitempty"`
 }
 
 // GetLedgersLedgerIdStatsPayeeParamsType defines parameters for GetLedgersLedgerIdStatsPayee.
@@ -652,6 +695,9 @@ type GetLedgersLedgerIdStatsPayeeParamsType string
 // GetLedgersLedgerIdStatsTotalParams defines parameters for GetLedgersLedgerIdStatsTotal.
 type GetLedgersLedgerIdStatsTotalParams struct {
 	Month *Month `form:"month,omitempty" json:"month,omitempty"`
+
+	// Account 账户前缀过滤，如 Expenses
+	Account *string `form:"account,omitempty" json:"account,omitempty"`
 }
 
 // DeleteLedgersLedgerIdTemplatesParams defines parameters for DeleteLedgersLedgerIdTemplates.
@@ -717,6 +763,9 @@ type PostApiKeysJSONRequestBody PostApiKeysJSONBody
 // PostLedgersJSONRequestBody defines body for PostLedgers for application/json ContentType.
 type PostLedgersJSONRequestBody = LedgerCreate
 
+// PostLedgersImportMultipartRequestBody defines body for PostLedgersImport for multipart/form-data ContentType.
+type PostLedgersImportMultipartRequestBody PostLedgersImportMultipartBody
+
 // PostLedgersLedgerIdAccountTypesJSONRequestBody defines body for PostLedgersLedgerIdAccountTypes for application/json ContentType.
 type PostLedgersLedgerIdAccountTypesJSONRequestBody = AccountTypeMapping
 
@@ -740,6 +789,9 @@ type DeleteLedgersLedgerIdEventsJSONRequestBody = Event
 
 // PostLedgersLedgerIdEventsJSONRequestBody defines body for PostLedgersLedgerIdEvents for application/json ContentType.
 type PostLedgersLedgerIdEventsJSONRequestBody = Event
+
+// PostLedgersLedgerIdImportMultipartRequestBody defines body for PostLedgersLedgerIdImport for multipart/form-data ContentType.
+type PostLedgersLedgerIdImportMultipartRequestBody PostLedgersLedgerIdImportMultipartBody
 
 // PostLedgersLedgerIdImportsSourceMultipartRequestBody defines body for PostLedgersLedgerIdImportsSource for multipart/form-data ContentType.
 type PostLedgersLedgerIdImportsSourceMultipartRequestBody PostLedgersLedgerIdImportsSourceMultipartBody

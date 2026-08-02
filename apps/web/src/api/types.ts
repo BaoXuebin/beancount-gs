@@ -2,6 +2,7 @@ import type { components } from './schema'
 
 export type Ledger = components['schemas']['Ledger']
 export type LedgerCreate = components['schemas']['LedgerCreate']
+export type BackupImportResult = components['schemas']['BackupImportResult']
 export type Team = components['schemas']['Team']
 export type TeamCreate = components['schemas']['TeamCreate']
 export type User = components['schemas']['User']

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Plus } from 'lucide-react'
+import { ArrowRight, FileArchive, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,12 +26,14 @@ import { useFetch } from '@/api/useFetch'
 import type { Ledger, LedgerCreate, Team } from '@/api/types'
 import { BrandBar } from '@/components/BrandBar'
 import { PageLoading } from '@/components/PageLoading'
+import { BackupImportDialog } from '@/components/BackupImportDialog'
 
 export function LedgersPage() {
   const ledgers = useFetch<Ledger[]>('/ledgers')
   const teams = useFetch<Team[]>('/teams')
 
   const [open, setOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<Partial<LedgerCreate>>({ operating_currency: 'CNY' })
@@ -95,9 +97,18 @@ export function LedgersPage() {
               账本归属工作区，多人协作编辑，修订号控制并发
             </p>
           </div>
-          <button type="button" className={buttonVariants()} onClick={openDialog}>
-            <Plus /> 新建账本
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={buttonVariants({ variant: 'outline' })}
+              onClick={() => setImportOpen(true)}
+            >
+              <FileArchive /> 导入 v1 账本
+            </button>
+            <button type="button" className={buttonVariants()} onClick={openDialog}>
+              <Plus /> 新建账本
+            </button>
+          </div>
         </div>
 
         {ledgers.loading && ledgers.data == null ? (
@@ -225,6 +236,13 @@ export function LedgersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <BackupImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          teams={teams.data ?? []}
+          ledgers={ledgers.data ?? []}
+          onImported={() => ledgers.refetch()}
+        />
       </div>
     </div>
   )

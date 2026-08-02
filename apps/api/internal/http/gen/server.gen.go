@@ -40,6 +40,9 @@ type ServerInterface interface {
 	// 新建账本（按模板初始化 bean 文件结构）
 	// (POST /ledgers)
 	PostLedgers(c *gin.Context)
+	// 从备份 zip 导入并新建账本
+	// (POST /ledgers/import)
+	PostLedgersImport(c *gin.Context)
 	// 删除账本（owner，二次确认参数 confirm=true）
 	// (DELETE /ledgers/{ledger_id})
 	DeleteLedgersLedgerId(c *gin.Context, ledgerId LedgerId, params DeleteLedgersLedgerIdParams)
@@ -94,6 +97,9 @@ type ServerInterface interface {
 	// 添加事件（event 指令）
 	// (POST /ledgers/{ledger_id}/events)
 	PostLedgersLedgerIdEvents(c *gin.Context, ledgerId LedgerId, params PostLedgersLedgerIdEventsParams)
+	// 导入备份 zip 到已有账本
+	// (POST /ledgers/{ledger_id}/import)
+	PostLedgersLedgerIdImport(c *gin.Context, ledgerId LedgerId, params PostLedgersLedgerIdImportParams)
 	// 上传账单 CSV 并预览（不落账）
 	// (POST /ledgers/{ledger_id}/imports/{source})
 	PostLedgersLedgerIdImportsSource(c *gin.Context, ledgerId LedgerId, source PostLedgersLedgerIdImportsSourceParamsSource)
@@ -409,6 +415,23 @@ func (siw *ServerInterfaceWrapper) PostLedgers(c *gin.Context) {
 	}
 
 	siw.Handler.PostLedgers(c)
+}
+
+// PostLedgersImport operation middleware
+func (siw *ServerInterfaceWrapper) PostLedgersImport(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PostLedgersImport(c)
 }
 
 // DeleteLedgersLedgerId operation middleware
@@ -1074,6 +1097,61 @@ func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdEvents(c *gin.Context) {
 	siw.Handler.PostLedgersLedgerIdEvents(c, ledgerId, params)
 }
 
+// PostLedgersLedgerIdImport operation middleware
+func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdImport(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "ledger_id" -------------
+	var ledgerId LedgerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ledger_id", c.Param("ledger_id"), &ledgerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ledger_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostLedgersLedgerIdImportParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "If-Revision-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Revision-Match")]; found {
+		var IfRevisionMatch IfRevisionMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for If-Revision-Match, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Revision-Match", valueList[0], &IfRevisionMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter If-Revision-Match: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IfRevisionMatch = IfRevisionMatch
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter If-Revision-Match is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PostLedgersLedgerIdImport(c, ledgerId, params)
+}
+
 // PostLedgersLedgerIdImportsSource operation middleware
 func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdImportsSource(c *gin.Context) {
 
@@ -1417,6 +1495,14 @@ func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdStatsAccountFlow(c *gin.Con
 		return
 	}
 
+	// ------------- Optional query parameter "account" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "account", c.Request.URL.Query(), &params.Account)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter account: %w", err), http.StatusBadRequest)
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -1453,6 +1539,14 @@ func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdStatsAccountTrend(c *gin.Co
 	err = runtime.BindQueryParameter("form", true, false, "month", c.Request.URL.Query(), &params.Month)
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter month: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "account" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "account", c.Request.URL.Query(), &params.Account)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter account: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -1503,6 +1597,14 @@ func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdStatsPayee(c *gin.Context) 
 		return
 	}
 
+	// ------------- Optional query parameter "account" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "account", c.Request.URL.Query(), &params.Account)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter account: %w", err), http.StatusBadRequest)
+		return
+	}
+
 	// ------------- Optional query parameter "type" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "type", c.Request.URL.Query(), &params.Type)
@@ -1547,6 +1649,14 @@ func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdStatsTotal(c *gin.Context) 
 	err = runtime.BindQueryParameter("form", true, false, "month", c.Request.URL.Query(), &params.Month)
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter month: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "account" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "account", c.Request.URL.Query(), &params.Account)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter account: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -2337,6 +2447,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/auth/logout", wrapper.PostAuthLogout)
 	router.GET(options.BaseURL+"/ledgers", wrapper.GetLedgers)
 	router.POST(options.BaseURL+"/ledgers", wrapper.PostLedgers)
+	router.POST(options.BaseURL+"/ledgers/import", wrapper.PostLedgersImport)
 	router.DELETE(options.BaseURL+"/ledgers/:ledger_id", wrapper.DeleteLedgersLedgerId)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id", wrapper.GetLedgersLedgerId)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/account-types", wrapper.GetLedgersLedgerIdAccountTypes)
@@ -2355,6 +2466,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.DELETE(options.BaseURL+"/ledgers/:ledger_id/events", wrapper.DeleteLedgersLedgerIdEvents)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/events", wrapper.GetLedgersLedgerIdEvents)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/events", wrapper.PostLedgersLedgerIdEvents)
+	router.POST(options.BaseURL+"/ledgers/:ledger_id/import", wrapper.PostLedgersLedgerIdImport)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/imports/:source", wrapper.PostLedgersLedgerIdImportsSource)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/imports/:source/confirm", wrapper.PostLedgersLedgerIdImportsSourceConfirm)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/members", wrapper.GetLedgersLedgerIdMembers)

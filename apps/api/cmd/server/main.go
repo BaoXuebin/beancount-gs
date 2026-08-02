@@ -131,6 +131,9 @@ func main() {
 		BaseURL: cfg.AIBaseURL, HTTPClient: outbound,
 	})
 	ledgerService := &ledger.Service{Store: store, Engine: beancount.CmdEngine{}, AI: aiClient}
+	backupHandlers := &httpapi.BackupHandlers{Store: store, Service: ledgerService, DataRoot: cfg.DataRoot}
+	authed.POST("/ledgers/import", backupHandlers.ImportAsNew)
+	authed.POST("/ledgers/:ledger_id/import", backupHandlers.ImportInto)
 	txnHandlers := &httpapi.TransactionHandlers{Store: store, Service: ledgerService}
 	authed.GET("/ledgers/:ledger_id/transactions", txnHandlers.List)
 	authed.POST("/ledgers/:ledger_id/transactions", txnHandlers.Create)

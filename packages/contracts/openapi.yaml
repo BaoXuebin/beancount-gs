@@ -210,6 +210,56 @@ paths:
       responses:
         "204": { description: 已删除 }
         "403": { $ref: "#/components/responses/Forbidden" }
+  /ledgers/import:
+    post:
+      tags: [ledgers]
+      summary: 从备份 zip 导入并新建账本
+      description: 解压校验（目录结构 + bean-check）后创建新账本；zip 必须包含根目录 index.bean。
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [team_id, name, file]
+              properties:
+                team_id: { type: string }
+                name: { type: string, description: 新账本名称 }
+                operating_currency: { type: string, default: CNY }
+                file: { type: string, format: binary, description: 账本备份 zip }
+      responses:
+        "201":
+          description: 导入并创建成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupImportResult" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /ledgers/{ledger_id}/import:
+    post:
+      tags: [ledgers]
+      summary: 导入备份 zip 到已有账本
+      description: 覆盖账本文件（被覆盖文件先快照到 bak/），通过 bean-check 校验后写入并递增修订号。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary, description: 账本备份 zip }
+      responses:
+        "200":
+          description: 导入成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupImportResult" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
   /ledgers/{ledger_id}/members:
     get:
       tags: [ledgers]
@@ -1156,6 +1206,22 @@ components:
         start_date: { type: string, format: date }
         opening_balances: { type: string, default: "Equity:OpeningBalances" }
         is_bak: { type: boolean, default: true }
+    BackupImportResult:
+      type: object
+      required: [files]
+      properties:
+        ledger:
+          $ref: "#/components/schemas/Ledger"
+        revision:
+          type: integer
+          description: 导入后修订号（导入已有账本时返回）
+        files:
+          type: array
+          items: { type: string }
+          description: 写入的文件相对路径列表
+        warnings:
+          type: array
+          items: { type: string }
     Account:
       type: object
       required: [account, type, status]
