@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { LedgerNav } from '@/components/LedgerNav'
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useFetch } from '@/api/useFetch'
-import type { Ledger, Transaction, TransactionListResponse } from '@/api/types'
+import type { Insight, Ledger, Transaction, TransactionListResponse } from '@/api/types'
 
 function postingsSummary(t: Transaction): string {
   return t.postings.map((p) => p.account).join(' / ')
@@ -26,13 +27,29 @@ export function TransactionsPage() {
   const { ledgerId = '' } = useParams()
   const ledger = useFetch<Ledger>(`/ledgers/${ledgerId}`)
   const txns = useFetch<TransactionListResponse>(`/ledgers/${ledgerId}/transactions`)
+  const insights = useFetch<{ insights: Insight[] }>(`/ledgers/${ledgerId}/ai/insights`)
 
   return (
     <div>
       <h1 className="text-xl font-semibold">{ledger.data?.name ?? '交易'}</h1>
+      <LedgerNav />
       <p className="mt-1 text-sm text-muted-foreground">
         共 {txns.data?.total ?? 0} 笔交易 · 修订 #{ledger.data?.revision ?? 0}
       </p>
+      {insights.data && insights.data.insights.length > 0 && (
+        <Card className="mt-4 border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-base">AI 洞察</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1">
+            {insights.data.insights.map((insight, i) => (
+              <p key={i} className="text-sm text-destructive">
+                {insight.message}
+              </p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="text-base">交易列表</CardTitle>

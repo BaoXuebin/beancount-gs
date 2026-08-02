@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { request } from '@/api/client'
 import { LedgersPage } from '@/pages/LedgersPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { ImportPage } from '@/pages/ImportPage'
+import { StatsPage } from '@/pages/StatsPage'
 import { TransactionsPage } from '@/pages/TransactionsPage'
 import { WorkspacesPage } from '@/pages/WorkspacesPage'
 
@@ -45,6 +47,8 @@ export default function App() {
           <Route path="/workspaces" element={<WorkspacesPage />} />
           <Route path="/ledgers" element={<LedgersPage />} />
           <Route path="/ledgers/:ledgerId/transactions" element={<TransactionsPage />} />
+          <Route path="/ledgers/:ledgerId/stats" element={<StatsPage />} />
+          <Route path="/ledgers/:ledgerId/import" element={<ImportPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
