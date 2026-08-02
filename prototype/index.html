@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>beancount-gs V2 原型总览</title>
+<link rel="stylesheet" href="assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="index.html"><span class="wf-logo"></span>beancount-gs V2 原型</a>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+
+  <div class="wf-index-head">
+    <h2>原型总览</h2>
+    <p class="wf-note">按页面拆分的线框原型，灰色框为组件占位，小字为功能说明。建议从「登录」开始走查。</p>
+  </div>
+
+  <div class="wf-index-group">认证与引导</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="pages/login.html"><b>登录</b><span class="wf-note">GitHub OAuth2 登录入口</span></a>
+    <a class="wf-index-card" href="pages/onboarding.html"><b>首次引导</b><span class="wf-note">登录后创建个人工作区</span></a>
+  </div>
+
+  <div class="wf-index-group">工作区与账本</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="pages/workspaces.html"><b>工作区列表</b><span class="wf-note">团队权限边界</span></a>
+    <a class="wf-index-card" href="pages/workspace-create.html"><b>新建工作区</b><span class="wf-note">创建者成为 owner</span></a>
+    <a class="wf-index-card" href="pages/ledgers.html"><b>账本列表</b><span class="wf-note">账本归属工作区</span></a>
+    <a class="wf-index-card" href="pages/ledger-create.html"><b>新建账本</b><span class="wf-note">账本初始化向导</span></a>
+    <a class="wf-index-card" href="pages/import-v1.html"><b>导入 v1 账本</b><span class="wf-note">v1 数据迁移</span></a>
+  </div>
+
+  <div class="wf-index-group">核心功能</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="pages/dashboard.html"><b>仪表盘</b><span class="wf-note">资产概览 + AI 洞察</span></a>
+    <a class="wf-index-card" href="pages/transactions.html"><b>交易列表</b><span class="wf-note">筛选 / 搜索 / 冲突提示</span></a>
+    <a class="wf-index-card" href="pages/txn-edit.html"><b>记一笔</b><span class="wf-note">分录 / 多币种 / 分期</span></a>
+    <a class="wf-index-card" href="pages/txn-detail.html"><b>交易详情</b><span class="wf-note">分录与原始文本</span></a>
+    <a class="wf-index-card" href="pages/templates.html"><b>交易模板</b><span class="wf-note">常用交易复用</span></a>
+    <a class="wf-index-card" href="pages/new-template.html"><b>新建模板</b><span class="wf-note">模板表单</span></a>
+    <a class="wf-index-card" href="pages/accounts.html"><b>账户</b><span class="wf-note">分组 / 余额 / 持仓</span></a>
+    <a class="wf-index-card" href="pages/account-detail.html"><b>账户详情</b><span class="wf-note">市值 / 盈亏 / 持仓</span></a>
+    <a class="wf-index-card" href="pages/open-account.html"><b>开户</b><span class="wf-note">新账户表单</span></a>
+    <a class="wf-index-card" href="pages/currencies.html"><b>币种与汇率</b><span class="wf-note">汇率管理与同步</span></a>
+    <a class="wf-index-card" href="pages/account-types.html"><b>账户类型</b><span class="wf-note">前缀名称映射</span></a>
+    <a class="wf-index-card" href="pages/stats.html"><b>统计</b><span class="wf-note">趋势 / 占比 / 桑基 / 日历</span></a>
+    <a class="wf-index-card" href="pages/import.html"><b>账单导入</b><span class="wf-note">支付宝 / 微信 / 银行 CSV · AI 智能分类</span></a>
+    <a class="wf-index-card" href="pages/events.html"><b>事件</b><span class="wf-note">账本时间线</span></a>
+    <a class="wf-index-card" href="pages/add-event.html"><b>添加事件</b><span class="wf-note">事件表单</span></a>
+    <a class="wf-index-card" href="pages/source.html"><b>源文件</b><span class="wf-note">bean 文本编辑</span></a>
+    <a class="wf-index-card" href="pages/export.html"><b>导出与备份</b><span class="wf-note">账本打包 / 备份下载</span></a>
+  </div>
+
+  <div class="wf-index-group">AI 与集成</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="pages/ai-assistant.html"><b>AI 记账助手</b><span class="wf-note">自然语言记账 / 问答 / 洞察</span></a>
+    <a class="wf-index-card" href="pages/ai-settings.html"><b>AI 设置</b><span class="wf-note">功能开关 / 模型 / 隐私</span></a>
+    <a class="wf-index-card" href="pages/integrations.html"><b>集成与 MCP</b><span class="wf-note">MCP Server / 工具 / API Keys</span></a>
+  </div>
+
+  <div class="wf-index-group">API 文档</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="pages/api-docs.html"><b>API 文档与调试</b><span class="wf-note">V2 接口列表 / 参数 / 请求响应示例 / 测试面板</span></a>
+    <a class="wf-index-card" href="../packages/contracts/openapi.yaml"><b>OpenAPI 契约</b><span class="wf-note">openapi.yaml · 接口规范单一来源</span></a>
+  </div>
+
+  <div class="wf-index-group">设置与协作</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="pages/settings.html"><b>设置</b><span class="wf-note">账本设置 / 成员 / 备份</span></a>
+    <a class="wf-index-card" href="pages/member-invite.html"><b>邀请成员</b><span class="wf-note">GitHub 用户 / 邀请链接</span></a>
+    <a class="wf-index-card" href="pages/audit.html"><b>审计日志</b><span class="wf-note">操作记录，owner 可见</span></a>
+    <a class="wf-index-card" href="pages/error-403.html"><b>权限不足</b><span class="wf-note">403 提示页</span></a>
+    <a class="wf-index-card" href="pages/error-404.html"><b>页面不存在</b><span class="wf-note">404 提示页</span></a>
+  </div>
+
+  <div class="wf-index-group">整体走查版（单文件）</div>
+  <div class="wf-index-grid">
+    <a class="wf-index-card" href="v2-wireframe.html"><b>完整走查</b><span class="wf-note">22 个页面一键串联的交互版</span></a>
+  </div>
+</div>
+</body>
+</html>

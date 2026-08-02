@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>账户类型 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="accounts.html">账户</a> / <span>账户类型</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav wf-active" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>账户类型</h2><span class="wf-note">账户前缀 → 中文名称映射，用于统计展示</span></div>
+          <div class="wf-toolbar">
+            <a class="wf-btn" href="accounts.html">返回</a>
+            <button type="button" class="wf-btn wf-btn-primary">+ 新增类型</button>
+          </div>
+        </div>
+        <div class="wf-card">
+          <table class="wf-table">
+            <thead><tr><th>前缀</th><th>名称</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Assets</td><td>资产</td><td><button type="button" class="wf-btn wf-btn-sm">编辑</button></td></tr>
+              <tr><td>Liabilities</td><td>负债</td><td><button type="button" class="wf-btn wf-btn-sm">编辑</button></td></tr>
+              <tr><td>Income</td><td>收入</td><td><button type="button" class="wf-btn wf-btn-sm">编辑</button></td></tr>
+              <tr><td>Expenses</td><td>费用</td><td><button type="button" class="wf-btn wf-btn-sm">编辑</button></td></tr>
+              <tr><td>Equity</td><td>权益</td><td><button type="button" class="wf-btn wf-btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <span class="wf-note">未匹配前缀默认使用账户最后一个节点作为名称</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

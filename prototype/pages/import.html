@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>导入账单 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <span>导入</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav wf-active" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>导入账单</h2><span class="wf-note">CSV 导入 · GBK / UTF-8 自动识别 · 默认币种 CNY</span></div>
+          <a class="wf-btn" href="transactions.html">返回交易</a>
+        </div>
+        <div class="wf-steps"><span>1 选择来源</span><i>→</i><span>2 上传文件</span><i>→</i><b>3 预览匹配（当前）</b><i>→</i><span>4 确认导入</span></div>
+        <div class="wf-grid">
+          <div class="wf-box"><b>支付宝</b><span class="wf-note">浏览器 / 移动端 CSV</span></div>
+          <div class="wf-box"><b>微信支付</b><span class="wf-note">账单 CSV</span></div>
+          <div class="wf-box"><b>工商银行</b><span class="wf-note">流水 CSV</span></div>
+          <div class="wf-box"><b>农业银行</b><span class="wf-note">流水 CSV</span></div>
+        </div>
+        <div class="wf-card">
+          <table class="wf-table">
+            <thead><tr><th>日期</th><th>收款方</th><th>描述</th><th class="num">金额</th><th>映射账户</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>08-01</td><td>盒马鲜生</td><td>水果</td><td class="num">-86.00</td><td>Expenses:Food（AI 96%）</td><td>已匹配</td></tr>
+              <tr><td>08-01</td><td>滴滴出行</td><td>打车</td><td class="num">-23.50</td><td>Expenses:Transport（AI 94%）</td><td>已匹配</td></tr>
+              <tr><td>08-02</td><td>未知商户</td><td>待分类</td><td class="num">-12.00</td><td>Expenses:Dining（AI 85%）</td><td>待确认</td></tr>
+            </tbody>
+          </table>
+          <div class="wf-toolbar">
+            <button type="button" class="wf-btn wf-btn-sm">应用全部 AI 建议</button>
+            <button type="button" class="wf-btn wf-btn-sm">保存映射为模板</button>
+            <a class="wf-btn wf-btn-primary wf-btn-sm" href="transactions.html">确认导入</a>
+          </div>
+        </div>
+        <span class="wf-note">AI 智能分类基于账户类型与历史修正学习；支持人工修正，修正结果作为后续分类依据</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

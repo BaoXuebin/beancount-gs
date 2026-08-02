@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>开户 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="accounts.html">账户</a> / <span>开户</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav wf-active" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>开户</h2><span class="wf-note">新账户写入 account/*.bean</span></div>
+          <a class="wf-btn" href="accounts.html">返回账户</a>
+        </div>
+        <div class="wf-grid wf-grid-2">
+          <div class="wf-box"><b>账户名称</b><span class="wf-note">如 Assets:Bank:招商银行</span></div>
+          <div class="wf-box"><b>账户类型</b><span class="wf-note">资产 / 负债 / 收入 / 费用 / 权益</span></div>
+          <div class="wf-box"><b>币种</b><span class="wf-note">CNY（支持多币种逗号分隔）</span></div>
+          <div class="wf-box"><b>开户日期</b><span class="wf-note">2026-08-02</span></div>
+        </div>
+        <div class="wf-box"><b>FIFO 成本计价</b><span class="wf-note">非本位币账户自动启用</span></div>
+        <div class="wf-toolbar">
+          <a class="wf-btn" href="accounts.html">取消</a>
+          <a class="wf-btn wf-btn-primary" href="accounts.html">创建账户</a>
+        </div>
+        <span class="wf-note">创建后账户立即生效；重复账户名会提示冲突</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

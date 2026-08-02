@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>集成与 MCP · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="settings.html">设置</a> / <span>集成与 MCP</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav wf-active" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>集成与 MCP</h2><span class="wf-note">通过 MCP / API 让 Agent（Claude、Cursor 等）接入账本</span></div>
+          <a class="wf-btn" href="settings.html">返回设置</a>
+        </div>
+
+        <div class="wf-card">
+          <h3>MCP Server</h3>
+          <div class="wf-row"><span>状态</span><span class="wf-tag">运行中</span></div>
+          <div class="wf-row"><span>地址</span><span>http://localhost:10000/mcp</span></div>
+          <div class="wf-row"><span>传输</span><span>Streamable HTTP（SSE 备用）</span></div>
+          <div class="wf-toolbar">
+            <button type="button" class="wf-btn wf-btn-sm">复制 MCP 配置</button>
+            <a class="wf-btn wf-btn-sm" href="audit.html">查看调用记录</a>
+          </div>
+        </div>
+
+        <div class="wf-card">
+          <h3>暴露的工具</h3>
+          <table class="wf-table">
+            <thead><tr><th>工具</th><th>说明</th><th>权限</th></tr></thead>
+            <tbody>
+              <tr><td>list_ledgers</td><td>列出当前用户可访问的账本</td><td>只读</td></tr>
+              <tr><td>query_transactions</td><td>按日期 / 账户 / 金额条件查询交易</td><td>只读</td></tr>
+              <tr><td>query_accounts</td><td>账户余额与持仓</td><td>只读</td></tr>
+              <tr><td>query_stats</td><td>统计与趋势数据</td><td>只读</td></tr>
+              <tr><td>create_transaction</td><td>新建交易（先预览后提交）</td><td>读写</td></tr>
+              <tr><td>update_transaction</td><td>更新交易</td><td>读写</td></tr>
+              <tr><td>delete_transaction</td><td>删除交易</td><td>读写</td></tr>
+              <tr><td>import_transactions</td><td>批量导入账单</td><td>读写</td></tr>
+              <tr><td>read_source_file</td><td>读取 bean 源文件</td><td>只读</td></tr>
+              <tr><td>write_source_file</td><td>编辑源文件（带修订号校验）</td><td>读写</td></tr>
+              <tr><td>ai_record</td><td>自然语言记账（AI 生成 + 确认）</td><td>AI</td></tr>
+              <tr><td>ai_summarize</td><td>账本总结与洞察</td><td>AI</td></tr>
+            </tbody>
+          </table>
+          <span class="wf-note">工具权限继承当前用户角色：viewer 只读，editor 可写，owner 可管理</span>
+        </div>
+
+        <div class="wf-card">
+          <h3>API Keys（Agent 接入凭据）</h3>
+          <table class="wf-table">
+            <thead><tr><th>名称</th><th>权限范围</th><th>最近使用</th><th>状态</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>claude-code</td><td>read-write</td><td>2026-08-02 10:15</td><td>有效</td><td><button type="button" class="wf-btn wf-btn-sm">吊销</button></td></tr>
+              <tr><td>cursor-agent</td><td>read-only</td><td>2026-08-01 22:40</td><td>有效</td><td><button type="button" class="wf-btn wf-btn-sm">吊销</button></td></tr>
+            </tbody>
+          </table>
+          <div class="wf-toolbar"><button type="button" class="wf-btn wf-btn-sm">+ 创建 API Key</button></div>
+          <span class="wf-note">权限范围：read-only / read-write / ai；密钥仅创建时显示一次，服务端加密存储</span>
+        </div>
+
+        <div class="wf-card">
+          <h3>接入示例</h3>
+          <div class="wf-code">{
+  "mcpServers": {
+    "beancount-gs": {
+      "type": "http",
+      "url": "http://localhost:10000/mcp",
+      "headers": { "Authorization": "Bearer &lt;API_KEY&gt;" }
+    }
+  }
+}</div>
+          <span class="wf-note">适用于 Claude Code / Cursor 等支持 MCP 的 Agent；也可直接调用 REST API（/api/v2）</span>
+        </div>
+
+        <span class="wf-note">所有 Agent 调用（谁 / 哪个 Key / 什么工具 / 参数）写入审计日志</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

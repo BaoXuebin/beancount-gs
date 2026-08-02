@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>导入 v1 账本 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">账本</a> / <span>导入 v1 账本</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <section class="wf-screen">
+    <div class="wf-page-head">
+      <div><h2>导入 v1 账本</h2><span class="wf-note">将 v1 数据目录迁移到 V2（新账本 UUID 目录）</span></div>
+      <a class="wf-btn" href="ledgers.html">返回账本</a>
+    </div>
+    <div class="wf-steps"><b>1 选择目录（当前）</b><i>→</i><span>2 检查文件</span><i>→</i><span>3 确认导入</span></div>
+    <div class="wf-grid wf-grid-2">
+      <div class="wf-box"><b>上传 v1 数据目录</b><span class="wf-note">拖拽或选择：index.bean / month / account / price / event / .beancount-gs</span></div>
+      <div class="wf-box"><b>预览目录结构</b><span class="wf-note">自动识别 v1 的 ledger_config.json 与账本目录</span></div>
+    </div>
+    <div class="wf-box">
+      <b>待迁移账本</b>
+      <span class="wf-note">家庭账本（2021-01-01 起 · CNY）— 勾选 ✓</span>
+      <span class="wf-note">备用金账本（2026-01 起 · CNY）— 勾选 ✓</span>
+    </div>
+    <div class="wf-toolbar">
+      <a class="wf-btn wf-btn-primary" href="ledgers.html">开始迁移</a>
+    </div>
+    <span class="wf-note">迁移仅复制账本文件；用户、权限、交易模板等元数据需在 V2 重建</span>
+  </section>
+</div>
+</body>
+</html>

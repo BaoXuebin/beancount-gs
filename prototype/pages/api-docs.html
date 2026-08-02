@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API 文档与调试 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="settings.html">设置</a> / <a href="integrations.html">集成与 MCP</a> / <span>API 文档</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav wf-active" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div>
+            <h2>API 文档与调试</h2>
+            <span class="wf-note">OpenAPI 3.1 · Base URL：http://localhost:10000/api/v2 · 认证：Cookie / Bearer</span>
+          </div>
+          <div class="wf-toolbar">
+            <a class="wf-btn" href="integrations.html">返回集成</a>
+            <a class="wf-btn wf-btn-primary" href="../../packages/contracts/openapi.yaml">查看 openapi.yaml</a>
+          </div>
+        </div>
+
+        <div class="wf-card">
+          <h3>接口测试面板（线框示意）</h3>
+          <div class="wf-grid wf-grid-2">
+            <div class="wf-box"><b>Method</b><span class="wf-note">POST（GET / POST / PUT / DELETE 下拉）</span></div>
+            <div class="wf-box"><b>URL</b><span class="wf-note">/ledgers/{ledger_id}/transactions</span></div>
+            <div class="wf-box"><b>Headers</b><span class="wf-note">Authorization: Bearer &lt;API_KEY&gt; · If-Revision-Match: 128</span></div>
+            <div class="wf-box"><b>Body (JSON)</b><span class="wf-note">{"date":"2026-08-02","postings":[...]}</span></div>
+          </div>
+          <div class="wf-toolbar">
+            <button type="button" class="wf-btn wf-btn-primary">发送请求</button>
+          </div>
+          <div class="wf-code-block"><b>响应示例</b>
+201 Created · {"id":"txn-20260802-001","date":"2026-08-02","narration":"日常采购",...}
+409 Conflict · {"code":"LEDGER_STALE","message":"账本已被他人修改","details":{"current_revision":129}}</div>
+          <span class="wf-note">正式实现将用 OpenAPI 自动生成可交互调试页（Scalar / Swagger UI），此处为线框示意</span>
+        </div>
+
+        <div class="wf-doc-group">
+          <h3>认证与用户</h3>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/auth/github/login</span><span class="wf-note">跳转 GitHub 授权</span></summary>
+            <div class="wf-note">无参数；成功后回调 /auth/github/callback 下发 httpOnly 会话 Cookie。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/users/me</span><span class="wf-note">当前用户</span></summary>
+            <div class="wf-code-block">200 OK · {"id":"u_001","github_login":"BaoXuebin","display_name":"BaoXuebin","email":"..."}</div>
+          </details>
+        </div>
+
+        <div class="wf-doc-group">
+          <h3>工作区与账本</h3>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/teams</span><span class="wf-note">工作区列表</span></summary>
+            <div class="wf-note">返回当前用户加入的工作区，含角色（owner / editor / viewer）与账本数。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers</span><span class="wf-note">新建账本</span></summary>
+            <div class="wf-note">Body：{"team_id","name","operating_currency":"CNY","start_date","opening_balances","is_bak"}。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/revision</span><span class="wf-note">当前修订号</span></summary>
+            <div class="wf-code-block">200 OK · {"ledger_id":"...","revision":128}</div>
+          </details>
+        </div>
+
+        <div class="wf-doc-group">
+          <h3>账户</h3>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/accounts?status=open</span><span class="wf-note">账户列表</span></summary>
+            <div class="wf-code-block">200 OK · [{"account":"Assets:Cash","type":"Assets","status":"open","opened_on":"2021-01-01",...}]</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers/{ledger_id}/accounts</span><span class="wf-note">开户（open 指令）</span></summary>
+            <div class="wf-note">Body：{"account":"Assets:Bank:招商银行","opened_on":"2026-08-02","currency":"CNY","booking":"fifo"}。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers/{ledger_id}/accounts/{account}/balance</span><span class="wf-note">期初对账（pad + balance）</span></summary>
+            <div class="wf-note">Body：{"date":"2026-08-01","number":"12345.67"}；服务端写入 pad 与 balance 指令。</div>
+          </details>
+        </div>
+
+        <div class="wf-doc-group">
+          <h3>交易（命名遵循 beancount：narration / postings / units / cost）</h3>
+          <details class="wf-ep" open>
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/transactions</span><span class="wf-note">交易列表</span></summary>
+            <div class="wf-note">Query：from / to / month / account / q / tag / limit / offset / order。</div>
+            <div class="wf-code-block">200 OK · {"items":[{"id":"txn-...","date":"2026-08-02","flag":"*","payee":"盒马鲜生","narration":"日常采购","tags":["Food"],"links":[],"postings":[{"account":"Expenses:Food","units":{"number":"-120.00","currency":"CNY"}},{"account":"Assets:Cash","units":{"number":"120.00","currency":"CNY"}}]}],"total":1}</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers/{ledger_id}/transactions</span><span class="wf-note">新建交易</span></summary>
+            <div class="wf-note">Header：If-Revision-Match: 128；外币分录自动生成 cost / price。</div>
+            <div class="wf-code-block">Body：{"date":"2026-08-02","payee":"Starbucks","narration":"咖啡","tags":["Daily"],"postings":[{"account":"Expenses:Food:Coffee","units":{"number":"-38.00","currency":"CNY"}},{"account":"Assets:Cash","units":{"number":"38.00","currency":"CNY"}}]}</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">PUT</span><span class="wf-endpoint">/ledgers/{ledger_id}/transactions/{transaction_id}</span><span class="wf-note">更新交易</span></summary>
+            <div class="wf-note">整体替换；修订号不匹配返回 409 LEDGER_STALE。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/transactions/{transaction_id}/raw</span><span class="wf-note">交易原始 bean 文本</span></summary>
+            <div class="wf-code-block">200 OK (text/plain) · 2026-08-02 * "盒马鲜生" "日常采购" #Food\n  Expenses:Food  120.00 CNY\n  Assets:Cash</div>
+          </details>
+        </div>
+
+        <div class="wf-doc-group">
+          <h3>统计 / 事件 / 源文件 / 导入</h3>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/stats/account-trend?type=month</span><span class="wf-note">账户趋势</span></summary>
+            <div class="wf-note">type：day / month / year / sum。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/stats/account-flow</span><span class="wf-note">桑基图数据</span></summary>
+            <div class="wf-code-block">200 OK · {"nodes":[{"name":"Expenses:Food"}],"links":[{"source":0,"target":1,"value":"120.00"}]}</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers/{ledger_id}/events</span><span class="wf-note">添加事件（event 指令）</span></summary>
+            <div class="wf-note">Body：{"date":"2026-08-01","type":"工作","description":"入职新公司"}。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/source-files/{path}</span><span class="wf-note">读取源文件</span></summary>
+            <div class="wf-note">path 为 URL 编码相对路径，如 month/2026-08.bean；写入前校验路径防穿越。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers/{ledger_id}/imports/{source}</span><span class="wf-note">账单导入预览</span></summary>
+            <div class="wf-note">source：alipay / wechat / icbc / abc；multipart 上传，返回带 AI 分类建议的预览行。</div>
+          </details>
+        </div>
+
+        <div class="wf-doc-group">
+          <h3>AI 与集成</h3>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/ledgers/{ledger_id}/ai/record</span><span class="wf-note">自然语言记账</span></summary>
+            <div class="wf-code-block">Body：{"text":"昨天星巴克咖啡 38 元"}
+200 OK · {"draft":{"date":"2026-08-01","payee":"Starbucks","narration":"咖啡","postings":[...]},"notes":"AI 生成草稿，确认后调用交易创建接口"}</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">GET</span><span class="wf-endpoint">/ledgers/{ledger_id}/ai/insights</span><span class="wf-note">洞察与异常检测</span></summary>
+            <div class="wf-code-block">200 OK · {"insights":[{"type":"duplicate","message":"8 月 1 日与 2 日「盒马鲜生」各有 120.00 元扣款，疑似重复"}]}</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/api-keys</span><span class="wf-note">创建 API Key</span></summary>
+            <div class="wf-note">Body：{"name":"claude-code","scope":"read-write"}；secret 仅返回一次（bgsk_ 前缀）。</div>
+          </details>
+          <details class="wf-ep">
+            <summary><span class="wf-method">POST</span><span class="wf-endpoint">/mcp</span><span class="wf-note">MCP Server（Streamable HTTP）</span></summary>
+            <div class="wf-note">供 Claude / Cursor 等 Agent 连接；工具：query_transactions / create_transaction / ai_record 等，Bearer API Key 认证。</div>
+          </details>
+        </div>
+
+        <span class="wf-note">完整契约以 packages/contracts/openapi.yaml 为唯一来源；前端类型与后端骨架由该文件生成</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

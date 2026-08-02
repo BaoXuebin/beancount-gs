@@ -1,0 +1,1339 @@
+openapi: 3.1.0
+info:
+  title: beancount-gs API
+  version: 2.0.0
+  description: |
+    beancount-gs V2 REST API。命名遵循 beancount 领域术语（narration / postings / units / cost /
+    operating_currency / opening_balances 等），JSON 字段统一 snake_case。
+
+    认证：
+    - cookieAuth：浏览器会话（GitHub OAuth2 登录后下发 httpOnly Cookie）。
+    - bearerAuth：Agent / 第三方通过 API Key 接入（MCP 亦使用同一套 Key）。
+
+    并发：所有写接口要求请求头 `If-Revision-Match: <ledger_revision>`（或用 body 字段
+    `base_revision`），不匹配返回 409 LEDGER_STALE 并携带当前修订号。
+servers:
+  - url: http://localhost:10000/api/v2
+security:
+  - cookieAuth: []
+  - bearerAuth: []
+tags:
+  - name: auth
+    description: 认证（GitHub OAuth2）
+  - name: users
+    description: 当前用户
+  - name: teams
+    description: 工作区（团队）
+  - name: ledgers
+    description: 账本
+  - name: accounts
+    description: 账户（open / close / balance）
+  - name: transactions
+    description: 交易（postings / cost / price）
+  - name: stats
+    description: 统计
+  - name: events
+    description: 事件
+  - name: source-files
+    description: bean 源文件
+  - name: imports
+    description: 账单导入
+  - name: currencies
+    description: 币种与汇率
+  - name: ai
+    description: AI 能力
+  - name: integrations
+    description: API Keys 与审计
+paths:
+  /auth/github/login:
+    get:
+      tags: [auth]
+      summary: 跳转 GitHub 授权
+      responses:
+        "302":
+          description: 重定向到 GitHub OAuth 授权页
+  /auth/github/callback:
+    get:
+      tags: [auth]
+      summary: GitHub OAuth 回调
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+        - name: state
+          in: query
+          schema: { type: string }
+      responses:
+        "302": { description: 成功后重定向到前端，并下发会话 Cookie }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: 登出（销毁会话）
+      responses:
+        "204": { description: 已登出 }
+  /users/me:
+    get:
+      tags: [users]
+      summary: 当前用户信息
+      responses:
+        "200":
+          description: 当前用户
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+  /teams:
+    get:
+      tags: [teams]
+      summary: 当前用户所在工作区列表
+      responses:
+        "200":
+          description: 工作区列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Team" }
+    post:
+      tags: [teams]
+      summary: 新建工作区（创建者成为 owner）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TeamCreate" }
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Team" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /teams/{team_id}/members:
+    get:
+      tags: [teams]
+      summary: 工作区成员列表
+      parameters:
+        - { $ref: "#/components/parameters/TeamId" }
+      responses:
+        "200":
+          description: 成员列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Membership" }
+    post:
+      tags: [teams]
+      summary: 邀请成员（owner 权限）
+      parameters:
+        - { $ref: "#/components/parameters/TeamId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MembershipInvite" }
+      responses:
+        "201": { description: 邀请已发送 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /teams/{team_id}/members/{user_id}:
+    patch:
+      tags: [teams]
+      summary: 修改成员角色
+      parameters:
+        - { $ref: "#/components/parameters/TeamId" }
+        - { $ref: "#/components/parameters/UserId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RoleUpdate" }
+      responses:
+        "200": { description: 角色已更新 }
+    delete:
+      tags: [teams]
+      summary: 移除成员
+      parameters:
+        - { $ref: "#/components/parameters/TeamId" }
+        - { $ref: "#/components/parameters/UserId" }
+      responses:
+        "204": { description: 已移除 }
+  /ledgers:
+    get:
+      tags: [ledgers]
+      summary: 当前用户可访问的账本列表
+      responses:
+        "200":
+          description: 账本列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Ledger" }
+    post:
+      tags: [ledgers]
+      summary: 新建账本（按模板初始化 bean 文件结构）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LedgerCreate" }
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ledger" }
+  /ledgers/{ledger_id}:
+    get:
+      tags: [ledgers]
+      summary: 账本详情（含修订号与我的角色）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 账本详情
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ledger" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [ledgers]
+      summary: 删除账本（owner，二次确认参数 confirm=true）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - name: confirm
+          in: query
+          required: true
+          schema: { type: boolean }
+      responses:
+        "204": { description: 已删除 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /ledgers/{ledger_id}/members:
+    get:
+      tags: [ledgers]
+      summary: 账本成员与角色
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 成员列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Membership" }
+    post:
+      tags: [ledgers]
+      summary: 邀请成员（owner）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MembershipInvite" }
+      responses:
+        "201": { description: 邀请已发送 }
+  /ledgers/{ledger_id}/revision:
+    get:
+      tags: [ledgers]
+      summary: 当前修订号（写操作前检查）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 修订号
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ledger_id, revision]
+                properties:
+                  ledger_id: { type: string }
+                  revision: { type: integer, example: 128 }
+  /ledgers/{ledger_id}/accounts:
+    get:
+      tags: [accounts]
+      summary: 账户列表（含余额 / 持仓）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, closed], default: open }
+      responses:
+        "200":
+          description: 账户列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Account" }
+    post:
+      tags: [accounts]
+      summary: 开户（写入 account/*.bean 的 open 指令）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountOpen" }
+      responses:
+        "201":
+          description: 开户成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /ledgers/{ledger_id}/accounts/{account}:
+    get:
+      tags: [accounts]
+      summary: 账户详情（持仓 / 盈亏 / 余额趋势）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Account" }
+      responses:
+        "200":
+          description: 账户详情
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountDetail" }
+    post:
+      tags: [accounts]
+      summary: 关闭账户（close 指令）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Account" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [closed_on]
+              properties:
+                closed_on: { type: string, format: date }
+      responses:
+        "200":
+          description: 已关闭
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+  /ledgers/{ledger_id}/accounts/{account}/balance:
+    post:
+      tags: [accounts]
+      summary: 期初对账（写入 pad + balance 指令）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Account" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, number]
+              properties:
+                date: { type: string, format: date }
+                number: { type: string, description: decimal 字符串 }
+      responses:
+        "200": { description: 对账指令已写入 }
+  /ledgers/{ledger_id}/account-types:
+    get:
+      tags: [accounts]
+      summary: 账户类型映射（前缀 → 名称）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 类型映射
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AccountType" }
+    post:
+      tags: [accounts]
+      summary: 新增账户类型
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountType" }
+      responses:
+        "201": { description: 已新增 }
+  /ledgers/{ledger_id}/transactions:
+    get:
+      tags: [transactions]
+      summary: 交易列表
+      description: 按条件筛选交易，默认按日期倒序。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+          description: 起始日期
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+          description: 结束日期
+        - name: month
+          in: query
+          schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+          description: 月份，如 2026-08
+        - name: account
+          in: query
+          schema: { type: string }
+          description: 账户精确匹配
+        - name: q
+          in: query
+          schema: { type: string }
+          description: 收款方 / 描述模糊搜索
+        - name: tag
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: order
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+      responses:
+        "200":
+          description: 交易列表
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Transaction" }
+                  total: { type: integer }
+    post:
+      tags: [transactions]
+      summary: 新建交易
+      description: 服务端校验借贷平衡；外币分录自动写入 price 指令并生成 cost。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransactionCreate" }
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /ledgers/{ledger_id}/transactions/{transaction_id}:
+    get:
+      tags: [transactions]
+      summary: 交易详情
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/TransactionId" }
+      responses:
+        "200":
+          description: 交易详情
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+    put:
+      tags: [transactions]
+      summary: 更新交易（整体替换）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/TransactionId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransactionCreate" }
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+        "409": { $ref: "#/components/responses/Conflict" }
+    delete:
+      tags: [transactions]
+      summary: 删除交易
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/TransactionId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      responses:
+        "204": { description: 已删除 }
+  /ledgers/{ledger_id}/transactions/{transaction_id}/raw:
+    get:
+      tags: [transactions]
+      summary: 交易原始 bean 文本
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/TransactionId" }
+      responses:
+        "200":
+          description: 原始文本
+          content:
+            text/plain: { schema: { type: string } }
+    put:
+      tags: [transactions]
+      summary: 用原始文本更新交易
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/TransactionId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      requestBody:
+        required: true
+        content:
+          text/plain: { schema: { type: string } }
+      responses:
+        "200": { description: 已更新 }
+  /ledgers/{ledger_id}/templates:
+    get:
+      tags: [transactions]
+      summary: 交易模板列表
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 模板列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TransactionTemplate" }
+    post:
+      tags: [transactions]
+      summary: 新建模板
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransactionTemplate" }
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TransactionTemplate" }
+    delete:
+      tags: [transactions]
+      summary: 删除模板
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - name: template_id
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: 已删除 }
+  /ledgers/{ledger_id}/stats/total:
+    get:
+      tags: [stats]
+      summary: 按账户类型汇总
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Month" }
+      responses:
+        "200":
+          description: 类型 → 金额
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { type: string }
+  /ledgers/{ledger_id}/stats/payee:
+    get:
+      tags: [stats]
+      summary: 收款方统计（金额 / 笔数 / 均值）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Month" }
+        - name: type
+          in: query
+          schema: { type: string, enum: [total, count, avg] }
+      responses:
+        "200":
+          description: 收款方统计列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StatsPayee" }
+  /ledgers/{ledger_id}/stats/account-trend:
+    get:
+      tags: [stats]
+      summary: 账户余额趋势
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Month" }
+        - name: type
+          in: query
+          schema: { type: string, enum: [day, month, year, sum] }
+      responses:
+        "200":
+          description: 趋势点列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StatsPoint" }
+  /ledgers/{ledger_id}/stats/account-flow:
+    get:
+      tags: [stats]
+      summary: 账户资金流向（桑基图数据）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Month" }
+      responses:
+        "200":
+          description: 节点与边
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [nodes, links]
+                properties:
+                  nodes:
+                    type: array
+                    items:
+                      type: object
+                      properties: { name: { type: string } }
+                  links:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        source: { type: integer }
+                        target: { type: integer }
+                        value: { type: string }
+  /ledgers/{ledger_id}/events:
+    get:
+      tags: [events]
+      summary: 事件列表（按日期倒序）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 事件列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Event" }
+    post:
+      tags: [events]
+      summary: 添加事件（event 指令）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Event" }
+      responses:
+        "201": { description: 已添加 }
+    delete:
+      tags: [events]
+      summary: 删除事件
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Event" }
+      responses:
+        "204": { description: 已删除 }
+  /ledgers/{ledger_id}/source-files:
+    get:
+      tags: [source-files]
+      summary: 源文件目录树
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 相对路径列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+  /ledgers/{ledger_id}/source-files/{path}:
+    get:
+      tags: [source-files]
+      summary: 读取源文件内容
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          description: 相对路径（URL 编码），如 month/2026-08.bean
+      responses:
+        "200":
+          description: 文件内容
+          content:
+            text/plain: { schema: { type: string } }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+    put:
+      tags: [source-files]
+      summary: 更新源文件（保存前备份 + bean-check 校验）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          text/plain: { schema: { type: string } }
+      responses:
+        "200": { description: 已保存 }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /ledgers/{ledger_id}/imports/{source}:
+    post:
+      tags: [imports]
+      summary: 上传账单 CSV 并预览（不落账）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - name: source
+          in: path
+          required: true
+          schema: { type: string, enum: [alipay, wechat, icbc, abc] }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: 预览结果（含 AI 分类建议）
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ImportRow" }
+  /ledgers/{ledger_id}/imports/{source}/confirm:
+    post:
+      tags: [imports]
+      summary: 确认导入（写入账本）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+        - name: source
+          in: path
+          required: true
+          schema: { type: string, enum: [alipay, wechat, icbc, abc] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rows]
+              properties:
+                rows:
+                  type: array
+                  items: { $ref: "#/components/schemas/ImportRow" }
+      responses:
+        "201":
+          description: 导入结果（成功 / 失败列表）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created: { type: integer }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index: { type: integer }
+                        reason: { type: string }
+  /ledgers/{ledger_id}/currencies:
+    get:
+      tags: [currencies]
+      summary: 币种与最新汇率
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      responses:
+        "200":
+          description: 币种列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Currency" }
+    post:
+      tags: [currencies]
+      summary: 新增币种
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currency, name]
+              properties:
+                currency: { type: string, example: USD }
+                name: { type: string, example: 美元 }
+                symbol: { type: string, example: "$" }
+      responses:
+        "201": { description: 已新增 }
+  /ledgers/{ledger_id}/currencies/sync:
+    post:
+      tags: [currencies]
+      summary: 同步最新汇率（写入 price 指令）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/IfRevisionMatch" }
+      responses:
+        "200":
+          description: 同步后的币种列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Currency" }
+  /ledgers/{ledger_id}/ai/record:
+    post:
+      tags: [ai]
+      summary: 自然语言记账（生成待确认交易草稿）
+      description: AI 不直接写账；返回草稿与建议，由调用方确认后调用交易创建接口。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, example: "昨天星巴克咖啡 38 元" }
+      responses:
+        "200":
+          description: 待确认交易草稿
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiRecordResult" }
+  /ledgers/{ledger_id}/ai/summarize:
+    post:
+      tags: [ai]
+      summary: 生成账本总结
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Month" }
+      responses:
+        "200":
+          description: 文字总结
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string }
+  /ledgers/{ledger_id}/ai/insights:
+    get:
+      tags: [ai]
+      summary: 洞察与异常检测（重复扣款 / 大额支出 / 环比异常）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/Month" }
+      responses:
+        "200":
+          description: 洞察列表
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [insights]
+                properties:
+                  insights:
+                    type: array
+                    items:
+                      type: object
+                      required: [type, message]
+                      properties:
+                        type: { type: string, enum: [duplicate, large_expense, trend_change] }
+                        message: { type: string }
+  /api-keys:
+    get:
+      tags: [integrations]
+      summary: API Key 列表
+      responses:
+        "200":
+          description: Key 列表（不含明文）
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ApiKey" }
+    post:
+      tags: [integrations]
+      summary: 创建 API Key（明文仅返回一次）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, scope]
+              properties:
+                name: { type: string }
+                scope: { type: string, enum: [read-only, read-write, ai] }
+      responses:
+        "201":
+          description: 创建成功，secret 字段仅此一次可见
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/ApiKey" }
+                  - type: object
+                    required: [secret]
+                    properties:
+                      secret: { type: string, example: "bgsk_xxxxxxxx" }
+  /api-keys/{key_id}:
+    delete:
+      tags: [integrations]
+      summary: 吊销 API Key
+      parameters:
+        - name: key_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: 已吊销 }
+  /audit-logs:
+    get:
+      tags: [integrations]
+      summary: 审计日志（owner）
+      parameters:
+        - name: ledger_id
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: 审计记录
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AuditLog" }
+  /mcp:
+    get:
+      tags: [integrations]
+      summary: MCP Server（SSE 传输）
+      description: 供 Claude / Cursor 等 Agent 连接；工具列表见 integration 文档，认证用 Bearer API Key。
+      responses:
+        "200": { description: SSE 事件流 }
+    post:
+      tags: [integrations]
+      summary: MCP Server（Streamable HTTP）
+      responses:
+        "200": { description: MCP JSON-RPC 响应 }
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: GitHub OAuth2 登录后下发的 httpOnly 会话 Cookie
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: bgsk_
+      description: API Key（MCP 与 REST 通用）
+  parameters:
+    LedgerId:
+      name: ledger_id
+      in: path
+      required: true
+      schema: { type: string }
+    TeamId:
+      name: team_id
+      in: path
+      required: true
+      schema: { type: string }
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema: { type: string }
+    Account:
+      name: account
+      in: path
+      required: true
+      schema: { type: string }
+      description: 账户全名（URL 编码），如 Assets%3ACash
+    TransactionId:
+      name: transaction_id
+      in: path
+      required: true
+      schema: { type: string }
+    Month:
+      name: month
+      in: query
+      schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+    IfRevisionMatch:
+      name: If-Revision-Match
+      in: header
+      required: true
+      schema: { type: integer }
+      description: 当前账本修订号；不匹配时返回 409 LEDGER_STALE
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: 未登录或会话失效
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: 角色权限不足
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: 修订号过期或资源冲突
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unprocessable:
+      description: 语义校验失败（借贷不平衡 / bean-check 失败 / 路径越界）
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    InternalError:
+      description: 服务器错误
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: LEDGER_STALE
+          description: 业务错误码：VALIDATION / UNAUTHORIZED / FORBIDDEN / NOT_FOUND /
+            LEDGER_STALE / UNBALANCED / INTERNAL
+        message: { type: string }
+        details:
+          type: object
+          description: 附加信息，如 409 时的 current_revision
+        request_id: { type: string }
+    User:
+      type: object
+      required: [id, github_login, display_name]
+      properties:
+        id: { type: string }
+        github_login: { type: string }
+        display_name: { type: string }
+        email: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    Team:
+      type: object
+      required: [id, name, role]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        member_count: { type: integer }
+        ledger_count: { type: integer }
+        created_at: { type: string, format: date-time }
+    TeamCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, example: 家庭 }
+    Membership:
+      type: object
+      required: [user_id, github_login, role]
+      properties:
+        user_id: { type: string }
+        github_login: { type: string }
+        display_name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        status: { type: string, enum: [active, pending], default: active }
+    MembershipInvite:
+      type: object
+      required: [github_login_or_email, role]
+      properties:
+        github_login_or_email: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+    RoleUpdate:
+      type: object
+      required: [role]
+      properties:
+        role: { $ref: "#/components/schemas/Role" }
+    Role:
+      type: string
+      enum: [owner, editor, viewer]
+    Ledger:
+      type: object
+      required: [id, name, operating_currency, revision, role]
+      properties:
+        id: { type: string }
+        team_id: { type: string }
+        name: { type: string }
+        data_path: { type: string }
+        operating_currency: { type: string, example: CNY }
+        start_date: { type: string, format: date }
+        opening_balances: { type: string, default: "Equity:OpeningBalances" }
+        is_bak: { type: boolean, default: true }
+        revision: { type: integer }
+        role: { $ref: "#/components/schemas/Role" }
+        member_count: { type: integer }
+        created_at: { type: string, format: date-time }
+    LedgerCreate:
+      type: object
+      required: [team_id, name, operating_currency]
+      properties:
+        team_id: { type: string }
+        name: { type: string }
+        operating_currency: { type: string, default: CNY }
+        start_date: { type: string, format: date }
+        opening_balances: { type: string, default: "Equity:OpeningBalances" }
+        is_bak: { type: boolean, default: true }
+    Account:
+      type: object
+      required: [account, type, status]
+      properties:
+        account: { type: string, example: "Assets:Cash" }
+        type: { type: string, enum: [Assets, Liabilities, Income, Expenses, Equity] }
+        status: { type: string, enum: [open, closed] }
+        opened_on: { type: string, format: date }
+        closed_on: { type: string, format: date, nullable: true }
+        currency: { type: string }
+        commodities:
+          type: array
+          items: { $ref: "#/components/schemas/Currency" }
+        positions:
+          type: array
+          items:
+            type: object
+            properties:
+              number: { type: string }
+              currency: { type: string }
+              currency_symbol: { type: string }
+        market_number: { type: string }
+        market_currency: { type: string }
+    AccountOpen:
+      type: object
+      required: [account, opened_on]
+      properties:
+        account: { type: string, example: "Assets:Bank:招商银行" }
+        opened_on: { type: string, format: date }
+        currency: { type: string, description: 多币种用逗号分隔 }
+        booking: { type: string, enum: [fifo, average, none], default: none }
+    AccountDetail:
+      allOf:
+        - { $ref: "#/components/schemas/Account" }
+        - type: object
+          properties:
+            market_number: { type: string }
+            market_currency: { type: string }
+            cost: { type: string }
+            pnl: { type: string }
+            balance_trend:
+              type: array
+              items: { $ref: "#/components/schemas/StatsPoint" }
+    AccountType:
+      type: object
+      required: [prefix, name]
+      properties:
+        prefix: { type: string, example: Assets }
+        name: { type: string, example: 资产 }
+    Transaction:
+      type: object
+      required: [id, date, postings]
+      properties:
+        id: { type: string }
+        date: { type: string, format: date }
+        flag: { type: string, enum: ["*", "!"], default: "*" }
+        payee: { type: string }
+        narration: { type: string }
+        tags: { type: array, items: { type: string } }
+        links: { type: array, items: { type: string } }
+        postings:
+          type: array
+          items: { $ref: "#/components/schemas/Posting" }
+    TransactionCreate:
+      type: object
+      required: [date, postings]
+      properties:
+        date: { type: string, format: date }
+        flag: { type: string, enum: ["*", "!"], default: "*" }
+        payee: { type: string }
+        narration: { type: string }
+        tags: { type: array, items: { type: string } }
+        links: { type: array, items: { type: string } }
+        postings:
+          type: array
+          minItems: 2
+          items: { $ref: "#/components/schemas/Posting" }
+        divide_dates:
+          type: array
+          items: { type: string, format: date }
+          description: 分期记账日期列表，金额自动均分
+    Posting:
+      type: object
+      required: [account]
+      properties:
+        account: { type: string, example: "Expenses:Food" }
+        units: { $ref: "#/components/schemas/Amount" }
+        cost: { $ref: "#/components/schemas/Cost" }
+        price: { $ref: "#/components/schemas/Amount" }
+    Amount:
+      type: object
+      required: [number, currency]
+      properties:
+        number: { type: string, example: "-120.00", description: decimal 字符串，避免浮点误差 }
+        currency: { type: string, example: CNY }
+    Cost:
+      type: object
+      properties:
+        number: { type: string }
+        currency: { type: string }
+        date: { type: string, format: date }
+        label: { type: string }
+    TransactionTemplate:
+      type: object
+      required: [name, narration, postings]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        payee: { type: string }
+        narration: { type: string }
+        tags: { type: array, items: { type: string } }
+        postings:
+          type: array
+          items: { $ref: "#/components/schemas/Posting" }
+    Event:
+      type: object
+      required: [date, type, description]
+      properties:
+        date: { type: string, format: date }
+        type: { type: string, example: 工作 }
+        description: { type: string }
+    ImportRow:
+      type: object
+      required: [date, narration, number]
+      properties:
+        index: { type: integer }
+        date: { type: string, format: date }
+        payee: { type: string }
+        narration: { type: string }
+        number: { type: string }
+        currency: { type: string, default: CNY }
+        suggested_account: { type: string, description: AI / 规则建议账户 }
+        confidence: { type: number, description: 0-1 }
+        status: { type: string, enum: [matched, suggested, unclassified] }
+    Currency:
+      type: object
+      required: [currency, name]
+      properties:
+        currency: { type: string }
+        name: { type: string }
+        symbol: { type: string }
+        is_operating: { type: boolean }
+        price: { type: string }
+        price_date: { type: string, format: date }
+    StatsPayee:
+      type: object
+      properties:
+        payee: { type: string }
+        count: { type: integer }
+        amount: { type: string }
+    StatsPoint:
+      type: object
+      properties:
+        date: { type: string }
+        amount: { type: string }
+        operating_currency: { type: string }
+    AiRecordResult:
+      type: object
+      required: [draft]
+      properties:
+        draft:
+          allOf:
+            - { $ref: "#/components/schemas/TransactionCreate" }
+            - type: object
+              properties:
+                account_suggestions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      posting_index: { type: integer }
+                      account: { type: string }
+                      confidence: { type: number }
+        notes: { type: string }
+    ApiKey:
+      type: object
+      required: [id, name, scope]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        scope: { type: string, enum: [read-only, read-write, ai] }
+        prefix: { type: string }
+        created_at: { type: string, format: date-time }
+        last_used_at: { type: string, format: date-time, nullable: true }
+        revoked: { type: boolean }
+    AuditLog:
+      type: object
+      required: [id, action, created_at]
+      properties:
+        id: { type: integer }
+        ledger_id: { type: string, nullable: true }
+        user_id: { type: string }
+        actor: { type: string, description: GitHub 登录名或 API Key 名称 }
+        action: { type: string }
+        object: { type: string }
+        detail: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>邀请成员 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="settings.html">设置</a> / <span>邀请成员</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav wf-active" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>邀请成员</h2><span class="wf-note">账本「家庭账本」· 角色决定可执行的操作</span></div>
+          <a class="wf-btn" href="settings.html">返回设置</a>
+        </div>
+        <div class="wf-grid wf-grid-2">
+          <div class="wf-box"><b>GitHub 用户名 / 邮箱</b><span class="wf-note">文本输入，多个用逗号分隔</span></div>
+          <div class="wf-box"><b>角色</b><span class="wf-note">editor（默认）/ owner / viewer</span></div>
+        </div>
+        <div class="wf-box"><b>邀请链接（可选）</b><span class="wf-note">生成一次性邀请链接，7 天内有效</span></div>
+        <div class="wf-card">
+          <h3>待处理邀请</h3>
+          <table class="wf-table">
+            <thead><tr><th>用户</th><th>角色</th><th>状态</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>alice@example.com</td><td>editor</td><td>已发送，等待接受</td><td><button type="button" class="wf-btn wf-btn-sm">撤销</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="wf-toolbar">
+          <a class="wf-btn" href="settings.html">取消</a>
+          <a class="wf-btn wf-btn-primary" href="settings.html">发送邀请</a>
+        </div>
+        <span class="wf-note">被邀请人需先通过 GitHub 登录；接受后按角色开放权限</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

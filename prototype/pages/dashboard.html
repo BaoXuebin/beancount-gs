@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>仪表盘 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <span>仪表盘</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav wf-active" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>仪表盘</h2><span class="wf-note">账本：家庭账本 · 修订 #128 · 本位币 CNY</span></div>
+          <div class="wf-toolbar">
+            <a class="wf-btn" href="import.html">导入账单</a>
+            <a class="wf-btn wf-btn-primary" href="txn-edit.html">记一笔</a>
+          </div>
+        </div>
+        <div class="wf-grid wf-grid-4">
+          <div class="wf-box"><b>总资产</b><span class="wf-num">¥ 236,540.00</span><span class="wf-note">按本位币折算</span></div>
+          <div class="wf-box"><b>本月收入</b><span class="wf-num">¥ 18,200.00</span><span class="wf-note">2026-08</span></div>
+          <div class="wf-box"><b>本月支出</b><span class="wf-num">¥ 6,840.50</span><span class="wf-note">2026-08</span></div>
+          <div class="wf-box"><b>本月结余</b><span class="wf-num">¥ 11,359.50</span><span class="wf-note">收入 - 支出</span></div>
+        </div>
+        <div class="wf-grid wf-grid-2">
+          <div class="wf-box"><b>月度收支（近 6 个月）</b><span class="wf-note">柱状图占位：收入 / 支出 / 结余</span></div>
+          <div class="wf-box">
+            <b>近期交易（最近 5 笔）</b>
+            <div class="wf-row"><span>08-02 盒马鲜生</span><span>-¥120.00</span></div>
+            <div class="wf-row"><span>08-01 工资</span><span>+¥18,200.00</span></div>
+            <div class="wf-row"><span>07-31 物业费</span><span>-¥680.00</span></div>
+            <div class="wf-row"><span>07-30 美团外卖</span><span>-¥45.80</span></div>
+          </div>
+        </div>
+        <div class="wf-box"><b>AI 洞察</b>
+          <span class="wf-note">⚠ 8 月 1 日与 2 日「盒马鲜生」各有 120.00 元扣款，疑似重复</span>
+          <span class="wf-note">📊 本月餐饮支出环比 +18%，建议查看明细</span>
+          <a class="wf-btn wf-btn-sm" href="ai-assistant.html">查看 AI 洞察</a>
+        </div>
+        <span class="wf-note">移动端：侧边栏折叠为底部导航；查询结果按账本修订号缓存</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

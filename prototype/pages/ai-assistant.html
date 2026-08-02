@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 助手 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <span>AI 助手</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav wf-active" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>AI 记账助手</h2><span class="wf-note">账本「家庭账本」· 自然语言记账 / 问答 / 洞察</span></div>
+          <a class="wf-btn" href="ai-settings.html">AI 设置</a>
+        </div>
+
+        <div class="wf-toolbar">
+          <span class="wf-tag">记一笔：昨天星巴克咖啡 38 元</span>
+          <span class="wf-tag">上个月交通费花了多少？</span>
+          <span class="wf-tag">生成 7 月消费总结</span>
+          <span class="wf-tag">帮我找重复扣款</span>
+        </div>
+
+        <div class="wf-card">
+          <h3>用户</h3>
+          <span class="wf-note">昨天星巴克买了杯咖啡 38 元</span>
+        </div>
+        <div class="wf-card">
+          <h3>AI · 待确认交易</h3>
+          <table class="wf-table">
+            <thead><tr><th>日期</th><th>收款方</th><th>描述</th><th class="num">金额</th><th>账户</th><th>标签</th></tr></thead>
+            <tbody>
+              <tr><td>2026-08-01</td><td>Starbucks</td><td>咖啡</td><td class="num">-38.00 CNY</td><td>Expenses:Food:Coffee（AI 92%）</td><td>#Daily</td></tr>
+              <tr><td colspan="6" class="wf-note">借方对应 Assets:Cash（AI 自动选择最近常用支付账户）</td></tr>
+            </tbody>
+          </table>
+          <div class="wf-toolbar">
+            <button type="button" class="wf-btn wf-btn-sm">修改</button>
+            <a class="wf-btn wf-btn-primary wf-btn-sm" href="transactions.html">确认入账</a>
+          </div>
+        </div>
+
+        <div class="wf-card">
+          <h3>用户</h3>
+          <span class="wf-note">上个月交通费花了多少？</span>
+        </div>
+        <div class="wf-card">
+          <h3>AI · 查询结果</h3>
+          <div class="wf-code">SELECT account, sum(convert(value(position), 'CNY')) WHERE account ~ 'Expenses:Transport' AND month = 7</div>
+          <div class="wf-row"><span>7 月交通费合计</span><span>-¥ 1,235.60</span></div>
+          <span class="wf-note">地铁 620.00 · 打车 415.60 · 公交 200.00；环比 6 月减少 12%</span>
+        </div>
+
+        <div class="wf-box"><b>输入框</b><span class="wf-note">在此输入自然语言；AI 只生成待确认内容，写入账本需你确认</span></div>
+        <div class="wf-toolbar">
+          <button type="button" class="wf-btn wf-btn-primary">发送</button>
+        </div>
+        <span class="wf-note">写操作需要 editor 及以上角色，携带 baseRevision；所有 AI 调用记录进入审计日志</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

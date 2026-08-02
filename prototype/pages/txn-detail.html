@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交易详情 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="transactions.html">交易</a> / <span>详情</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav wf-active" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>交易详情</h2><span class="wf-note">2026-08-02 · #Food #Family</span></div>
+          <div class="wf-toolbar">
+            <a class="wf-btn" href="transactions.html">返回</a>
+            <a class="wf-btn" href="txn-edit.html">编辑</a>
+            <button type="button" class="wf-btn wf-btn-danger">删除</button>
+          </div>
+        </div>
+        <div class="wf-grid wf-grid-2">
+          <div class="wf-box"><b>日期</b><span class="wf-note">2026-08-02</span></div>
+          <div class="wf-box"><b>收款方 / 描述</b><span class="wf-note">盒马鲜生 · 日常采购</span></div>
+        </div>
+        <div class="wf-card">
+          <h3>分录（2 条）</h3>
+          <table class="wf-table">
+            <thead><tr><th>账户</th><th class="num">金额</th><th>币种</th><th>成本 / 汇率</th></tr></thead>
+            <tbody>
+              <tr><td>Expenses:Food</td><td class="num">-120.00</td><td>CNY</td><td>—</td></tr>
+              <tr><td>Assets:Cash</td><td class="num">+120.00</td><td>CNY</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="wf-box"><b>原始文本（只读）</b><div class="wf-code">2026-08-02 * "盒马鲜生" "日常采购" #Food
+  Expenses:Food  120.00 CNY
+  Assets:Cash</div><span class="wf-note">可切换到「源文件」直接编辑原始 bean 文本</span></div>
+        <span class="wf-note">编辑与删除均携带 baseRevision，避免覆盖他人修改</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

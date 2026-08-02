@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>导出与备份 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <span>导出与备份</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>导出与备份</h2><span class="wf-note">数据可随时带走，账本文件即资产</span></div>
+          <button type="button" class="wf-btn wf-btn-primary">立即导出</button>
+        </div>
+        <div class="wf-grid wf-grid-2">
+          <div class="wf-box"><b>导出账本文件</b><span class="wf-note">打包 index.bean / month / account / price / event 为 zip</span></div>
+          <div class="wf-box"><b>导出元数据</b><span class="wf-note">交易模板 / 账户类型 / 币种配置（JSON）</span></div>
+        </div>
+        <div class="wf-box"><b>备份历史</b><span class="wf-note">写前快照 · SQLite 每日快照 · 最近备份 2026-08-02 00:10</span></div>
+        <span class="wf-note">v1 迁移与 v2 间互导使用同一份 bean 文件，保证数据可迁移</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交易 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <span>交易</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav wf-active" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>交易</h2><span class="wf-note">2026-08 · 全部账户</span></div>
+          <div class="wf-toolbar">
+            <a class="wf-btn" href="import.html">导入</a>
+            <a class="wf-btn" href="templates.html">模板</a>
+            <a class="wf-btn wf-btn-primary" href="txn-edit.html">记一笔</a>
+          </div>
+        </div>
+        <div class="wf-banner"><span>⚠ 账本已被他人修改（409 Conflict）</span><a class="wf-btn wf-btn-sm" href="transactions.html">刷新</a><a class="wf-btn wf-btn-sm" href="transactions.html">查看差异</a></div>
+        <div class="wf-toolbar">
+          <div class="wf-box wf-field"><b>搜索</b><span class="wf-note">收款方 / 描述 / 金额</span></div>
+          <div class="wf-box wf-field"><b>月份</b><span class="wf-note">2026-08</span></div>
+          <div class="wf-box wf-field"><b>账户</b><span class="wf-note">全部</span></div>
+          <div class="wf-box wf-field"><b>标签</b><span class="wf-note">全部</span></div>
+        </div>
+        <div class="wf-card">
+          <table class="wf-table">
+            <thead><tr><th>日期</th><th>收款方</th><th>描述</th><th>账户</th><th class="num">金额</th><th>标签</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>08-02</td><td>盒马鲜生</td><td>日常采购</td><td>Expenses:Food</td><td class="num">-120.00 CNY</td><td>#Food</td><td><a class="wf-btn wf-btn-sm" href="txn-detail.html">查看</a> <a class="wf-btn wf-btn-sm" href="txn-edit.html">编辑</a> <button type="button" class="wf-btn wf-btn-sm">删除</button></td></tr>
+              <tr><td>08-01</td><td>公司</td><td>工资</td><td>Income:Salary</td><td class="num">+18,200.00 CNY</td><td></td><td><a class="wf-btn wf-btn-sm" href="txn-detail.html">查看</a> <a class="wf-btn wf-btn-sm" href="txn-edit.html">编辑</a> <button type="button" class="wf-btn wf-btn-sm">删除</button></td></tr>
+              <tr><td>07-31</td><td>物业</td><td>物业费</td><td>Expenses:Home</td><td class="num">-680.00 CNY</td><td>#Home</td><td><a class="wf-btn wf-btn-sm" href="txn-detail.html">查看</a> <a class="wf-btn wf-btn-sm" href="txn-edit.html">编辑</a> <button type="button" class="wf-btn wf-btn-sm">删除</button></td></tr>
+            </tbody>
+          </table>
+          <button type="button" class="wf-btn wf-btn-sm" style="align-self:flex-start">加载更多</button>
+        </div>
+        <span class="wf-note">所有写操作携带 baseRevision，冲突时返回 409 与最新修订号</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

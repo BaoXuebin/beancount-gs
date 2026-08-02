@@ -1,0 +1,1862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>V2 Wireframe</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="V2 Wireframe" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;V2 Wireframe&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --red: light-dark(rgb(186 38 35), rgb(250 66 62));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: var(--border-radius-lg, 12.5px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+/* Model-authored chart rules can otherwise stretch icons after these styles load. */
+svg.lucide {
+  display: block;
+  width: 16px !important;
+  height: 16px !important;
+  flex: none;
+  margin: 0 !important;
+  stroke-width: 1.6;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;v2wf&quot;&gt;
+&lt;style&gt;
+#v2wf {
+  --wf-bg: light-dark(#fafafa, #17171b);
+  --wf-panel: light-dark(#ffffff, #26262c);
+  --wf-box: light-dark(#e6e6ea, #38383f);
+  --wf-box-strong: light-dark(#d3d3d9, #4a4a52);
+  --wf-ink: light-dark(#1a1a1f, #f2f2f5);
+  --wf-muted: light-dark(#6d6d76, #a5a5af);
+  --wf-line: light-dark(#d6d6dc, #3d3d44);
+  --wf-accent: light-dark(#3a3a42, #d9d9e0);
+  --wf-accent-ink: light-dark(#ffffff, #19191d);
+  --wf-danger: light-dark(#b42318, #f2a09a);
+  color-scheme: light dark;
+  font: 14px/1.55 system-ui, -apple-system, &quot;Segoe UI&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;
+  color: var(--wf-ink);
+  background: transparent;
+}
+#v2wf * { box-sizing: border-box; }
+#v2wf [hidden] { display: none !important; }
+#v2wf .wf-top { display: flex; align-items: center; gap: 12px; padding: 8px 2px 12px; flex-wrap: wrap; }
+#v2wf .wf-brand { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+#v2wf .wf-logo { width: 22px; height: 22px; border-radius: 6px; background: var(--wf-accent); display: inline-block; }
+#v2wf .wf-crumb { display: flex; align-items: center; gap: 4px; color: var(--wf-muted); font-size: 13px; flex-wrap: wrap; }
+#v2wf .wf-crumb button { border: 0; background: none; color: var(--wf-ink); cursor: pointer; padding: 2px 6px; border-radius: 6px; font-size: 13px; }
+#v2wf .wf-crumb button:hover { background: var(--wf-box); }
+#v2wf .wf-user { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--wf-muted); }
+#v2wf .wf-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--wf-box-strong); display: inline-block; }
+#v2wf .wf-body { display: flex; gap: 16px; align-items: flex-start; }
+#v2wf .wf-sidebar { width: 168px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+#v2wf .wf-nav { text-align: left; border: 1px solid transparent; background: transparent; color: var(--wf-ink); padding: 9px 10px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+#v2wf .wf-nav small { color: var(--wf-muted); font-size: 11px; }
+#v2wf .wf-nav:hover { background: var(--wf-box); }
+#v2wf .wf-nav.wf-active { background: var(--wf-accent); color: var(--wf-accent-ink); }
+#v2wf .wf-nav.wf-active small { color: var(--wf-accent-ink); opacity: 0.75; }
+#v2wf .wf-stage { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+#v2wf .wf-screen { display: flex; flex-direction: column; gap: 12px; }
+#v2wf .wf-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+#v2wf h2 { font-size: 18px; font-weight: 500; margin: 0; }
+#v2wf h3 { font-size: 14px; font-weight: 500; margin: 0; }
+#v2wf .wf-note { color: var(--wf-muted); font-size: 12px; }
+#v2wf .wf-box { background: var(--wf-box); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+#v2wf .wf-box b { font-weight: 500; }
+#v2wf .wf-num { font-size: 20px; font-variant-numeric: tabular-nums; }
+#v2wf .wf-card { background: var(--wf-panel); border: 1px solid var(--wf-line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+#v2wf .wf-click { cursor: pointer; }
+#v2wf .wf-click:hover { border-color: var(--wf-accent); }
+#v2wf .wf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+#v2wf .wf-grid-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+#v2wf .wf-grid-4 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+#v2wf .wf-btn { border: 1px solid var(--wf-line); background: var(--wf-panel); color: var(--wf-ink); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+#v2wf .wf-btn:hover { border-color: var(--wf-accent); }
+#v2wf .wf-btn-sm { padding: 3px 9px; font-size: 12px; }
+#v2wf .wf-btn-primary { background: var(--wf-accent); color: var(--wf-accent-ink); border-color: var(--wf-accent); }
+#v2wf .wf-btn-danger { background: var(--wf-panel); color: var(--wf-danger); border-color: var(--wf-danger); }
+#v2wf .wf-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px dashed var(--wf-danger); color: var(--wf-danger); background: var(--wf-panel); border-radius: 8px; padding: 9px 12px; font-size: 13px; }
+#v2wf .wf-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+#v2wf .wf-field { padding: 8px 14px; }
+#v2wf .wf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#v2wf .wf-table th, #v2wf .wf-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--wf-line); }
+#v2wf .wf-table th { color: var(--wf-muted); font-weight: 400; font-size: 12px; }
+#v2wf .wf-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#v2wf .wf-flow { display: flex; gap: 7px; align-items: center; font-size: 12px; color: var(--wf-muted); flex-wrap: wrap; }
+#v2wf .wf-flow b { color: var(--wf-ink); font-weight: 500; }
+#v2wf .wf-flow i { font-style: normal; }
+#v2wf .wf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+#v2wf .wf-tab { border: 1px solid var(--wf-line); background: var(--wf-panel); color: var(--wf-ink); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 12px; }
+#v2wf .wf-tab.wf-active { background: var(--wf-accent); color: var(--wf-accent-ink); border-color: var(--wf-accent); }
+#v2wf .wf-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 1px dashed var(--wf-line); }
+#v2wf .wf-row:last-child { border-bottom: 0; }
+#v2wf .wf-row[data-goto] { cursor: pointer; }
+#v2wf .wf-auth { max-width: 420px; margin: 6px auto 0; width: 100%; }
+#v2wf .wf-auth-card { background: var(--wf-panel); border: 1px solid var(--wf-line); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+#v2wf .wf-logo-big { font-size: 22px; font-weight: 500; text-align: center; }
+#v2wf .wf-steps { display: flex; gap: 7px; flex-wrap: wrap; font-size: 12px; color: var(--wf-muted); align-items: center; }
+#v2wf .wf-steps b { color: var(--wf-ink); font-weight: 500; }
+#v2wf .wf-tag { font-size: 11px; border: 1px solid var(--wf-line); border-radius: 999px; padding: 1px 8px; color: var(--wf-muted); display: inline-block; }
+#v2wf .wf-code { font-family: ui-monospace, Consolas, &quot;Courier New&quot;, monospace; font-size: 12px; white-space: pre; overflow-x: auto; line-height: 1.7; }
+@media (max-width: 640px) {
+  #v2wf .wf-body { flex-direction: column; }
+  #v2wf .wf-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+}
+&lt;/style&gt;
+
+&lt;div class=&quot;wf-top&quot;&gt;
+  &lt;div class=&quot;wf-brand&quot;&gt;&lt;span class=&quot;wf-logo&quot;&gt;&lt;/span&gt;beancount-gs&lt;/div&gt;
+  &lt;nav class=&quot;wf-crumb&quot; id=&quot;wfCrumb&quot; aria-label=&quot;页面路径&quot; hidden&gt;&lt;/nav&gt;
+  &lt;div class=&quot;wf-user&quot;&gt;&lt;span class=&quot;wf-avatar&quot;&gt;&lt;/span&gt;&lt;span&gt;GitHub 用户&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;wf-body&quot;&gt;
+  &lt;aside class=&quot;wf-sidebar&quot; id=&quot;wfSidebar&quot; aria-label=&quot;主导航&quot; hidden&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;dashboard&quot;&gt;仪表盘&lt;small&gt;资产与月度概览&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;transactions&quot;&gt;交易&lt;small&gt;流水 / 记账 / 筛选&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;accounts&quot;&gt;账户&lt;small&gt;持仓与余额&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;stats&quot;&gt;统计&lt;small&gt;趋势 / 占比 / 桑基&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;import&quot;&gt;导入&lt;small&gt;账单 CSV 导入&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;events&quot;&gt;事件&lt;small&gt;时间线&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;source&quot;&gt;源文件&lt;small&gt;bean 文件编辑&lt;/small&gt;&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;wf-nav&quot; data-nav=&quot;settings&quot;&gt;设置&lt;small&gt;账本与成员&lt;/small&gt;&lt;/button&gt;
+  &lt;/aside&gt;
+
+  &lt;main class=&quot;wf-stage&quot; id=&quot;wfStage&quot;&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;login&quot;&gt;
+      &lt;div class=&quot;wf-auth&quot;&gt;
+        &lt;div class=&quot;wf-auth-card&quot;&gt;
+          &lt;div class=&quot;wf-logo-big&quot;&gt;beancount-gs&lt;/div&gt;
+          &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;登录卡片&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;GitHub OAuth2 · 无本地密码 · httpOnly 会话 Cookie&lt;/span&gt;&lt;/div&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;workspaces&quot;&gt;使用 GitHub 登录&lt;/button&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;首次登录自动创建个人工作区；邀请成员后即可多人协作同一账本&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-flow&quot;&gt;&lt;span&gt;登录（当前）&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;工作区&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;账本&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;功能页&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;workspaces&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;工作区&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;团队是权限边界：账本归属工作区，成员按角色协作&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;workspace-create&quot;&gt;+ 新建工作区&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-flow&quot;&gt;&lt;span&gt;登录&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;b&gt;工作区（当前）&lt;/b&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;账本&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;功能页&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-grid&quot;&gt;
+        &lt;div class=&quot;wf-card wf-click&quot; data-goto=&quot;ledgers&quot;&gt;
+          &lt;b&gt;家庭&lt;/b&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;成员 3 · 账本 2&lt;/span&gt;
+          &lt;span class=&quot;wf-tag&quot;&gt;owner&lt;/span&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;进入&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-card wf-click&quot; data-goto=&quot;ledgers&quot;&gt;
+          &lt;b&gt;创业项目&lt;/b&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;成员 2 · 账本 1&lt;/span&gt;
+          &lt;span class=&quot;wf-tag&quot;&gt;editor&lt;/span&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;进入&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-card wf-click&quot; data-goto=&quot;ledgers&quot;&gt;
+          &lt;b&gt;家庭（只读）&lt;/b&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;成员 1 · 账本 1&lt;/span&gt;
+          &lt;span class=&quot;wf-tag&quot;&gt;viewer&lt;/span&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;进入&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;ledgers&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;工作区「家庭」&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本列表 · 记账本位币 CNY&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;import-v1&quot;&gt;导入 v1 账本&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;ledger-create&quot;&gt;+ 新建账本&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-flow&quot;&gt;&lt;span&gt;登录&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;工作区&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;b&gt;账本（当前）&lt;/b&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;功能页&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-grid&quot;&gt;
+        &lt;div class=&quot;wf-card wf-click&quot; data-goto=&quot;dashboard&quot;&gt;
+          &lt;b&gt;家庭账本&lt;/b&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;2021 年至今 · 更新于 2026-07-30&lt;/span&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;成员 3 · 修订 #128&lt;/span&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;打开&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-card wf-click&quot; data-goto=&quot;dashboard&quot;&gt;
+          &lt;b&gt;备用金账本&lt;/b&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;2026-01 创建 · 更新于 2026-07-28&lt;/span&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;成员 2 · 修订 #36&lt;/span&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;打开&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-card wf-click&quot; data-goto=&quot;dashboard&quot;&gt;
+          &lt;b&gt;投资账本&lt;/b&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;2025-06 创建 · 更新于 2026-07-25&lt;/span&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;成员 1 · 修订 #72&lt;/span&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;打开&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;dashboard&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;仪表盘&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本：家庭账本 · 修订 #128 · 本位币 CNY&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;import&quot;&gt;导入账单&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;txn-edit&quot;&gt;记一笔&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-4&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;总资产&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;¥ 236,540.00&lt;/span&gt;&lt;span class=&quot;wf-note&quot;&gt;按本位币折算&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;本月收入&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;¥ 18,200.00&lt;/span&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;本月支出&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;¥ 6,840.50&lt;/span&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;本月结余&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;¥ 11,359.50&lt;/span&gt;&lt;span class=&quot;wf-note&quot;&gt;收入 - 支出&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;月度收支（近 6 个月）&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;柱状图占位：收入 / 支出 / 结余&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;近期交易（最近 5 笔）&lt;/b&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;08-02 盒马鲜生&lt;/span&gt;&lt;span&gt;-¥120.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;08-01 工资&lt;/span&gt;&lt;span&gt;+¥18,200.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;07-31 物业费&lt;/span&gt;&lt;span&gt;-¥680.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;07-30 美团外卖&lt;/span&gt;&lt;span&gt;-¥45.80&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;移动端：侧边栏折叠为底部导航；查询结果按账本修订号缓存&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;transactions&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;交易&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08 · 全部账户&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;import&quot;&gt;导入&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;templates&quot;&gt;模板&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;txn-edit&quot;&gt;记一笔&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-banner&quot;&gt;&lt;span&gt;⚠ 账本已被他人修改（409 Conflict）&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;刷新&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;查看差异&lt;/button&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-toolbar&quot;&gt;
+        &lt;div class=&quot;wf-box wf-field&quot;&gt;&lt;b&gt;搜索&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;收款方 / 描述 / 金额&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box wf-field&quot;&gt;&lt;b&gt;月份&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box wf-field&quot;&gt;&lt;b&gt;账户&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;全部&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box wf-field&quot;&gt;&lt;b&gt;标签&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;全部&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;日期&lt;/th&gt;&lt;th&gt;收款方&lt;/th&gt;&lt;th&gt;描述&lt;/th&gt;&lt;th&gt;账户&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;金额&lt;/th&gt;&lt;th&gt;标签&lt;/th&gt;&lt;th&gt;操作&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;08-02&lt;/td&gt;&lt;td&gt;盒马鲜生&lt;/td&gt;&lt;td&gt;日常采购&lt;/td&gt;&lt;td&gt;Expenses:Food&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-120.00 CNY&lt;/td&gt;&lt;td&gt;#Food&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot; data-goto=&quot;txn-detail&quot;&gt;查看&lt;/button&gt; &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt; &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;删除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;08-01&lt;/td&gt;&lt;td&gt;公司&lt;/td&gt;&lt;td&gt;工资&lt;/td&gt;&lt;td&gt;Income:Salary&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;+18,200.00 CNY&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot; data-goto=&quot;txn-detail&quot;&gt;查看&lt;/button&gt; &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt; &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;删除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;07-31&lt;/td&gt;&lt;td&gt;物业&lt;/td&gt;&lt;td&gt;物业费&lt;/td&gt;&lt;td&gt;Expenses:Home&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-680.00 CNY&lt;/td&gt;&lt;td&gt;#Home&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot; data-goto=&quot;txn-detail&quot;&gt;查看&lt;/button&gt; &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt; &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;删除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot; style=&quot;align-self:flex-start&quot;&gt;加载更多&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;所有写操作携带 baseRevision，冲突时返回 409 与最新修订号&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;txn-edit&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;记一笔&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;交易表单 · 支持多币种成本与分期记账&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;transactions&quot;&gt;返回交易&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;日期&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08-02（日历选择器）&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;收款方 Payee&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;盒马鲜生（自动补全历史）&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;描述 Narration&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;日常采购&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;标签 Tags&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;#Food #Family&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;分录 Entries&lt;/h3&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;账户&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;金额&lt;/th&gt;&lt;th&gt;币种&lt;/th&gt;&lt;th&gt;成本 / 汇率&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;Expenses:Food&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-120.00&lt;/td&gt;&lt;td&gt;CNY&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;删除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;Assets:Cash&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;+120.00&lt;/td&gt;&lt;td&gt;CNY&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;删除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;+ 添加分录&lt;/button&gt;
+          &lt;span class=&quot;wf-note&quot; style=&quot;align-self:center&quot;&gt;✓ 借贷平衡（差额 0.00）&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-toolbar&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;transactions&quot;&gt;取消&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;transactions&quot;&gt;保存&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;保存时校验 baseRevision；金额使用 decimal 精确计算&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;accounts&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;账户&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;资产 / 负债 / 收入 / 费用 / 权益&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;account-types&quot;&gt;账户类型&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;currencies&quot;&gt;币种与汇率&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot;&gt;+ 开户&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;Assets 资产&lt;/b&gt;
+          &lt;div class=&quot;wf-row&quot; data-goto=&quot;account-detail&quot;&gt;&lt;span&gt;现金&lt;/span&gt;&lt;span&gt;¥ 12,340.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot; data-goto=&quot;account-detail&quot;&gt;&lt;span&gt;支付宝&lt;/span&gt;&lt;span&gt;¥ 8,560.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot; data-goto=&quot;account-detail&quot;&gt;&lt;span&gt;股票组合&lt;/span&gt;&lt;span&gt;¥ 132,000.00 · 3 币种&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;Liabilities 负债&lt;/b&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;信用卡&lt;/span&gt;&lt;span&gt;¥ -3,200.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;房贷&lt;/span&gt;&lt;span&gt;¥ -680,000.00&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;Income 收入 / Expenses 费用&lt;/b&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;工资&lt;/span&gt;&lt;span&gt;本月 +18,200.00&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;餐饮 · 交通 · 居家&lt;/span&gt;&lt;span&gt;本月 -6,840.50&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;Equity 权益&lt;/b&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;期初权益&lt;/span&gt;&lt;span&gt;¥ 50,000.00&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;支持多币种持仓（FIFO）与账户图标；余额来自 bean-query，按修订号失效&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;stats&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;统计&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本：家庭账本&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;div class=&quot;wf-box wf-field&quot;&gt;&lt;b&gt;年份&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;2026&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-box wf-field&quot;&gt;&lt;b&gt;账户前缀&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;全部&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-tabs&quot; role=&quot;group&quot; aria-label=&quot;统计维度&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab wf-active&quot; data-tab=&quot;账户趋势&quot;&gt;趋势&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot; data-tab=&quot;账户占比&quot;&gt;占比&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot; data-tab=&quot;资金流向桑基图&quot;&gt;桑基&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot; data-tab=&quot;月度日历&quot;&gt;日历&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot; data-tab=&quot;币种价格&quot;&gt;币种&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-box&quot;&gt;&lt;b id=&quot;wfStatLabel&quot;&gt;图表占位：账户趋势&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;折线图：账户余额随时间变化（日 / 月 / 年维度）&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;账户占比&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;环形图占位：费用分类占比&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;日历热力图&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;月度每日支出强度&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;import&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;导入账单&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;CSV 导入 · GBK / UTF-8 自动识别 · 默认币种 CNY&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;transactions&quot;&gt;返回交易&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-steps&quot;&gt;&lt;span&gt;1 选择来源&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;2 上传文件&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;b&gt;3 预览匹配（当前）&lt;/b&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;4 确认导入&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-grid&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;支付宝&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;浏览器 / 移动端 CSV&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;微信支付&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;账单 CSV&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;工商银行&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;流水 CSV&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;农业银行&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;流水 CSV&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;日期&lt;/th&gt;&lt;th&gt;收款方&lt;/th&gt;&lt;th&gt;描述&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;金额&lt;/th&gt;&lt;th&gt;映射账户&lt;/th&gt;&lt;th&gt;状态&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;08-01&lt;/td&gt;&lt;td&gt;盒马鲜生&lt;/td&gt;&lt;td&gt;水果&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-86.00&lt;/td&gt;&lt;td&gt;Expenses:Food&lt;/td&gt;&lt;td&gt;已匹配&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;08-01&lt;/td&gt;&lt;td&gt;滴滴出行&lt;/td&gt;&lt;td&gt;打车&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-23.50&lt;/td&gt;&lt;td&gt;Expenses:Transport&lt;/td&gt;&lt;td&gt;已匹配&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;08-02&lt;/td&gt;&lt;td&gt;未知商户&lt;/td&gt;&lt;td&gt;待分类&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-12.00&lt;/td&gt;&lt;td&gt;— 需选择&lt;/td&gt;&lt;td&gt;待确认&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;保存映射为模板&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary wf-btn-sm&quot; data-goto=&quot;transactions&quot;&gt;确认导入&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;导入前按规则自动归类（收款方 → 账户），支持人工修正&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;events&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;事件&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本时间线 · 按日期倒序&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot;&gt;+ 添加事件&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;2026-08-01&lt;/span&gt;&lt;span&gt;入职新公司&lt;/span&gt;&lt;span class=&quot;wf-tag&quot;&gt;工作&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;2026-07-15&lt;/span&gt;&lt;span&gt;搬家完成&lt;/span&gt;&lt;span class=&quot;wf-tag&quot;&gt;生活&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;2026-07-01&lt;/span&gt;&lt;span&gt;季度理财目标启动&lt;/span&gt;&lt;span class=&quot;wf-tag&quot;&gt;投资&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;source&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;源文件&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;beancount 文本账本 · 语法高亮&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot;&gt;保存并校验&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-banner&quot;&gt;&lt;span&gt;🔒 编辑锁：BaoXuebin 正在编辑此文件&lt;/span&gt;&lt;span class=&quot;wf-note&quot;&gt;其他成员此时为只读&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;文件树&lt;/b&gt;
+          &lt;div class=&quot;wf-note&quot;&gt;index.bean&lt;/div&gt;
+          &lt;div class=&quot;wf-note&quot;&gt;includes.bean&lt;/div&gt;
+          &lt;div class=&quot;wf-note&quot;&gt;month / 2026-08.bean（当前）&lt;/div&gt;
+          &lt;div class=&quot;wf-note&quot;&gt;account / assets.bean&lt;/div&gt;
+          &lt;div class=&quot;wf-note&quot;&gt;price / prices.bean&lt;/div&gt;
+          &lt;div class=&quot;wf-note&quot;&gt;event / events.bean&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;编辑器（2026-08.bean）&lt;/b&gt;
+          &lt;div class=&quot;wf-code&quot;&gt;2026-08-02 * &quot;盒马鲜生&quot; &quot;日常采购&quot; #Food
+  Expenses:Food  120.00 CNY
+  Assets:Cash&lt;/div&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;保存前校验 baseRevision，可运行 bean-check 校验语法&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;settings&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;设置&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本「家庭账本」&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-tabs&quot; role=&quot;group&quot; aria-label=&quot;设置分区&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab wf-active&quot;&gt;账本设置&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot;&gt;成员&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot;&gt;备份&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-tab&quot;&gt;危险区&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;账本名称&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;家庭账本&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;记账本位币&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;CNY（运营币种）&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;起始日期&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;2021-01-01&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;期初权益账户&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;Equity:OpeningBalances&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;成员&lt;/h3&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;用户&lt;/th&gt;&lt;th&gt;角色&lt;/th&gt;&lt;th&gt;状态&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;BaoXuebin（owner）&lt;/td&gt;&lt;td&gt;owner&lt;/td&gt;&lt;td&gt;在线&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;alice@example.com&lt;/td&gt;&lt;td&gt;editor&lt;/td&gt;&lt;td&gt;已接受邀请&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;移除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;bob（viewer）&lt;/td&gt;&lt;td&gt;viewer&lt;/td&gt;&lt;td&gt;待接受&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;移除&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot; data-goto=&quot;member-invite&quot;&gt;+ 邀请成员（GitHub 用户名 / 邮箱）&lt;/button&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;备份&lt;/h3&gt;
+        &lt;span class=&quot;wf-note&quot;&gt;写前快照自动备份到 bak/；SQLite 元数据每日快照 · 最近备份 2026-08-02 00:10&lt;/span&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;立即备份&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;审计&lt;/h3&gt;
+        &lt;span class=&quot;wf-note&quot;&gt;谁在何时对账本做了什么操作，仅 owner 可见&lt;/span&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot; data-goto=&quot;audit&quot;&gt;打开审计日志&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;危险区&lt;/h3&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-danger wf-btn-sm&quot;&gt;删除账本（需二次确认，仅 owner）&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;workspace-create&quot;&gt;
+      &lt;div class=&quot;wf-auth&quot;&gt;
+        &lt;div class=&quot;wf-auth-card&quot;&gt;
+          &lt;h2&gt;新建工作区&lt;/h2&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;工作区是权限边界：账本归属工作区，成员按角色协作&lt;/span&gt;
+          &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;工作区名称&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;文本输入框，如「家庭」&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;创建者角色&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;自动成为 owner，可邀请成员并分配角色&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-toolbar&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;workspaces&quot;&gt;取消&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;ledgers&quot;&gt;创建&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-flow&quot;&gt;&lt;span&gt;登录&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;工作区&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;b&gt;新建工作区（当前）&lt;/b&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;账本&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;ledger-create&quot;&gt;
+      &lt;div class=&quot;wf-auth&quot;&gt;
+        &lt;div class=&quot;wf-auth-card&quot;&gt;
+          &lt;h2&gt;新建账本&lt;/h2&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;按模板初始化 beancount 账本文件结构&lt;/span&gt;
+          &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+            &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;账本名称&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;家庭账本&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;记账本位币&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;CNY（下拉选择）&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;起始日期&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;2021-01-01&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;期初权益账户&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;Equity:OpeningBalances&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;写前备份&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;开关：编辑源文件前自动快照到 bak/&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-toolbar&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;ledgers&quot;&gt;取消&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;dashboard&quot;&gt;创建账本&lt;/button&gt;
+          &lt;/div&gt;
+          &lt;span class=&quot;wf-note&quot;&gt;创建后自动生成 index.bean / month / account / price / event 目录&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;import-v1&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;导入 v1 账本&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;将 v1 数据目录迁移到 V2（新账本 UUID 目录）&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;ledgers&quot;&gt;返回账本&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-steps&quot;&gt;&lt;b&gt;1 选择目录（当前）&lt;/b&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;2 检查文件&lt;/span&gt;&lt;i&gt;→&lt;/i&gt;&lt;span&gt;3 确认导入&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;上传 v1 数据目录&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;拖拽或选择：index.bean / month / account / price / event / .beancount-gs&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;预览目录结构&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;自动识别 v1 的 ledger_config.json 与账本目录&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-box&quot;&gt;
+        &lt;b&gt;待迁移账本&lt;/b&gt;
+        &lt;span class=&quot;wf-note&quot;&gt;家庭账本（2021-01-01 起 · CNY）— 勾选 ✓&lt;/span&gt;
+        &lt;span class=&quot;wf-note&quot;&gt;备用金账本（2026-01 起 · CNY）— 勾选 ✓&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-toolbar&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;ledgers&quot;&gt;开始迁移&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;迁移仅复制账本文件；用户、权限、交易模板等元数据需在 V2 重建&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;txn-detail&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;交易详情&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08-02 · #Food #Family&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;transactions&quot;&gt;返回&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;txn-edit&quot;&gt;编辑&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-danger&quot; data-goto=&quot;transactions&quot;&gt;删除&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;日期&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;2026-08-02&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;收款方 / 描述&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;盒马鲜生 · 日常采购&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;分录（2 条）&lt;/h3&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;账户&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;金额&lt;/th&gt;&lt;th&gt;币种&lt;/th&gt;&lt;th&gt;成本 / 汇率&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;Expenses:Food&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;-120.00&lt;/td&gt;&lt;td&gt;CNY&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;Assets:Cash&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;+120.00&lt;/td&gt;&lt;td&gt;CNY&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;原始文本（只读）&lt;/b&gt;&lt;div class=&quot;wf-code&quot;&gt;2026-08-02 * &quot;盒马鲜生&quot; &quot;日常采购&quot; #Food
+  Expenses:Food  120.00 CNY
+  Assets:Cash&lt;/div&gt;&lt;span class=&quot;wf-note&quot;&gt;可切换到「源文件」直接编辑原始 bean 文本&lt;/span&gt;&lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;编辑与删除均携带 baseRevision，避免覆盖他人修改&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;account-detail&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;账户详情&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;Assets:Stock 股票组合 · CNY / USD / HKD&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;accounts&quot;&gt;返回&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-danger&quot;&gt;关闭账户&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-4&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;当前市值&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;¥ 132,000.00&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;成本&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;¥ 98,000.00&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;盈亏&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;+¥ 34,000.00&lt;/span&gt;&lt;span class=&quot;wf-note&quot;&gt;+34.7%&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;开户日&lt;/b&gt;&lt;span class=&quot;wf-num&quot;&gt;2021-03-15&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;
+          &lt;b&gt;持仓（FIFO）&lt;/b&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;100 × 腾讯控股&lt;/span&gt;&lt;span&gt;HKD 68,000&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;wf-row&quot;&gt;&lt;span&gt;50 × Apple&lt;/span&gt;&lt;span&gt;USD 9,000&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;余额趋势&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;折线图占位：近 12 个月余额&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;支持多币种持仓与成本价；余额数据按修订号缓存&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;currencies&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;币种与汇率&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;本位币 CNY · 汇率写入 price/prices.bean&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;accounts&quot;&gt;返回&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot;&gt;同步最新汇率&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;币种&lt;/th&gt;&lt;th&gt;名称&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;汇率（CNY）&lt;/th&gt;&lt;th&gt;更新日期&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;CNY&lt;/td&gt;&lt;td&gt;人民币&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;1.0000&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;wf-tag&quot;&gt;本位币&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;USD&lt;/td&gt;&lt;td&gt;美元&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;7.1850&lt;/td&gt;&lt;td&gt;2026-08-01&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;修改&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;HKD&lt;/td&gt;&lt;td&gt;港币&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;0.9210&lt;/td&gt;&lt;td&gt;2026-08-01&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;修改&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;EUR&lt;/td&gt;&lt;td&gt;欧元&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;7.9500&lt;/td&gt;&lt;td&gt;2026-07-30&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;修改&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;+ 添加币种&lt;/button&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;记账涉及外币时自动使用最新汇率生成成本价&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;templates&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;交易模板&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;常用交易一键复用&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;transactions&quot;&gt;返回交易&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot;&gt;+ 新建模板&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid&quot;&gt;
+        &lt;div class=&quot;wf-card&quot;&gt;&lt;b&gt;工资入账&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;Income:Salary → Assets:Bank&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;使用&lt;/button&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-card&quot;&gt;&lt;b&gt;房租缴纳&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;Expenses:Home → Assets:Bank&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;使用&lt;/button&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-card&quot;&gt;&lt;b&gt;外卖&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;Expenses:Food → Assets:Cash&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;使用&lt;/button&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;模板保存在账本元数据中，仅本人可见（可扩展为团队共享）&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;account-types&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;账户类型&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账户前缀 → 中文名称映射，用于统计展示&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-toolbar&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;accounts&quot;&gt;返回&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot;&gt;+ 新增类型&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;前缀&lt;/th&gt;&lt;th&gt;名称&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;Assets&lt;/td&gt;&lt;td&gt;资产&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;Liabilities&lt;/td&gt;&lt;td&gt;负债&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;Income&lt;/td&gt;&lt;td&gt;收入&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;Expenses&lt;/td&gt;&lt;td&gt;费用&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;Equity&lt;/td&gt;&lt;td&gt;权益&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;编辑&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;未匹配前缀默认使用账户最后一个节点作为名称&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;member-invite&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;邀请成员&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本「家庭账本」· 角色决定可执行的操作&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;settings&quot;&gt;返回设置&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-grid wf-grid-2&quot;&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;GitHub 用户名 / 邮箱&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;文本输入，多个用逗号分隔&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;角色&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;editor（默认）/ owner / viewer&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-box&quot;&gt;&lt;b&gt;邀请链接（可选）&lt;/b&gt;&lt;span class=&quot;wf-note&quot;&gt;生成一次性邀请链接，7 天内有效&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;h3&gt;待处理邀请&lt;/h3&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;用户&lt;/th&gt;&lt;th&gt;角色&lt;/th&gt;&lt;th&gt;状态&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;alice@example.com&lt;/td&gt;&lt;td&gt;editor&lt;/td&gt;&lt;td&gt;已发送，等待接受&lt;/td&gt;&lt;td&gt;&lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-sm&quot;&gt;撤销&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-toolbar&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;settings&quot;&gt;取消&lt;/button&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn wf-btn-primary&quot; data-goto=&quot;settings&quot;&gt;发送邀请&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;被邀请人需先通过 GitHub 登录；接受后按角色开放权限&lt;/span&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;wf-screen&quot; data-screen=&quot;audit&quot;&gt;
+      &lt;div class=&quot;wf-page-head&quot;&gt;
+        &lt;div&gt;&lt;h2&gt;审计日志&lt;/h2&gt;&lt;span class=&quot;wf-note&quot;&gt;账本操作记录 · 仅 owner 可见&lt;/span&gt;&lt;/div&gt;
+        &lt;button type=&quot;button&quot; class=&quot;wf-btn&quot; data-goto=&quot;settings&quot;&gt;返回设置&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;wf-card&quot;&gt;
+        &lt;table class=&quot;wf-table&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;时间&lt;/th&gt;&lt;th&gt;用户&lt;/th&gt;&lt;th&gt;动作&lt;/th&gt;&lt;th&gt;对象&lt;/th&gt;&lt;th&gt;详情&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;&lt;td&gt;08-02 10:21&lt;/td&gt;&lt;td&gt;BaoXuebin&lt;/td&gt;&lt;td&gt;更新交易&lt;/td&gt;&lt;td&gt;txn-20260802-001&lt;/td&gt;&lt;td&gt;金额 110.00 → 120.00&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;08-02 09:48&lt;/td&gt;&lt;td&gt;alice&lt;/td&gt;&lt;td&gt;导入账单&lt;/td&gt;&lt;td&gt;支付宝 2026-07&lt;/td&gt;&lt;td&gt;导入 42 笔&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;08-01 22:03&lt;/td&gt;&lt;td&gt;BaoXuebin&lt;/td&gt;&lt;td&gt;邀请成员&lt;/td&gt;&lt;td&gt;alice@example.com&lt;/td&gt;&lt;td&gt;角色 editor&lt;/td&gt;&lt;/tr&gt;
+            &lt;tr&gt;&lt;td&gt;08-01 20:15&lt;/td&gt;&lt;td&gt;bob&lt;/td&gt;&lt;td&gt;同步汇率&lt;/td&gt;&lt;td&gt;USD&lt;/td&gt;&lt;td&gt;7.1800 → 7.1850&lt;/td&gt;&lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;wf-note&quot;&gt;写操作自动记录；文件内容历史见 bak/ 快照&lt;/span&gt;
+    &lt;/section&gt;
+
+  &lt;/main&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(function () {
+  var root = document.getElementById(&#x27;v2wf&#x27;);
+  if (!root) return;
+  var sidebar = root.querySelector(&#x27;#wfSidebar&#x27;);
+  var crumbNav = root.querySelector(&#x27;#wfCrumb&#x27;);
+  var userChip = root.querySelector(&#x27;.wf-user&#x27;);
+  var screens = Array.prototype.slice.call(root.querySelectorAll(&#x27;.wf-screen&#x27;));
+  var navBtns = Array.prototype.slice.call(root.querySelectorAll(&#x27;[data-nav]&#x27;));
+  var crumbDefs = {
+    workspaces: [{ label: &#x27;工作区&#x27; }],
+    ledgers: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;账本&#x27; }],
+    dashboard: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;仪表盘&#x27; }],
+    transactions: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;交易&#x27; }],
+    &#x27;txn-edit&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;交易&#x27;, goto: &#x27;transactions&#x27; }, { label: &#x27;记一笔&#x27; }],
+    accounts: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;账户&#x27; }],
+    stats: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;统计&#x27; }],
+    import: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;导入&#x27; }],
+    events: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;事件&#x27; }],
+    source: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;源文件&#x27; }],
+    settings: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;设置&#x27; }],
+    &#x27;workspace-create&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;新建工作区&#x27; }],
+    &#x27;ledger-create&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;新建账本&#x27; }],
+    &#x27;import-v1&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;导入 v1 账本&#x27; }],
+    &#x27;txn-detail&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;交易&#x27;, goto: &#x27;transactions&#x27; }, { label: &#x27;详情&#x27; }],
+    &#x27;account-detail&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;账户&#x27;, goto: &#x27;accounts&#x27; }, { label: &#x27;账户详情&#x27; }],
+    currencies: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;账户&#x27;, goto: &#x27;accounts&#x27; }, { label: &#x27;币种与汇率&#x27; }],
+    templates: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;交易&#x27;, goto: &#x27;transactions&#x27; }, { label: &#x27;交易模板&#x27; }],
+    &#x27;account-types&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;账户&#x27;, goto: &#x27;accounts&#x27; }, { label: &#x27;账户类型&#x27; }],
+    &#x27;member-invite&#x27;: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;设置&#x27;, goto: &#x27;settings&#x27; }, { label: &#x27;邀请成员&#x27; }],
+    audit: [{ label: &#x27;工作区&#x27;, goto: &#x27;workspaces&#x27; }, { label: &#x27;家庭账本&#x27;, goto: &#x27;ledgers&#x27; }, { label: &#x27;设置&#x27;, goto: &#x27;settings&#x27; }, { label: &#x27;审计日志&#x27; }]
+  };
+  var appScreens = [&#x27;dashboard&#x27;, &#x27;transactions&#x27;, &#x27;txn-edit&#x27;, &#x27;txn-detail&#x27;, &#x27;accounts&#x27;, &#x27;account-detail&#x27;, &#x27;currencies&#x27;, &#x27;account-types&#x27;, &#x27;stats&#x27;, &#x27;import&#x27;, &#x27;events&#x27;, &#x27;source&#x27;, &#x27;settings&#x27;, &#x27;member-invite&#x27;, &#x27;audit&#x27;, &#x27;templates&#x27;];
+
+  function show(id) {
+    screens.forEach(function (s) { s.hidden = s.dataset.screen !== id; });
+    navBtns.forEach(function (b) { b.classList.toggle(&#x27;wf-active&#x27;, b.dataset.nav === id); });
+    sidebar.hidden = appScreens.indexOf(id) === -1;
+    userChip.hidden = id === &#x27;login&#x27;;
+    crumbNav.textContent = &#x27;&#x27;;
+    var segs = crumbDefs[id];
+    if (segs) {
+      crumbNav.hidden = false;
+      segs.forEach(function (seg, i) {
+        if (i &gt; 0) crumbNav.appendChild(document.createTextNode(&#x27; / &#x27;));
+        if (seg.goto) {
+          var b = document.createElement(&#x27;button&#x27;);
+          b.type = &#x27;button&#x27;;
+          b.textContent = seg.label;
+          b.setAttribute(&#x27;data-goto&#x27;, seg.goto);
+          crumbNav.appendChild(b);
+        } else {
+          crumbNav.appendChild(document.createTextNode(seg.label));
+        }
+      });
+    } else {
+      crumbNav.hidden = true;
+    }
+  }
+
+  root.addEventListener(&#x27;click&#x27;, function (e) {
+    var t = e.target.closest ? e.target.closest(&#x27;[data-goto]&#x27;) : null;
+    if (t) show(t.getAttribute(&#x27;data-goto&#x27;));
+  });
+
+  var tabBtns = Array.prototype.slice.call(root.querySelectorAll(&#x27;[data-tab]&#x27;));
+  var statLabel = root.querySelector(&#x27;#wfStatLabel&#x27;);
+  tabBtns.forEach(function (b) {
+    b.addEventListener(&#x27;click&#x27;, function () {
+      tabBtns.forEach(function (x) { x.classList.toggle(&#x27;wf-active&#x27;, x === b); });
+      if (statLabel) statLabel.textContent = &#x27;图表占位：&#x27; + b.getAttribute(&#x27;data-tab&#x27;);
+    });
+  });
+
+  show(&#x27;login&#x27;);
+})();
+&lt;/script&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

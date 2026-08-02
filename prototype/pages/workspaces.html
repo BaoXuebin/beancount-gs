@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工作区 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <section class="wf-screen">
+    <div class="wf-page-head">
+      <div><h2>工作区</h2><span class="wf-note">团队是权限边界：账本归属工作区，成员按角色协作</span></div>
+      <a class="wf-btn" href="workspace-create.html">+ 新建工作区</a>
+    </div>
+    <div class="wf-flow"><span>登录</span><i>→</i><b>工作区（当前）</b><i>→</i><span>账本</span><i>→</i><span>功能页</span></div>
+    <div class="wf-grid">
+      <a class="wf-card wf-click" href="ledgers.html" style="text-decoration:none">
+        <b>家庭</b>
+        <span class="wf-note">成员 3 · 账本 2</span>
+        <span class="wf-tag">owner</span>
+        <span class="wf-btn wf-btn-sm" style="pointer-events:none">进入</span>
+      </a>
+      <a class="wf-card wf-click" href="ledgers.html" style="text-decoration:none">
+        <b>创业项目</b>
+        <span class="wf-note">成员 2 · 账本 1</span>
+        <span class="wf-tag">editor</span>
+        <span class="wf-btn wf-btn-sm" style="pointer-events:none">进入</span>
+      </a>
+      <a class="wf-card wf-click" href="ledgers.html" style="text-decoration:none">
+        <b>家庭（只读）</b>
+        <span class="wf-note">成员 1 · 账本 1</span>
+        <span class="wf-tag">viewer</span>
+        <span class="wf-btn wf-btn-sm" style="pointer-events:none">进入</span>
+      </a>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 设置 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="settings.html">设置</a> / <span>AI 设置</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav wf-active" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>AI 设置</h2><span class="wf-note">账本「家庭账本」· 仅 owner 可修改</span></div>
+          <a class="wf-btn" href="settings.html">返回设置</a>
+        </div>
+
+        <div class="wf-card">
+          <h3>功能开关</h3>
+          <div class="wf-row"><span>记账助手（自然语言生成交易）</span><span class="wf-tag">已开启</span></div>
+          <div class="wf-row"><span>智能分类（导入 / 记账时建议账户）</span><span class="wf-tag">已开启</span></div>
+          <div class="wf-row"><span>洞察与异常检测（重复扣款 / 大额支出）</span><span class="wf-tag">已开启</span></div>
+          <div class="wf-row"><span>月度财务总结</span><span class="wf-tag">已关闭</span></div>
+        </div>
+
+        <div class="wf-card">
+          <h3>模型配置</h3>
+          <div class="wf-grid wf-grid-2">
+            <div class="wf-box"><b>提供商</b><span class="wf-note">OpenAI / 兼容 API / Ollama 本地模型</span></div>
+            <div class="wf-box"><b>模型</b><span class="wf-note">gpt-4o / deepseek / qwen（下拉选择）</span></div>
+          </div>
+          <div class="wf-box"><b>API Key</b><span class="wf-note">服务端加密存储，已配置（OpenAI）</span></div>
+          <div class="wf-toolbar">
+            <button type="button" class="wf-btn wf-btn-sm">测试连接</button>
+          </div>
+        </div>
+
+        <div class="wf-card">
+          <h3>数据与隐私</h3>
+          <div class="wf-row"><span>AI 可访问范围</span><span>当前账本（只读查询 + 待确认写入）</span></div>
+          <div class="wf-row"><span>发送给第三方模型的数据</span><span>仅当前账本内容，不含登录与会话信息</span></div>
+          <span class="wf-note">自托管场景可切换 Ollama 本地模型，账本数据不出服务器</span>
+        </div>
+
+        <div class="wf-toolbar">
+          <a class="wf-btn" href="settings.html">取消</a>
+          <a class="wf-btn wf-btn-primary" href="settings.html">保存设置</a>
+        </div>
+        <span class="wf-note">AI 生成的所有写入仍走「预览 → 确认 → 入账」，且记录审计日志</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

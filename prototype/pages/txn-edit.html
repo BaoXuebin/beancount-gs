@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>记一笔 · beancount-gs 原型</title>
+<link rel="stylesheet" href="../assets/wireframe.css">
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-top">
+    <a class="wf-brand" href="../index.html"><span class="wf-logo"></span>beancount-gs 原型</a>
+    <nav class="wf-crumb">
+      <a href="workspaces.html">工作区</a> / <a href="ledgers.html">家庭账本</a> / <a href="transactions.html">交易</a> / <span>记一笔</span>
+    </nav>
+    <div class="wf-user"><span class="wf-avatar"></span><span>GitHub 用户</span></div>
+  </div>
+  <div class="wf-body">
+    <aside class="wf-sidebar">
+      <a class="wf-nav" href="dashboard.html">仪表盘<small>资产与月度概览</small></a>
+      <a class="wf-nav wf-active" href="transactions.html">交易<small>流水 / 记账 / 筛选</small></a>
+      <a class="wf-nav" href="accounts.html">账户<small>持仓与余额</small></a>
+      <a class="wf-nav" href="stats.html">统计<small>趋势 / 占比 / 桑基</small></a>
+      <a class="wf-nav" href="import.html">导入<small>账单 CSV 导入</small></a>
+      <a class="wf-nav" href="events.html">事件<small>时间线</small></a>
+      <a class="wf-nav" href="source.html">源文件<small>bean 文件编辑</small></a>
+      <a class="wf-nav" href="ai-assistant.html">AI 助手<small>自然语言记账 / 问答</small></a>
+      <a class="wf-nav" href="settings.html">设置<small>账本与成员</small></a>
+    </aside>
+    <main class="wf-stage">
+      <section class="wf-screen">
+        <div class="wf-page-head">
+          <div><h2>记一笔</h2><span class="wf-note">交易表单 · 支持多币种成本与分期记账</span></div>
+          <a class="wf-btn" href="transactions.html">返回交易</a>
+        </div>
+        <div class="wf-box"><b>✨ AI 生成分录（可选）</b><span class="wf-note">输入自然语言，如「昨天星巴克咖啡 38 元」</span><a class="wf-btn wf-btn-sm" href="ai-assistant.html">使用 AI 助手</a></div>
+        <div class="wf-grid wf-grid-2">
+          <div class="wf-box"><b>日期</b><span class="wf-note">2026-08-02（日历选择器）</span></div>
+          <div class="wf-box"><b>收款方 Payee</b><span class="wf-note">盒马鲜生（自动补全历史）</span></div>
+          <div class="wf-box"><b>描述 Narration</b><span class="wf-note">日常采购</span></div>
+          <div class="wf-box"><b>标签 Tags</b><span class="wf-note">#Food #Family</span></div>
+        </div>
+        <div class="wf-card">
+          <h3>分录 Entries</h3>
+          <table class="wf-table">
+            <thead><tr><th>账户</th><th class="num">金额</th><th>币种</th><th>成本 / 汇率</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Expenses:Food</td><td class="num">-120.00</td><td>CNY</td><td>—</td><td><button type="button" class="wf-btn wf-btn-sm">删除</button></td></tr>
+              <tr><td>Assets:Cash</td><td class="num">+120.00</td><td>CNY</td><td>—</td><td><button type="button" class="wf-btn wf-btn-sm">删除</button></td></tr>
+            </tbody>
+          </table>
+          <div class="wf-toolbar">
+            <button type="button" class="wf-btn wf-btn-sm">+ 添加分录</button>
+            <span class="wf-note" style="align-self:center">✓ 借贷平衡（差额 0.00）</span>
+          </div>
+        </div>
+        <div class="wf-card">
+          <h3>分期记账（可选）</h3>
+          <div class="wf-box"><b>分期日期列表</b><span class="wf-note">如 08-01 / 09-01 / 10-01，金额自动均分（保留 3 位小数）</span></div>
+        </div>
+        <div class="wf-toolbar">
+          <a class="wf-btn" href="transactions.html">取消</a>
+          <a class="wf-btn wf-btn-primary" href="transactions.html">保存</a>
+        </div>
+        <span class="wf-note">保存时校验 baseRevision；金额使用 decimal 精确计算</span>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>
