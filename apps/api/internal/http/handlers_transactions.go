@@ -3,9 +3,11 @@ package httpapi
 import (
 	"database/sql"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/beancount-gs/api/internal/db"
 	"github.com/beancount-gs/api/internal/http/gen"
@@ -82,21 +84,119 @@ func (h *TransactionHandlers) Create(c *gin.Context) {
 	created, err := h.Service.Create(c.Request.Context(), *l,
 		fromGenTransactionCreate(form), revision, ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
 	if err != nil {
-		switch {
-		case errors.Is(err, db.ErrRevisionConflict):
-			details := map[string]any{"current_revision": l.Revision}
-			Error(c, http.StatusConflict, "LEDGER_STALE", "账本已被他人修改", details)
-		case errors.Is(err, ledger.ErrNotBalanced):
-			Error(c, http.StatusUnprocessableEntity, "UNBALANCED", "交易借贷不平衡", nil)
-		case errors.Is(err, ledger.ErrInvalidDate), errors.Is(err, ledger.ErrNoPostings):
-			Error(c, http.StatusUnprocessableEntity, "VALIDATION", err.Error(), nil)
-		default:
-			slog.Error("create transaction failed", "err", err)
-			Error(c, http.StatusInternalServerError, "INTERNAL", "创建交易失败："+err.Error(), nil)
-		}
+		h.writeCreateError(c, *l, err)
 		return
 	}
 	c.JSON(http.StatusCreated, toGenTransaction(*created))
+}
+
+func (h *TransactionHandlers) Update(c *gin.Context) {
+	l, ok := h.requireLedger(c, "editor")
+	if !ok {
+		return
+	}
+	revision, err := parseRevisionHeader(c)
+	if err != nil {
+		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "缺少或非法的 If-Revision-Match 头", nil)
+		return
+	}
+	var form gen.TransactionCreate
+	if err := c.ShouldBindJSON(&form); err != nil {
+		BadRequest(c, "参数错误："+err.Error())
+		return
+	}
+	user := CurrentUser(c)
+	updated, err := h.Service.Update(c.Request.Context(), *l, c.Param("transaction_id"),
+		fromGenTransactionCreate(form), revision, ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
+	if err != nil {
+		h.writeCreateError(c, *l, err)
+		return
+	}
+	c.JSON(http.StatusOK, toGenTransaction(*updated))
+}
+
+func (h *TransactionHandlers) Delete(c *gin.Context) {
+	l, ok := h.requireLedger(c, "editor")
+	if !ok {
+		return
+	}
+	revision, err := parseRevisionHeader(c)
+	if err != nil {
+		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "缺少或非法的 If-Revision-Match 头", nil)
+		return
+	}
+	user := CurrentUser(c)
+	err = h.Service.Delete(c.Request.Context(), *l, c.Param("transaction_id"), revision,
+		ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
+	if err != nil {
+		h.writeCreateError(c, *l, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *TransactionHandlers) RawText(c *gin.Context) {
+	l, ok := h.requireLedger(c, "")
+	if !ok {
+		return
+	}
+	text, err := h.Service.RawText(c.Request.Context(), *l, c.Param("transaction_id"))
+	if err != nil {
+		slog.Error("get raw text failed", "err", err)
+		Error(c, http.StatusInternalServerError, "INTERNAL", "读取原始文本失败", nil)
+		return
+	}
+	if strings.TrimSpace(text) == "" {
+		Error(c, http.StatusNotFound, "NOT_FOUND", "交易不存在", nil)
+		return
+	}
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(text))
+}
+
+func (h *TransactionHandlers) UpdateRawText(c *gin.Context) {
+	l, ok := h.requireLedger(c, "editor")
+	if !ok {
+		return
+	}
+	revision, err := parseRevisionHeader(c)
+	if err != nil {
+		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "缺少或非法的 If-Revision-Match 头", nil)
+		return
+	}
+	body, err := io.ReadAll(io.LimitReader(c.Request.Body, 1<<20))
+	if err != nil {
+		BadRequest(c, "读取请求体失败")
+		return
+	}
+	raw := string(body)
+	if strings.TrimSpace(raw) == "" {
+		BadRequest(c, "原始文本不能为空")
+		return
+	}
+	user := CurrentUser(c)
+	err = h.Service.UpdateRawText(c.Request.Context(), *l, c.Param("transaction_id"), raw, revision,
+		ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
+	if err != nil {
+		h.writeCreateError(c, *l, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+func (h *TransactionHandlers) writeCreateError(c *gin.Context, l db.Ledger, err error) {
+	switch {
+	case errors.Is(err, db.ErrRevisionConflict):
+		Error(c, http.StatusConflict, "LEDGER_STALE", "账本已被他人修改", map[string]any{"current_revision": l.Revision})
+	case errors.Is(err, ledger.ErrNotFound):
+		Error(c, http.StatusNotFound, "NOT_FOUND", "交易不存在", nil)
+	case errors.Is(err, ledger.ErrNotBalanced):
+		Error(c, http.StatusUnprocessableEntity, "UNBALANCED", "交易借贷不平衡", nil)
+	case errors.Is(err, ledger.ErrInvalidDate), errors.Is(err, ledger.ErrNoPostings):
+		Error(c, http.StatusUnprocessableEntity, "VALIDATION", err.Error(), nil)
+	default:
+		slog.Error("transaction write failed", "err", err)
+		Error(c, http.StatusInternalServerError, "INTERNAL", "操作失败："+err.Error(), nil)
+	}
 }
 
 func (h *TransactionHandlers) requireLedger(c *gin.Context, minRole string) (*db.Ledger, bool) {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/beancount-gs/api/internal/beancount"
@@ -80,6 +81,54 @@ func TestBeanQueryIntegration(t *testing.T) {
 	}
 	if len(list) != 1 {
 		t.Fatalf("expected 1 transaction, got %d", len(list))
+	}
+
+	// 更新（bean-query 内容哈希变化 → id 变化）
+	updatedTxn := Transaction{
+		Date: "2026-08-02", Payee: "盒马鲜生", Narration: "日常采购（修正）",
+		Tags: []string{"Food"},
+		Postings: []Posting{
+			{Account: "Expenses:Food", Units: &Amount{Number: "-130.00", Currency: "CNY"}},
+			{Account: "Assets:Cash", Units: &Amount{Number: "130.00", Currency: "CNY"}},
+		},
+	}
+	updated, err := svc.Update(ctx, ledgerRow, created.ID, updatedTxn, 1, Actor{UserID: user.ID, Login: "alice"})
+	if err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	if updated.ID == "" || updated.ID == created.ID {
+		t.Fatalf("update should change id: old=%s new=%s", created.ID, updated.ID)
+	}
+	got2, err := svc.Get(ctx, ledgerRow, updated.ID)
+	if err != nil || got2.Narration != "日常采购（修正）" || got2.Postings[0].Units.Number != "-130.00" {
+		t.Fatalf("updated transaction wrong: %v %+v", err, got2)
+	}
+
+	// 原始文本读取与替换
+	raw, err := svc.RawText(ctx, ledgerRow, updated.ID)
+	if err != nil || !strings.Contains(raw, "日常采购（修正）") {
+		t.Fatalf("raw text: %v %q", err, raw)
+	}
+	rawText := "2026-08-02 * \"盒马鲜生\" \"早餐\"\n  Expenses:Food  -15.00 CNY\n  Assets:Cash  15.00 CNY"
+	if err := svc.UpdateRawText(ctx, ledgerRow, updated.ID, rawText, 2, Actor{UserID: user.ID, Login: "alice"}); err != nil {
+		t.Fatalf("update raw: %v", err)
+	}
+	list2, err := svc.List(ctx, ledgerRow, Filters{Month: "2026-08"})
+	if err != nil || len(list2) != 1 {
+		t.Fatalf("list after raw: %v %d", err, len(list2))
+	}
+	afterRaw, err := svc.Get(ctx, ledgerRow, list2[0].ID)
+	if err != nil || afterRaw.Narration != "早餐" {
+		t.Fatalf("raw update not applied: %v %+v", err, afterRaw)
+	}
+
+	// 删除
+	if err := svc.Delete(ctx, ledgerRow, list2[0].ID, 3, Actor{UserID: user.ID, Login: "alice"}); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	list3, err := svc.List(ctx, ledgerRow, Filters{Month: "2026-08"})
+	if err != nil || len(list3) != 0 {
+		t.Fatalf("list after delete: %v %d", err, len(list3))
 	}
 }
 

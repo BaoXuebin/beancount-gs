@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -117,15 +118,18 @@ func TestLedgerFlow(t *testing.T) {
 	}
 }
 
-type txnFakeEngine struct {
-	rows []beancount.Row
+type txnFakeEngineWithText struct {
+	rows      []beancount.Row
+	printText string
 }
 
-func (f *txnFakeEngine) QueryCSV(_ context.Context, _, _ string) ([]beancount.Row, error) {
+func (f *txnFakeEngineWithText) QueryCSV(_ context.Context, _, _ string) ([]beancount.Row, error) {
 	return f.rows, nil
 }
-func (f *txnFakeEngine) Print(_ context.Context, _, _ string) (string, error) { return "", nil }
-func (f *txnFakeEngine) Check(_ context.Context, _ string) ([]string, error)  { return nil, nil }
+func (f *txnFakeEngineWithText) Print(_ context.Context, _, _ string) (string, error) {
+	return f.printText, nil
+}
+func (f *txnFakeEngineWithText) Check(_ context.Context, _ string) ([]string, error) { return nil, nil }
 
 func TestTransactionFlow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -148,15 +152,16 @@ func TestTransactionFlow(t *testing.T) {
 	if err := store.CreateSession(ctx, uuid.NewString(), user.ID, security.HashToken(token), time.Now().Add(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
+	dataPath := filepath.Join(t.TempDir(), "ledger")
 	ledgerRow, err := store.CreateLedgerWithOwner(ctx, db.NewLedgerParams{
 		ID: uuid.NewString(), TeamID: team.ID, Name: "家庭账本",
-		DataPath: filepath.Join(t.TempDir(), "ledger"), OperatingCurrency: "CNY",
+		DataPath: dataPath, OperatingCurrency: "CNY",
 	}, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	engine := &txnFakeEngine{rows: []beancount.Row{
+	engine := &txnFakeEngineWithText{rows: []beancount.Row{
 		{"id": "txn-abc", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购",
 			"account": "Expenses:Food", "number": "-120.00", "currency": "CNY",
 			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
@@ -171,6 +176,8 @@ func TestTransactionFlow(t *testing.T) {
 	authed.POST("/ledgers/:ledger_id/transactions", h.Create)
 	authed.GET("/ledgers/:ledger_id/transactions", h.List)
 	authed.GET("/ledgers/:ledger_id/transactions/:transaction_id", h.Get)
+	authed.PUT("/ledgers/:ledger_id/transactions/:transaction_id", h.Update)
+	authed.DELETE("/ledgers/:ledger_id/transactions/:transaction_id", h.Delete)
 
 	body := `{"date":"2026-08-02","payee":"盒马鲜生","narration":"日常采购","tags":["Food"],"postings":[
 		{"account":"Expenses:Food","units":{"number":"-120.00","currency":"CNY"}},
@@ -228,5 +235,58 @@ func TestTransactionFlow(t *testing.T) {
 	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("detail status %d", w.Code)
+	}
+
+	// 更新
+	monthFile := filepath.Join(dataPath, "month", "2026-08.bean")
+	fileContent, err := os.ReadFile(monthFile)
+	if err != nil {
+		t.Fatalf("read month file: %v", err)
+	}
+	engine.printText = string(fileContent)
+	engine.rows = []beancount.Row{
+		{"id": "txn-def", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "修正",
+			"account": "Expenses:Food", "number": "-130.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+		{"id": "txn-def", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "修正",
+			"account": "Assets:Cash", "number": "130.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+	}
+	updateBody := `{"date":"2026-08-02","payee":"盒马鲜生","narration":"修正","postings":[
+		{"account":"Expenses:Food","units":{"number":"-130.00","currency":"CNY"}},
+		{"account":"Assets:Cash","units":{"number":"130.00","currency":"CNY"}}]}`
+	req = httptest.NewRequest(http.MethodPut, "/api/v2/ledgers/"+ledgerRow.ID+"/transactions/txn-abc", bytes.NewBufferString(updateBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("If-Revision-Match", "1")
+	req.AddCookie(&http.Cookie{Name: "bgs_session", Value: token})
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("update status %d body=%s", w.Code, w.Body.String())
+	}
+	fileContent, err = os.ReadFile(monthFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(fileContent), "修正") || strings.Contains(string(fileContent), "-120.00") {
+		t.Fatalf("update not written to file:\n%s", fileContent)
+	}
+
+	// 删除
+	engine.printText = string(fileContent)
+	req = httptest.NewRequest(http.MethodDelete, "/api/v2/ledgers/"+ledgerRow.ID+"/transactions/txn-def", nil)
+	req.Header.Set("If-Revision-Match", "2")
+	req.AddCookie(&http.Cookie{Name: "bgs_session", Value: token})
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("delete status %d body=%s", w.Code, w.Body.String())
+	}
+	fileContent, err = os.ReadFile(monthFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(string(fileContent)) != "" {
+		t.Fatalf("delete not applied:\n%s", fileContent)
 	}
 }

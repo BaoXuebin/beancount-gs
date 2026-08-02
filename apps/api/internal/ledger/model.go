@@ -1,6 +1,7 @@
 package ledger
 
 import (
+	"sync"
 	"time"
 
 	"github.com/beancount-gs/api/internal/beancount"
@@ -56,4 +57,5 @@ type Service struct {
 	Store  *db.Store
 	Engine beancount.QueryEngine
 	Now    func() time.Time
+	locks  sync.Map // ledgerID -> *sync.Mutex，串行化同一账本的文件写入
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/beancount-gs/api/internal/beancount"
@@ -47,21 +48,19 @@ func (s *Service) Get(ctx context.Context, l db.Ledger, id string) (*Transaction
 
 // Create 校验、生成 bean 文本、写月份文件，乐观并发 CAS 修订号后回查交易 id。
 func (s *Service) Create(ctx context.Context, l db.Ledger, t Transaction, expectedRevision int64, actor Actor) (*Transaction, error) {
+	unlock := s.lockLedger(l.ID)
+	defer unlock()
 	if err := Validate(t); err != nil {
 		return nil, err
 	}
-	month, err := time.Parse("2006-01-02", t.Date)
-	if err != nil {
-		return nil, ErrInvalidDate
-	}
-	monthStr := month.Format("2006-01")
+	monthStr := t.Date[:7]
 	text, priceLines, err := BuildBeanText(t, l.OperatingCurrency)
 	if err != nil {
 		return nil, err
 	}
 
 	// 先 CAS 修订号，再写文件，防止并发丢更新
-	revision, err := s.Store.CompareAndBumpRevision(ctx, l.ID, expectedRevision)
+	_, err = s.Store.CompareAndBumpRevision(ctx, l.ID, expectedRevision)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +82,150 @@ func (s *Service) Create(ctx context.Context, l db.Ledger, t Transaction, expect
 
 	created := t
 	created.ID = s.findTransactionID(ctx, l, t)
-	_ = revision
 	return &created, nil
 }
+
+// Update 整体替换交易；跨月份时自动迁移到新月份文件。
+func (s *Service) Update(ctx context.Context, l db.Ledger, id string, t Transaction, expectedRevision int64, actor Actor) (*Transaction, error) {
+	unlock := s.lockLedger(l.ID)
+	defer unlock()
+	if err := Validate(t); err != nil {
+		return nil, err
+	}
+	old, err := s.Get(ctx, l, id)
+	if err != nil {
+		return nil, err
+	}
+	oldText, err := s.Engine.Print(ctx, indexPath(l), id)
+	if err != nil {
+		return nil, fmt.Errorf("print transaction: %w", err)
+	}
+	text, priceLines, err := BuildBeanText(t, l.OperatingCurrency)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := s.Store.CompareAndBumpRevision(ctx, l.ID, expectedRevision); err != nil {
+		return nil, err
+	}
+
+	oldFile, err := s.monthFilePath(l, old.Date)
+	if err != nil {
+		return nil, err
+	}
+	oldLines := splitTextLines(oldText)
+	newLines := splitTextLines(text)
+	if t.Date[:7] == old.Date[:7] {
+		if err := repository.ReplaceLinesByNormalizedMatch(oldFile, oldLines, newLines); err != nil {
+			return nil, fmt.Errorf("replace transaction: %w", err)
+		}
+	} else {
+		if err := repository.ReplaceLinesByNormalizedMatch(oldFile, oldLines, nil); err != nil {
+			return nil, fmt.Errorf("remove old transaction: %w", err)
+		}
+		if err := repository.AppendMonthTransaction(l.DataPath, t.Date[:7], text); err != nil {
+			return nil, fmt.Errorf("append new month: %w", err)
+		}
+	}
+	for _, line := range priceLines {
+		if err := repository.AppendPrice(l.DataPath, line); err != nil {
+			return nil, fmt.Errorf("append price: %w", err)
+		}
+	}
+	if err := s.audit(ctx, l, actor, "update_transaction", id); err != nil {
+		return nil, err
+	}
+	created := t
+	created.ID = s.findTransactionID(ctx, l, t)
+	return &created, nil
+}
+
+func (s *Service) Delete(ctx context.Context, l db.Ledger, id string, expectedRevision int64, actor Actor) error {
+	unlock := s.lockLedger(l.ID)
+	defer unlock()
+	old, err := s.Get(ctx, l, id)
+	if err != nil {
+		return err
+	}
+	oldText, err := s.Engine.Print(ctx, indexPath(l), id)
+	if err != nil {
+		return fmt.Errorf("print transaction: %w", err)
+	}
+	if _, err := s.Store.CompareAndBumpRevision(ctx, l.ID, expectedRevision); err != nil {
+		return err
+	}
+	oldFile, err := s.monthFilePath(l, old.Date)
+	if err != nil {
+		return err
+	}
+	if err := repository.ReplaceLinesByNormalizedMatch(oldFile, splitTextLines(oldText), nil); err != nil {
+		return fmt.Errorf("remove transaction: %w", err)
+	}
+	return s.audit(ctx, l, actor, "delete_transaction", id)
+}
+
+func (s *Service) RawText(ctx context.Context, l db.Ledger, id string) (string, error) {
+	return s.Engine.Print(ctx, indexPath(l), id)
+}
+
+func (s *Service) UpdateRawText(ctx context.Context, l db.Ledger, id, raw string, expectedRevision int64, actor Actor) error {
+	unlock := s.lockLedger(l.ID)
+	defer unlock()
+	old, err := s.Get(ctx, l, id)
+	if err != nil {
+		return err
+	}
+	oldText, err := s.Engine.Print(ctx, indexPath(l), id)
+	if err != nil {
+		return fmt.Errorf("print transaction: %w", err)
+	}
+	if _, err := s.Store.CompareAndBumpRevision(ctx, l.ID, expectedRevision); err != nil {
+		return err
+	}
+	oldFile, err := s.monthFilePath(l, old.Date)
+	if err != nil {
+		return err
+	}
+	newLines := splitTextLines(raw)
+	if err := repository.ReplaceLinesByNormalizedMatch(oldFile, splitTextLines(oldText), newLines); err != nil {
+		return fmt.Errorf("replace raw text: %w", err)
+	}
+	return s.audit(ctx, l, actor, "update_raw_text", id)
+}
+
+func (s *Service) monthFilePath(l db.Ledger, date string) (string, error) {
+	m, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return "", ErrInvalidDate
+	}
+	return filepath.Join(l.DataPath, "month", m.Format("2006-01")+".bean"), nil
+}
+
+func (s *Service) audit(ctx context.Context, l db.Ledger, actor Actor, action, object string) error {
+	return s.Store.InsertAuditLog(ctx, db.AuditParams{
+		LedgerID: l.ID, UserID: actor.UserID, Actor: actor.Login,
+		Action: action, Object: object,
+	})
+}
+
+func (s *Service) lockLedger(ledgerID string) func() {
+	mu, _ := s.locks.LoadOrStore(ledgerID, &sync.Mutex{})
+	lock := mu.(*sync.Mutex)
+	lock.Lock()
+	return lock.Unlock
+}
+
+// splitTextLines 拆分行并去除首尾空行。
+func splitTextLines(s string) []string {
+	lines := strings.Split(s, "\n")
+	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+		lines = lines[:len(lines)-1]
+	}
+	for len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
+		lines = lines[1:]
+	}
+	return lines
+}
+
 
 // findTransactionID 通过日期与收款方/描述回查新交易的 id（bean-query 生成）。
 func (s *Service) findTransactionID(ctx context.Context, l db.Ledger, t Transaction) string {

@@ -106,6 +106,10 @@ func main() {
 	authed.GET("/ledgers/:ledger_id/transactions", txnHandlers.List)
 	authed.POST("/ledgers/:ledger_id/transactions", txnHandlers.Create)
 	authed.GET("/ledgers/:ledger_id/transactions/:transaction_id", txnHandlers.Get)
+	authed.PUT("/ledgers/:ledger_id/transactions/:transaction_id", txnHandlers.Update)
+	authed.DELETE("/ledgers/:ledger_id/transactions/:transaction_id", txnHandlers.Delete)
+	authed.GET("/ledgers/:ledger_id/transactions/:transaction_id/raw", txnHandlers.RawText)
+	authed.PUT("/ledgers/:ledger_id/transactions/:transaction_id/raw", txnHandlers.UpdateRawText)
 
 	addr := ":" + strconv.Itoa(cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: router}

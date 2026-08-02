@@ -15,14 +15,15 @@ import (
 )
 
 type fakeEngine struct {
-	rows []beancount.Row
-	err  error
+	rows      []beancount.Row
+	err       error
+	printText string
 }
 
 func (f *fakeEngine) QueryCSV(_ context.Context, _, _ string) ([]beancount.Row, error) {
 	return f.rows, f.err
 }
-func (f *fakeEngine) Print(_ context.Context, _, _ string) (string, error) { return "", nil }
+func (f *fakeEngine) Print(_ context.Context, _, _ string) (string, error) { return f.printText, nil }
 func (f *fakeEngine) Check(_ context.Context, _ string) ([]string, error)  { return nil, nil }
 
 func TestGroupTransactions(t *testing.T) {
@@ -213,5 +214,110 @@ func TestStaleRevisionFails(t *testing.T) {
 	}
 	if _, err := svc.Create(ctx, ledgerRow, txn, 5, Actor{UserID: user.ID}); !errors.Is(err, db.ErrRevisionConflict) {
 		t.Fatalf("stale revision should conflict, got %v", err)
+	}
+}
+
+func TestUpdateAndDelete(t *testing.T) {
+	ctx := context.Background()
+	store, err := db.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	user, err := store.UpsertGitHubUser(ctx, "1", "alice", "", "Alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	team, err := store.CreateTeamWithOwner(ctx, uuid.NewString(), "家庭", user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dataPath := filepath.Join(t.TempDir(), "ledger")
+	ledgerRow, err := store.CreateLedgerWithOwner(ctx, db.NewLedgerParams{
+		ID: uuid.NewString(), TeamID: team.ID, Name: "家庭账本",
+		DataPath: dataPath, OperatingCurrency: "CNY",
+	}, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actor := Actor{UserID: user.ID, Login: "alice"}
+
+	txn1 := Transaction{
+		Date: "2026-08-02", Payee: "盒马鲜生", Narration: "日常采购",
+		Postings: []Posting{
+			{Account: "Expenses:Food", Units: &Amount{Number: "-120.00", Currency: "CNY"}},
+			{Account: "Assets:Cash", Units: &Amount{Number: "120.00", Currency: "CNY"}},
+		},
+	}
+	rows := []beancount.Row{
+		{"id": "txn-abc", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购",
+			"account": "Expenses:Food", "number": "-120.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+		{"id": "txn-abc", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购",
+			"account": "Assets:Cash", "number": "120.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+	}
+	engine := &fakeEngine{rows: rows}
+	svc := &Service{Store: store, Engine: engine, Now: time.Now}
+	created, err := svc.Create(ctx, ledgerRow, txn1, 0, actor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text1, _, err := BuildBeanText(txn1, "CNY")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 更新
+	txn2 := Transaction{
+		Date: "2026-08-02", Payee: "盒马鲜生", Narration: "日常采购（修正）",
+		Postings: []Posting{
+			{Account: "Expenses:Food", Units: &Amount{Number: "-130.00", Currency: "CNY"}},
+			{Account: "Assets:Cash", Units: &Amount{Number: "130.00", Currency: "CNY"}},
+		},
+	}
+	text2, _, err := BuildBeanText(txn2, "CNY")
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine.printText = text1
+	engine.rows = append(engine.rows,
+		beancount.Row{"id": "txn-def", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购（修正）",
+			"account": "Expenses:Food", "number": "-130.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+		beancount.Row{"id": "txn-def", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "日常采购（修正）",
+			"account": "Assets:Cash", "number": "130.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+	)
+	updated, err := svc.Update(ctx, ledgerRow, created.ID, txn2, 1, actor)
+	if err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	if updated.ID != "txn-def" {
+		t.Fatalf("updated id mismatch: %s", updated.ID)
+	}
+	content, err := os.ReadFile(filepath.Join(dataPath, "month", "2026-08.bean"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(content), "日常采购（修正）") || strings.Contains(string(content), "-120.00") {
+		t.Fatalf("update not applied:\n%s", content)
+	}
+
+	// 删除
+	engine.printText = text2
+	if err := svc.Delete(ctx, ledgerRow, "txn-def", 2, actor); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	content, err = os.ReadFile(filepath.Join(dataPath, "month", "2026-08.bean"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(content), "日常采购（修正）") {
+		t.Fatalf("delete not applied:\n%s", content)
+	}
+	got, err := store.GetLedger(ctx, ledgerRow.ID)
+	if err != nil || got.Revision != 3 {
+		t.Fatalf("revision should be 3: %v %+v", err, got)
 	}
 }
