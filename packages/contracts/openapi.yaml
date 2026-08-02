@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: beancount-gs API
   version: 2.0.0
@@ -293,7 +293,7 @@ paths:
       summary: 账户详情（持仓 / 盈亏 / 余额趋势）
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
-        - { $ref: "#/components/parameters/Account" }
+        - { $ref: "#/components/parameters/AccountParam" }
       responses:
         "200":
           description: 账户详情
@@ -305,7 +305,7 @@ paths:
       summary: 关闭账户（close 指令）
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
-        - { $ref: "#/components/parameters/Account" }
+        - { $ref: "#/components/parameters/AccountParam" }
       requestBody:
         required: true
         content:
@@ -327,7 +327,7 @@ paths:
       summary: 期初对账（写入 pad + balance 指令）
       parameters:
         - { $ref: "#/components/parameters/LedgerId" }
-        - { $ref: "#/components/parameters/Account" }
+        - { $ref: "#/components/parameters/AccountParam" }
       requestBody:
         required: true
         content:
@@ -353,7 +353,7 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/AccountType" }
+                items: { $ref: "#/components/schemas/AccountTypeMapping" }
     post:
       tags: [accounts]
       summary: 新增账户类型
@@ -363,7 +363,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AccountType" }
+            schema: { $ref: "#/components/schemas/AccountTypeMapping" }
       responses:
         "201": { description: 已新增 }
   /ledgers/{ledger_id}/transactions:
@@ -995,7 +995,7 @@ components:
       in: path
       required: true
       schema: { type: string }
-    Account:
+    AccountParam:
       name: account
       in: path
       required: true
@@ -1183,7 +1183,7 @@ components:
             balance_trend:
               type: array
               items: { $ref: "#/components/schemas/StatsPoint" }
-    AccountType:
+    AccountTypeMapping:
       type: object
       required: [prefix, name]
       properties:

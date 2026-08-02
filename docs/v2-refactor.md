@@ -228,7 +228,7 @@ V2.0 已确认：普通表单编辑（交易/账户）走乐观并发；"源文�
   - `/api/v2/auth/*`：注册/登录/登出/当前用户
   - `/api/v2/teams`、`/api/v2/teams/{id}/members`
   - `/api/v2/ledgers/{id}/members`、`/revision`
-- 文档：OpenAPI 3.1 存于 `packages/contracts/openapi.yaml`，CI 校验前后端一致。
+- 文档：OpenAPI 3.0 存于 `packages/contracts/openapi.yaml`，CI 校验前后端一致。
 
 ## 9. 部署与运维
 
@@ -335,4 +335,4 @@ V2 的 API 命名统一遵循 beancount 领域术语，JSON 字段使用 snake_c
 
 - 写接口通过 `If-Revision-Match: <revision>` 头（或 body 的 `base_revision`）做乐观并发校验，冲突返回 `409 LEDGER_STALE`。
 - API Key 前缀 `bgsk_`，范围 `read-only` / `read-write` / `ai`；MCP 与 REST 共用同一套 Key 与权限模型。
-- 完整契约见 `packages/contracts/openapi.yaml`（OpenAPI 3.1），前后端类型与文档页均由此生成。
+- 完整契约见 `packages/contracts/openapi.yaml`（OpenAPI 3.0，兼容 oapi-codegen 与 openapi-typescript），前后端类型与文档页均由此生成。
