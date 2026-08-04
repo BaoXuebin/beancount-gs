@@ -2023,6 +2023,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledgers/{ledger_id}/ai/record/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 自然语言批量记账（一次生成多条待确认交易草稿）
+         * @description AI 不直接写账；一次可描述多笔交易，返回草稿数组，由调用方确认后逐笔调用创建接口。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @example 昨天星巴克 38 元
+                         *     前天打车 120 元
+                         */
+                        text: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 待确认交易草稿数组 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AiRecordBatchResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ledgers/{ledger_id}/ai/summarize": {
         parameters: {
             query?: never;
@@ -2620,6 +2671,10 @@ export interface components {
             date?: string;
             amount?: string;
             operating_currency?: string;
+        };
+        AiRecordBatchResult: {
+            drafts: components["schemas"]["Transaction"][];
+            notes?: string;
         };
         AiRecordResult: {
             draft: components["schemas"]["TransactionCreate"] & {

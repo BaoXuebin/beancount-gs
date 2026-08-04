@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,9 +14,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ApiError, request } from '@/api/client'
-import type { AiRecordResult, Amount, Posting, Transaction } from '@/api/types'
+import type { Account, AiRecordResult, Amount, Posting, Transaction, TransactionTemplate } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { LoadingHint } from '@/components/LoadingHint'
+import { AccountPicker } from '@/components/AccountPicker'
+import { useFetch } from '@/api/useFetch'
 
 interface PostingRow {
   account: string
@@ -73,6 +75,7 @@ interface TransactionEditFormProps {
   ledgerId: string
   transactionId?: string | null
   draft?: AiRecordResult['draft'] | null
+  initial?: TransactionTemplate | null
   onSaved?: () => void
   onCancel?: () => void
 }
@@ -81,6 +84,7 @@ export function TransactionEditForm({
   ledgerId,
   transactionId,
   draft,
+  initial,
   onSaved,
   onCancel,
 }: TransactionEditFormProps) {
@@ -92,12 +96,12 @@ export function TransactionEditForm({
   const [tags, setTags] = useState('')
   const [divideDates, setDivideDates] = useState('')
   const [postings, setPostings] = useState<PostingRow[]>([blankPosting(), blankPosting()])
-  const [aiText, setAiText] = useState('')
-  const [aiBusy, setAiBusy] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [conflict, setConflict] = useState<string | null>(null)
   const [loading, setLoading] = useState(isEdit)
+  // 账户列表（用于分录账户的模糊选择与默认币种填充）
+  const accounts = useFetch<Account[]>(`/ledgers/${ledgerId}/accounts?status=open`)
 
   useEffect(() => {
     if (!isEdit) return
@@ -134,6 +138,15 @@ export function TransactionEditForm({
     if (draft.postings?.length) setPostings(draft.postings.map(postingToRow))
   }, [draft, isEdit])
 
+  // 从模板预填（仅新建）
+  useEffect(() => {
+    if (!initial || isEdit) return
+    if (initial.payee) setPayee(initial.payee)
+    if (initial.narration) setNarration(initial.narration)
+    if (initial.tags?.length) setTags(initial.tags.join(', '))
+    if (initial.postings?.length) setPostings(initial.postings.map(postingToRow))
+  }, [initial, isEdit])
+
   const updatePosting = (index: number, patch: Partial<PostingRow>) => {
     setPostings((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
   }
@@ -152,29 +165,6 @@ export function TransactionEditForm({
       balanced: Math.abs(sum) < 0.001,
     }))
   }, [postings])
-
-  const generateDraft = async () => {
-    if (!aiText.trim()) return
-    setAiBusy(true)
-    setError(null)
-    try {
-      const result = await request<AiRecordResult>(`/ledgers/${ledgerId}/ai/record`, {
-        method: 'POST',
-        body: JSON.stringify({ text: aiText }),
-      })
-      const draft = result.draft
-      if (draft.date) setDate(draft.date)
-      if (draft.payee) setPayee(draft.payee)
-      if (draft.narration) setNarration(draft.narration)
-      if (draft.tags) setTags(draft.tags.join(', '))
-      if (draft.postings?.length) setPostings(draft.postings.map(postingToRow))
-      setAiText('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setAiBusy(false)
-    }
-  }
 
   const save = async () => {
     if (postings.length < 2) {
@@ -237,32 +227,6 @@ export function TransactionEditForm({
 
   return (
     <div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-1.5 text-base">
-            <Sparkles className="size-4" /> AI 生成分录（可选）
-          </CardTitle>
-          <CardDescription>输入自然语言，如「昨天星巴克咖啡 38 元」，AI 生成草稿后仍可修改</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-2">
-          <Input
-            value={aiText}
-            onChange={(e) => setAiText(e.target.value)}
-            placeholder="如：昨天星巴克咖啡 38 元"
-            className="min-w-64 flex-1"
-            onKeyDown={(e) => e.key === 'Enter' && generateDraft()}
-          />
-          <button
-            type="button"
-            className={buttonVariants({ variant: 'outline' })}
-            disabled={aiBusy || !aiText.trim()}
-            onClick={generateDraft}
-          >
-            {aiBusy ? '生成中…' : '生成草稿'}
-          </button>
-        </CardContent>
-      </Card>
-
       {conflict && (
         <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           ⚠ {conflict}
@@ -320,10 +284,13 @@ export function TransactionEditForm({
               {postings.map((p, i) => (
                 <TableRow key={i}>
                   <TableCell>
-                    <Input
+                    <AccountPicker
                       value={p.account}
-                      onChange={(e) => updatePosting(i, { account: e.target.value })}
-                      placeholder="Expenses:Food"
+                      accounts={accounts.data ?? []}
+                      placeholder="Expenses:Food（输入可搜索）"
+                      onChange={(acct, cur) =>
+                        updatePosting(i, { account: acct, ...(cur ? { currency: cur } : {}) })
+                      }
                     />
                   </TableCell>
                   <TableCell>

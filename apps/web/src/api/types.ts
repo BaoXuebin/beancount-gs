@@ -31,6 +31,11 @@ export interface AiAccountsResult {
   notes?: string
 }
 
+export interface AiRecordBatchResult {
+  drafts: Transaction[]
+  notes?: string
+}
+
 export interface AccountOpenBatchResult {
   created: Account[]
   skipped: { account: string; reason: string }[]

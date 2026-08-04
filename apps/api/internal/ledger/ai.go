@@ -25,26 +25,39 @@ func (s *Service) AiRecord(ctx context.Context, l db.Ledger, text string) (Trans
 	system := "你是 beancount 记账助手。把用户自然语言转换为 json 交易对象，严格使用字段：" +
 		"date(YYYY-MM-DD，未给则用今天)、payee、narration、postings（数组，每项 account 和 units{number,currency}）。" +
 		"借贷必须平衡，number 是字符串，账户以 Assets:/Liabilities:/Income:/Expenses:/Equity: 开头。"
-	var draft struct {
-		Date      string `json:"date"`
-		Payee     string `json:"payee"`
-		Narration string `json:"narration"`
-		Postings  []struct {
-			Account string `json:"account"`
-			Units   struct {
-				Number   string `json:"number"`
-				Currency string `json:"currency"`
-			} `json:"units"`
-		} `json:"postings"`
-	}
+	var draft aiTxnDraft
 	if err := s.AI.ChatJSON(ctx, system, text, &draft); err != nil {
 		return Transaction{}, "", err
 	}
-	if draft.Date == "" {
-		draft.Date = time.Now().Format("2006-01-02")
+	txn, ok := buildAiTransaction(l, draft)
+	if !ok {
+		return Transaction{}, "", errors.New("AI 生成的交易缺少完整分录")
 	}
-	txn := Transaction{Date: draft.Date, Payee: draft.Payee, Narration: draft.Narration}
-	for _, p := range draft.Postings {
+	return txn, "AI 生成草稿，请确认后调用创建接口", nil
+}
+
+// aiTxnDraft AI 生成交易草稿的原始结构（单条与批量共用）。
+type aiTxnDraft struct {
+	Date      string `json:"date"`
+	Payee     string `json:"payee"`
+	Narration string `json:"narration"`
+	Postings  []struct {
+		Account string `json:"account"`
+		Units   struct {
+			Number   string `json:"number"`
+			Currency string `json:"currency"`
+		} `json:"units"`
+	} `json:"postings"`
+}
+
+// buildAiTransaction 把 AI 草稿转换为内部交易；分录不足 2 条时返回 ok=false。
+func buildAiTransaction(l db.Ledger, d aiTxnDraft) (Transaction, bool) {
+	date := d.Date
+	if date == "" {
+		date = time.Now().Format("2006-01-02")
+	}
+	txn := Transaction{Date: date, Payee: d.Payee, Narration: d.Narration}
+	for _, p := range d.Postings {
 		if strings.TrimSpace(p.Account) == "" {
 			continue
 		}
@@ -57,10 +70,34 @@ func (s *Service) AiRecord(ctx context.Context, l db.Ledger, text string) (Trans
 			Units:   &Amount{Number: p.Units.Number, Currency: currency},
 		})
 	}
-	if len(txn.Postings) < 2 {
-		return Transaction{}, "", errors.New("AI 生成的交易缺少完整分录")
+	return txn, len(txn.Postings) >= 2
+}
+
+// AiRecordBatch 自然语言 → 多条待确认交易草稿（一次可描述多笔交易）。
+func (s *Service) AiRecordBatch(ctx context.Context, l db.Ledger, text string) ([]Transaction, string, error) {
+	if s.AI == nil || !s.AI.Enabled() {
+		return nil, "", ai.ErrNotConfigured
 	}
-	return txn, "AI 生成草稿，请确认后调用创建接口", nil
+	system := "你是 beancount 记账助手。把用户自然语言转换为 json 对象，字段：drafts（交易数组，每笔含 date(YYYY-MM-DD，未给则用今天)、payee、narration、postings（数组，每项 account 和 units{number,currency}））、notes（提示文字）。" +
+		"用户可能一次描述多笔交易（如多行），请为每一笔生成一个草稿。每笔交易借贷必须平衡，number 是字符串，账户以 Assets:/Liabilities:/Income:/Expenses:/Equity: 开头。" +
+		"只输出 json，不要 Markdown。示例：{\"drafts\":[{\"date\":\"2026-08-04\",\"payee\":\"星巴克\",\"narration\":\"咖啡\",\"postings\":[{\"account\":\"Expenses:Food:Coffee\",\"units\":{\"number\":\"38\",\"currency\":\"CNY\"}},{\"account\":\"Assets:Cash\",\"units\":{\"number\":\"-38\",\"currency\":\"CNY\"}}]}],\"notes\":\"已生成 1 笔\"}"
+	var out struct {
+		Drafts []aiTxnDraft `json:"drafts"`
+		Notes  string       `json:"notes,omitempty"`
+	}
+	if err := s.AI.ChatJSON(ctx, system, text, &out); err != nil {
+		return nil, "", err
+	}
+	result := make([]Transaction, 0, len(out.Drafts))
+	for _, d := range out.Drafts {
+		if txn, ok := buildAiTransaction(l, d); ok {
+			result = append(result, txn)
+		}
+	}
+	if len(result) == 0 {
+		return nil, "", errors.New("AI 未生成有效交易，请调整描述后重试")
+	}
+	return result, out.Notes, nil
 }
 
 type AccountSuggestion struct {

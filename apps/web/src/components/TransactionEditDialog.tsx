@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { TransactionEditForm } from '@/components/TransactionEditForm'
-import type { AiRecordResult } from '@/api/types'
+import type { AiRecordResult, TransactionTemplate } from '@/api/types'
 
 interface TransactionEditDialogProps {
   open: boolean
@@ -14,6 +14,7 @@ interface TransactionEditDialogProps {
   ledgerId: string
   transactionId?: string | null
   draft?: AiRecordResult['draft'] | null
+  initial?: TransactionTemplate | null
   onSaved?: () => void
 }
 
@@ -23,6 +24,7 @@ export function TransactionEditDialog({
   ledgerId,
   transactionId,
   draft,
+  initial,
   onSaved,
 }: TransactionEditDialogProps) {
   const isEdit = transactionId != null
@@ -39,6 +41,7 @@ export function TransactionEditDialog({
           ledgerId={ledgerId}
           transactionId={transactionId}
           draft={draft}
+          initial={initial}
           onCancel={() => onOpenChange(false)}
           onSaved={() => {
             onOpenChange(false)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/beancount-gs/api/internal/ai"
 	"github.com/beancount-gs/api/internal/db"
+	"github.com/beancount-gs/api/internal/http/gen"
 	"github.com/beancount-gs/api/internal/ledger"
 	"github.com/gin-gonic/gin"
 )
@@ -34,6 +35,30 @@ func (h *AIHandlers) Record(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"draft": toGenTransaction(txn), "notes": notes})
+}
+
+func (h *AIHandlers) RecordBatch(c *gin.Context) {
+	l, ok := requireLedger(c, h.Store, "editor")
+	if !ok {
+		return
+	}
+	var form struct {
+		Text string `json:"text" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		BadRequest(c, "参数错误："+err.Error())
+		return
+	}
+	txns, notes, err := h.Service.AiRecordBatch(c.Request.Context(), *l, form.Text)
+	if err != nil {
+		h.writeAIError(c, err)
+		return
+	}
+	drafts := make([]gen.Transaction, 0, len(txns))
+	for _, t := range txns {
+		drafts = append(drafts, toGenTransaction(t))
+	}
+	c.JSON(http.StatusOK, gin.H{"drafts": drafts, "notes": notes})
 }
 
 func (h *AIHandlers) Accounts(c *gin.Context) {

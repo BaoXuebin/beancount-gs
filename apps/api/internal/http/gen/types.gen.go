@@ -241,6 +241,12 @@ type AiAccountsResult struct {
 	Notes *string `json:"notes,omitempty"`
 }
 
+// AiRecordBatchResult defines model for AiRecordBatchResult.
+type AiRecordBatchResult struct {
+	Drafts []Transaction `json:"drafts"`
+	Notes  *string       `json:"notes,omitempty"`
+}
+
 // AiRecordResult defines model for AiRecordResult.
 type AiRecordResult struct {
 	Draft struct {
@@ -625,6 +631,11 @@ type PostLedgersLedgerIdAiRecordJSONBody struct {
 	Text string `json:"text"`
 }
 
+// PostLedgersLedgerIdAiRecordBatchJSONBody defines parameters for PostLedgersLedgerIdAiRecordBatch.
+type PostLedgersLedgerIdAiRecordBatchJSONBody struct {
+	Text string `json:"text"`
+}
+
 // PostLedgersLedgerIdAiSummarizeParams defines parameters for PostLedgersLedgerIdAiSummarize.
 type PostLedgersLedgerIdAiSummarizeParams struct {
 	Month *Month `form:"month,omitempty" json:"month,omitempty"`
@@ -830,6 +841,9 @@ type PostLedgersLedgerIdAiAccountsJSONRequestBody PostLedgersLedgerIdAiAccountsJ
 
 // PostLedgersLedgerIdAiRecordJSONRequestBody defines body for PostLedgersLedgerIdAiRecord for application/json ContentType.
 type PostLedgersLedgerIdAiRecordJSONRequestBody PostLedgersLedgerIdAiRecordJSONBody
+
+// PostLedgersLedgerIdAiRecordBatchJSONRequestBody defines body for PostLedgersLedgerIdAiRecordBatch for application/json ContentType.
+type PostLedgersLedgerIdAiRecordBatchJSONRequestBody PostLedgersLedgerIdAiRecordBatchJSONBody
 
 // PostLedgersLedgerIdCurrenciesJSONRequestBody defines body for PostLedgersLedgerIdCurrencies for application/json ContentType.
 type PostLedgersLedgerIdCurrenciesJSONRequestBody PostLedgersLedgerIdCurrenciesJSONBody

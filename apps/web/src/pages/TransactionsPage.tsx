@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Eye, Pencil, RefreshCw, Trash2 } from 'lucide-react'
+import { Eye, Pencil, RefreshCw, Sparkles, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,11 +32,13 @@ import {
 } from '@/components/ui/table'
 import { ApiError, request } from '@/api/client'
 import { useFetch } from '@/api/useFetch'
-import type { Ledger, Transaction, TransactionListResponse } from '@/api/types'
+import type { Ledger, Transaction, TransactionListResponse, TransactionTemplate } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { LoadingHint } from '@/components/LoadingHint'
 import { TransactionViewDialog } from '@/components/TransactionViewDialog'
 import { TransactionEditDialog } from '@/components/TransactionEditDialog'
+import { TemplatesDialog } from '@/components/TemplatesDialog'
+import { AiRecordDialog } from '@/components/AiRecordDialog'
 
 const PAGE_SIZE = 50
 
@@ -68,6 +70,10 @@ export function TransactionsPage() {
   const [deleting, setDeleting] = useState<Transaction | null>(null)
   const [viewing, setViewing] = useState<Transaction | null>(null)
   const [editing, setEditing] = useState<Transaction | null>(null)
+  const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createInitial, setCreateInitial] = useState<TransactionTemplate | null>(null)
+  const [aiOpen, setAiOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -151,12 +157,30 @@ export function TransactionsPage() {
           <Link to={`/ledgers/${ledgerId}/import`} className={buttonVariants({ variant: 'outline' })}>
             导入
           </Link>
-          <Link to={`/ledgers/${ledgerId}/templates`} className={buttonVariants({ variant: 'outline' })}>
+          <button
+            type="button"
+            className={buttonVariants({ variant: 'outline' })}
+            onClick={() => setTemplatesOpen(true)}
+          >
             模板
-          </Link>
-          <Link to={`/ledgers/${ledgerId}/transactions/new`} className={buttonVariants()}>
+          </button>
+          <button
+            type="button"
+            className={buttonVariants({ variant: 'outline' })}
+            onClick={() => setAiOpen(true)}
+          >
+            <Sparkles /> AI 记录
+          </button>
+          <button
+            type="button"
+            className={buttonVariants()}
+            onClick={() => {
+              setCreateInitial(null)
+              setCreateOpen(true)
+            }}
+          >
             记一笔
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -392,6 +416,35 @@ export function TransactionsPage() {
           setEditing(null)
           setReloadKey((k) => k + 1)
         }}
+      />
+
+      <TemplatesDialog
+        open={templatesOpen}
+        onOpenChange={setTemplatesOpen}
+        ledgerId={ledgerId}
+        onUse={(template) => {
+          setCreateInitial(template)
+          setCreateOpen(true)
+        }}
+      />
+
+      <TransactionEditDialog
+        open={createOpen}
+        onOpenChange={(open) => !open && setCreateOpen(false)}
+        ledgerId={ledgerId}
+        initial={createInitial}
+        onSaved={() => {
+          setCreateOpen(false)
+          setCreateInitial(null)
+          setReloadKey((k) => k + 1)
+        }}
+      />
+
+      <AiRecordDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        ledgerId={ledgerId}
+        onCreated={() => setReloadKey((k) => k + 1)}
       />
     </div>
   )
