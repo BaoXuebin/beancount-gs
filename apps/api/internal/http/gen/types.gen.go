@@ -210,10 +210,35 @@ type AccountOpen struct {
 // AccountOpenBooking defines model for AccountOpen.Booking.
 type AccountOpenBooking string
 
+// AccountOpenBatch defines model for AccountOpenBatch.
+type AccountOpenBatch struct {
+	Accounts []AccountOpen `json:"accounts"`
+}
+
+// AccountOpenBatchResult defines model for AccountOpenBatchResult.
+type AccountOpenBatchResult struct {
+	Created []Account `json:"created"`
+	Skipped *[]struct {
+		Account string `json:"account"`
+		Reason  string `json:"reason"`
+	} `json:"skipped,omitempty"`
+}
+
 // AccountTypeMapping defines model for AccountTypeMapping.
 type AccountTypeMapping struct {
 	Name   string `json:"name"`
 	Prefix string `json:"prefix"`
+}
+
+// AiAccountsResult defines model for AiAccountsResult.
+type AiAccountsResult struct {
+	Accounts []struct {
+		Account string `json:"account"`
+
+		// Currency 多币种用逗号分隔
+		Currency *string `json:"currency,omitempty"`
+	} `json:"accounts"`
+	Notes *string `json:"notes,omitempty"`
 }
 
 // AiRecordResult defines model for AiRecordResult.
@@ -572,12 +597,22 @@ type PostLedgersLedgerIdAccountsAccountJSONBody struct {
 	ClosedOn openapi_types.Date `json:"closed_on"`
 }
 
+// PutLedgersLedgerIdAccountsAccountJSONBody defines parameters for PutLedgersLedgerIdAccountsAccount.
+type PutLedgersLedgerIdAccountsAccountJSONBody struct {
+	OpenedOn openapi_types.Date `json:"opened_on"`
+}
+
 // PostLedgersLedgerIdAccountsAccountBalanceJSONBody defines parameters for PostLedgersLedgerIdAccountsAccountBalance.
 type PostLedgersLedgerIdAccountsAccountBalanceJSONBody struct {
 	Date openapi_types.Date `json:"date"`
 
 	// Number decimal 字符串
 	Number string `json:"number"`
+}
+
+// PostLedgersLedgerIdAiAccountsJSONBody defines parameters for PostLedgersLedgerIdAiAccounts.
+type PostLedgersLedgerIdAiAccountsJSONBody struct {
+	Text string `json:"text"`
 }
 
 // GetLedgersLedgerIdAiInsightsParams defines parameters for GetLedgersLedgerIdAiInsights.
@@ -778,11 +813,20 @@ type PostLedgersLedgerIdAccountTypesJSONRequestBody = AccountTypeMapping
 // PostLedgersLedgerIdAccountsJSONRequestBody defines body for PostLedgersLedgerIdAccounts for application/json ContentType.
 type PostLedgersLedgerIdAccountsJSONRequestBody = AccountOpen
 
+// PostLedgersLedgerIdAccountsBatchJSONRequestBody defines body for PostLedgersLedgerIdAccountsBatch for application/json ContentType.
+type PostLedgersLedgerIdAccountsBatchJSONRequestBody = AccountOpenBatch
+
 // PostLedgersLedgerIdAccountsAccountJSONRequestBody defines body for PostLedgersLedgerIdAccountsAccount for application/json ContentType.
 type PostLedgersLedgerIdAccountsAccountJSONRequestBody PostLedgersLedgerIdAccountsAccountJSONBody
 
+// PutLedgersLedgerIdAccountsAccountJSONRequestBody defines body for PutLedgersLedgerIdAccountsAccount for application/json ContentType.
+type PutLedgersLedgerIdAccountsAccountJSONRequestBody PutLedgersLedgerIdAccountsAccountJSONBody
+
 // PostLedgersLedgerIdAccountsAccountBalanceJSONRequestBody defines body for PostLedgersLedgerIdAccountsAccountBalance for application/json ContentType.
 type PostLedgersLedgerIdAccountsAccountBalanceJSONRequestBody PostLedgersLedgerIdAccountsAccountBalanceJSONBody
+
+// PostLedgersLedgerIdAiAccountsJSONRequestBody defines body for PostLedgersLedgerIdAiAccounts for application/json ContentType.
+type PostLedgersLedgerIdAiAccountsJSONRequestBody PostLedgersLedgerIdAiAccountsJSONBody
 
 // PostLedgersLedgerIdAiRecordJSONRequestBody defines body for PostLedgersLedgerIdAiRecord for application/json ContentType.
 type PostLedgersLedgerIdAiRecordJSONRequestBody PostLedgersLedgerIdAiRecordJSONBody

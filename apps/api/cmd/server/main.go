@@ -70,7 +70,7 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	router.Use(gin.Recovery())
+	router.Use(httpapi.RequestLogger(), gin.Recovery())
 
 	api := router.Group("/api/v2")
 	api.GET("/health", func(c *gin.Context) {
@@ -146,10 +146,17 @@ func main() {
 	accountHandlers := &httpapi.AccountHandlers{Store: store, Service: ledgerService}
 	authed.GET("/ledgers/:ledger_id/accounts", accountHandlers.List)
 	authed.POST("/ledgers/:ledger_id/accounts", accountHandlers.Open)
+	authed.POST("/ledgers/:ledger_id/accounts/batch", accountHandlers.BatchOpen)
 	authed.GET("/ledgers/:ledger_id/accounts/:account", accountHandlers.Get)
 	authed.POST("/ledgers/:ledger_id/accounts/:account", accountHandlers.Close)
+	authed.PUT("/ledgers/:ledger_id/accounts/:account", accountHandlers.Reopen)
 	authed.POST("/ledgers/:ledger_id/accounts/:account/balance", accountHandlers.Balance)
 	authed.GET("/ledgers/:ledger_id/account-types", accountHandlers.ListTypes)
+
+	currencyHandlers := &httpapi.CurrencyHandlers{Store: store, Service: ledgerService}
+	authed.GET("/ledgers/:ledger_id/currencies", currencyHandlers.List)
+	authed.POST("/ledgers/:ledger_id/currencies", currencyHandlers.Add)
+	authed.POST("/ledgers/:ledger_id/currencies/sync", currencyHandlers.Sync)
 	authed.POST("/ledgers/:ledger_id/account-types", accountHandlers.AddType)
 
 	statsHandlers := &httpapi.StatsHandlers{Store: store, Service: ledgerService}
@@ -165,6 +172,7 @@ func main() {
 
 	aiHandlers := &httpapi.AIHandlers{Store: store, Service: ledgerService}
 	authed.POST("/ledgers/:ledger_id/ai/record", aiHandlers.Record)
+	authed.POST("/ledgers/:ledger_id/ai/accounts", aiHandlers.Accounts)
 	authed.POST("/ledgers/:ledger_id/ai/summarize", aiHandlers.Summarize)
 	authed.GET("/ledgers/:ledger_id/ai/insights", aiHandlers.Insights)
 

@@ -61,6 +61,35 @@ func ReadAccountFiles(dataPath string) ([]AccountDirective, error) {
 	return directives, nil
 }
 
+type AccountDirectiveLine struct {
+	Prefix string // 账户类型前缀，如 Assets
+	Line   string // 完整的 open / close 指令文本
+}
+
+// AppendAccountDirectiveBatch 按账户类型文件分组批量追加 open / close 指令。
+func AppendAccountDirectiveBatch(dataPath string, items []AccountDirectiveLine) error {
+	if len(items) == 0 {
+		return nil
+	}
+	dir := filepath.Join(dataPath, "account")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	byFile := make(map[string][]string)
+	for _, it := range items {
+		file := strings.ToLower(it.Prefix) + ".bean"
+		byFile[file] = append(byFile[file], it.Line)
+	}
+	for file, lines := range byFile {
+		for _, line := range lines {
+			if err := appendLine(filepath.Join(dir, file), line); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // AppendAccountDirective 追加 open / close 指令到对应账户类型的文件（account/<prefix>.bean）。
 func AppendAccountDirective(dataPath, prefix, line string) error {
 	dir := filepath.Join(dataPath, "account")

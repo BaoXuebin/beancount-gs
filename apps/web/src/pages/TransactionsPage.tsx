@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
+import { Eye, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,16 +35,14 @@ import { useFetch } from '@/api/useFetch'
 import type { Ledger, Transaction, TransactionListResponse } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { LoadingHint } from '@/components/LoadingHint'
+import { TransactionViewDialog } from '@/components/TransactionViewDialog'
+import { TransactionEditDialog } from '@/components/TransactionEditDialog'
 
 const PAGE_SIZE = 50
 
 function currentMonth(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
-function postingsSummary(t: Transaction): string {
-  return t.postings.map((p) => p.account).join(' / ')
 }
 
 function amountSummary(t: Transaction): string {
@@ -68,6 +66,8 @@ export function TransactionsPage() {
   const [offset, setOffset] = useState(0)
   const [conflict, setConflict] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<Transaction | null>(null)
+  const [viewing, setViewing] = useState<Transaction | null>(null)
+  const [editing, setEditing] = useState<Transaction | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -250,57 +250,77 @@ export function TransactionsPage() {
       <Card className="mt-4">
         <CardContent className="pt-6">
           {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
-          {txns.loading && Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="my-2 h-10" />)}
+          {txns.loading && Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="my-2 h-12" />)}
           {txns.error && <p className="text-sm text-destructive">加载失败：{txns.error}</p>}
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>日期</TableHead>
-                <TableHead>收款方</TableHead>
-                <TableHead>描述</TableHead>
-                <TableHead>账户</TableHead>
-                <TableHead className="text-right">金额</TableHead>
-                <TableHead>标签</TableHead>
-                <TableHead className="text-right">操作</TableHead>
+                <TableHead className="w-[24%]">收款方 / 日期</TableHead>
+                <TableHead className="w-[26%]">描述 / 标签</TableHead>
+                <TableHead className="w-[28%]">账户</TableHead>
+                <TableHead className="w-[104px] text-right">金额</TableHead>
+                <TableHead className="w-[108px] text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {txns.data?.items.map((t) => (
                 <TableRow key={t.id}>
-                  <TableCell className="whitespace-nowrap">{t.date}</TableCell>
-                  <TableCell>{t.payee ?? '-'}</TableCell>
-                  <TableCell className="max-w-[160px] truncate">{t.narration ?? '-'}</TableCell>
-                  <TableCell className="max-w-[220px] truncate">{postingsSummary(t)}</TableCell>
-                  <TableCell className="text-right font-mono">{amountSummary(t)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {t.tags?.map((tagName) => (
-                        <Badge key={tagName} variant="secondary">
-                          #{tagName}
-                        </Badge>
+                  <TableCell className="align-top whitespace-normal">
+                    <div className="break-words font-medium">{t.payee ?? '-'}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{t.date}</div>
+                  </TableCell>
+                  <TableCell className="align-top whitespace-normal">
+                    <div className="break-words">{t.narration ?? '-'}</div>
+                    {t.tags && t.tags.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {t.tags.map((tagName) => (
+                          <Badge key={tagName} variant="secondary" className="h-4 px-1.5 text-[10px]">
+                            #{tagName}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="align-top whitespace-normal">
+                    <div className="space-y-0.5">
+                      {t.postings.map((p, i) => (
+                        <div key={i} className="break-words font-mono text-xs">
+                          {p.account}
+                        </div>
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="align-top whitespace-nowrap text-right font-mono">
+                    {amountSummary(t) || '-'}
+                  </TableCell>
+                  <TableCell className="align-top whitespace-nowrap text-right">
                     <div className="flex justify-end gap-1">
-                      <Link
-                        to={`/ledgers/${ledgerId}/transactions/${t.id}`}
-                        className={cn(buttonVariants({ variant: 'outline', size: 'xs' }))}
-                      >
-                        查看
-                      </Link>
-                      <Link
-                        to={`/ledgers/${ledgerId}/transactions/${t.id}/edit`}
-                        className={cn(buttonVariants({ variant: 'outline', size: 'xs' }))}
-                      >
-                        编辑
-                      </Link>
                       <button
                         type="button"
-                        className={cn(buttonVariants({ variant: 'destructive', size: 'xs' }))}
+                        title="查看"
+                        className={cn(buttonVariants({ variant: 'outline', size: 'icon-xs' }))}
+                        onClick={() => setViewing(t)}
+                      >
+                        <Eye />
+                        <span className="sr-only">查看</span>
+                      </button>
+                      <button
+                        type="button"
+                        title="编辑"
+                        className={cn(buttonVariants({ variant: 'outline', size: 'icon-xs' }))}
+                        onClick={() => setEditing(t)}
+                      >
+                        <Pencil />
+                        <span className="sr-only">编辑</span>
+                      </button>
+                      <button
+                        type="button"
+                        title="删除"
+                        className={cn(buttonVariants({ variant: 'destructive', size: 'icon-xs' }))}
                         onClick={() => setDeleting(t)}
                       >
-                        删除
+                        <Trash2 />
+                        <span className="sr-only">删除</span>
                       </button>
                     </div>
                   </TableCell>
@@ -348,6 +368,31 @@ export function TransactionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TransactionViewDialog
+        open={viewing != null}
+        onOpenChange={(open) => !open && setViewing(null)}
+        ledgerId={ledgerId}
+        transaction={viewing}
+        onEdit={(t) => {
+          setViewing(null)
+          setEditing(t)
+        }}
+        onDeleted={() => {
+          setViewing(null)
+          setReloadKey((k) => k + 1)
+        }}
+      />
+      <TransactionEditDialog
+        open={editing != null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        ledgerId={ledgerId}
+        transactionId={editing?.id}
+        onSaved={() => {
+          setEditing(null)
+          setReloadKey((k) => k + 1)
+        }}
+      />
     </div>
   )
 }

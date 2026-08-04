@@ -59,5 +59,6 @@ type Service struct {
 	Engine beancount.QueryEngine
 	AI     *ai.Client
 	Now    func() time.Time
-	locks  sync.Map // ledgerID -> *sync.Mutex，串行化同一账本的文件写入
+	FX     FXProvider // 汇率拉取（测试可注入；nil 时用默认公开接口）
+	locks  sync.Map   // ledgerID -> *sync.Mutex，串行化同一账本的文件写入
 }

@@ -36,6 +36,25 @@ func (h *AIHandlers) Record(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"draft": toGenTransaction(txn), "notes": notes})
 }
 
+func (h *AIHandlers) Accounts(c *gin.Context) {
+	l, ok := requireLedger(c, h.Store, "editor")
+	if !ok {
+		return
+	}
+	var form struct {
+		Text string `json:"text" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		BadRequest(c, "参数错误："+err.Error())
+		return
+	}
+	accounts, notes, err := h.Service.AiAccounts(c.Request.Context(), *l, form.Text)
+	if err != nil {
+		h.writeAIError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"accounts": accounts, "notes": notes})
+}
 func (h *AIHandlers) Summarize(c *gin.Context) {
 	l, ok := requireLedger(c, h.Store, "")
 	if !ok {

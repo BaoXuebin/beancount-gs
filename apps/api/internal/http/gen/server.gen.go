@@ -61,15 +61,24 @@ type ServerInterface interface {
 	// 开户（写入 account/*.bean 的 open 指令）
 	// (POST /ledgers/{ledger_id}/accounts)
 	PostLedgersLedgerIdAccounts(c *gin.Context, ledgerId LedgerId)
+	// 批量开户（一次写入多个 open 指令）
+	// (POST /ledgers/{ledger_id}/accounts/batch)
+	PostLedgersLedgerIdAccountsBatch(c *gin.Context, ledgerId LedgerId)
 	// 账户详情（持仓 / 盈亏 / 余额趋势）
 	// (GET /ledgers/{ledger_id}/accounts/{account})
 	GetLedgersLedgerIdAccountsAccount(c *gin.Context, ledgerId LedgerId, account AccountParam)
 	// 关闭账户（close 指令）
 	// (POST /ledgers/{ledger_id}/accounts/{account})
 	PostLedgersLedgerIdAccountsAccount(c *gin.Context, ledgerId LedgerId, account AccountParam)
+	// 重新开户（close 后追加 open 指令恢复使用）
+	// (PUT /ledgers/{ledger_id}/accounts/{account})
+	PutLedgersLedgerIdAccountsAccount(c *gin.Context, ledgerId LedgerId, account AccountParam)
 	// 期初对账（写入 pad + balance 指令）
 	// (POST /ledgers/{ledger_id}/accounts/{account}/balance)
 	PostLedgersLedgerIdAccountsAccountBalance(c *gin.Context, ledgerId LedgerId, account AccountParam)
+	// AI 批量设计账户（生成待确认账户列表）
+	// (POST /ledgers/{ledger_id}/ai/accounts)
+	PostLedgersLedgerIdAiAccounts(c *gin.Context, ledgerId LedgerId)
 	// 洞察与异常检测（重复扣款 / 大额支出 / 环比异常）
 	// (GET /ledgers/{ledger_id}/ai/insights)
 	GetLedgersLedgerIdAiInsights(c *gin.Context, ledgerId LedgerId, params GetLedgersLedgerIdAiInsightsParams)
@@ -634,6 +643,34 @@ func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAccounts(c *gin.Context) {
 	siw.Handler.PostLedgersLedgerIdAccounts(c, ledgerId)
 }
 
+// PostLedgersLedgerIdAccountsBatch operation middleware
+func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAccountsBatch(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "ledger_id" -------------
+	var ledgerId LedgerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ledger_id", c.Param("ledger_id"), &ledgerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ledger_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PostLedgersLedgerIdAccountsBatch(c, ledgerId)
+}
+
 // GetLedgersLedgerIdAccountsAccount operation middleware
 func (siw *ServerInterfaceWrapper) GetLedgersLedgerIdAccountsAccount(c *gin.Context) {
 
@@ -708,6 +745,43 @@ func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAccountsAccount(c *gin.Con
 	siw.Handler.PostLedgersLedgerIdAccountsAccount(c, ledgerId, account)
 }
 
+// PutLedgersLedgerIdAccountsAccount operation middleware
+func (siw *ServerInterfaceWrapper) PutLedgersLedgerIdAccountsAccount(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "ledger_id" -------------
+	var ledgerId LedgerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ledger_id", c.Param("ledger_id"), &ledgerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ledger_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "account" -------------
+	var account AccountParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "account", c.Param("account"), &account, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter account: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PutLedgersLedgerIdAccountsAccount(c, ledgerId, account)
+}
+
 // PostLedgersLedgerIdAccountsAccountBalance operation middleware
 func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAccountsAccountBalance(c *gin.Context) {
 
@@ -743,6 +817,34 @@ func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAccountsAccountBalance(c *
 	}
 
 	siw.Handler.PostLedgersLedgerIdAccountsAccountBalance(c, ledgerId, account)
+}
+
+// PostLedgersLedgerIdAiAccounts operation middleware
+func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAiAccounts(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "ledger_id" -------------
+	var ledgerId LedgerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ledger_id", c.Param("ledger_id"), &ledgerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ledger_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PostLedgersLedgerIdAiAccounts(c, ledgerId)
 }
 
 // GetLedgersLedgerIdAiInsights operation middleware
@@ -2485,9 +2587,12 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/account-types", wrapper.PostLedgersLedgerIdAccountTypes)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/accounts", wrapper.GetLedgersLedgerIdAccounts)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/accounts", wrapper.PostLedgersLedgerIdAccounts)
+	router.POST(options.BaseURL+"/ledgers/:ledger_id/accounts/batch", wrapper.PostLedgersLedgerIdAccountsBatch)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/accounts/:account", wrapper.GetLedgersLedgerIdAccountsAccount)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/accounts/:account", wrapper.PostLedgersLedgerIdAccountsAccount)
+	router.PUT(options.BaseURL+"/ledgers/:ledger_id/accounts/:account", wrapper.PutLedgersLedgerIdAccountsAccount)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/accounts/:account/balance", wrapper.PostLedgersLedgerIdAccountsAccountBalance)
+	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/accounts", wrapper.PostLedgersLedgerIdAiAccounts)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/ai/insights", wrapper.GetLedgersLedgerIdAiInsights)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/record", wrapper.PostLedgersLedgerIdAiRecord)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/summarize", wrapper.PostLedgersLedgerIdAiSummarize)

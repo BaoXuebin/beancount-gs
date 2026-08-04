@@ -14,6 +14,7 @@ var (
 	ErrInvalidDate = errors.New("invalid transaction date")
 	ErrNoPostings  = errors.New("transaction requires at least two postings")
 	ErrDuplicateAccount = errors.New("account already exists")
+	ErrAccountNotClosed = errors.New("account is not closed")
 )
 
 // Validate 校验交易结构：日期、分录数量、借贷平衡。

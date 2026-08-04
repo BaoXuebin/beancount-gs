@@ -24,6 +24,17 @@ export type Membership = components['schemas']['Membership']
 export type StatsPayee = components['schemas']['StatsPayee']
 export type AiRecordResult = components['schemas']['AiRecordResult']
 
+export type AiAccountSuggestion = components['schemas']['AiAccountsResult']['accounts'][number]
+
+export interface AiAccountsResult {
+  accounts: AiAccountSuggestion[]
+  notes?: string
+}
+
+export interface AccountOpenBatchResult {
+  created: Account[]
+  skipped: { account: string; reason: string }[]
+}
 export interface TransactionListResponse {
   items: Transaction[]
   total: number

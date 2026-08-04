@@ -788,6 +788,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledgers/{ledger_id}/accounts/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量开户（一次写入多个 open 指令） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AccountOpenBatch"];
+                };
+            };
+            responses: {
+                /** @description 批量开户结果（含跳过项） */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccountOpenBatchResult"];
+                    };
+                };
+                409: components["responses"]["Conflict"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ledgers/{ledger_id}/accounts/{account}": {
         parameters: {
             query?: never;
@@ -820,7 +863,39 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /** 重新开户（close 后追加 open 指令恢复使用） */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                    /** @description 账户全名（URL 编码），如 Assets%3ACash */
+                    account: components["parameters"]["AccountParam"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        opened_on: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 已重新开户 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Account"];
+                    };
+                };
+                409: components["responses"]["Conflict"];
+            };
+        };
         /** 关闭账户（close 指令） */
         post: {
             parameters: {
@@ -2036,6 +2111,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledgers/{ledger_id}/ai/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * AI 批量设计账户（生成待确认账户列表）
+         * @description AI 不直接写账；返回建议账户列表，由调用方确认后调用批量开户接口。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example 我需要这些账户：招商银行储蓄卡、日常餐饮、工资收入 */
+                        text: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 建议账户列表 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AiAccountsResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api-keys": {
         parameters: {
             query?: never;
@@ -2361,6 +2484,25 @@ export interface components {
              * @enum {string}
              */
             booking: "fifo" | "average" | "none";
+        };
+        AccountOpenBatch: {
+            accounts: components["schemas"]["AccountOpen"][];
+        };
+        AccountOpenBatchResult: {
+            created: components["schemas"]["Account"][];
+            skipped?: {
+                account: string;
+                reason: string;
+            }[];
+        };
+        AiAccountsResult: {
+            accounts: {
+                /** @example Assets:Bank:招商银行 */
+                account: string;
+                /** @description 多币种用逗号分隔 */
+                currency?: string;
+            }[];
+            notes?: string;
         };
         AccountDetail: components["schemas"]["Account"] & {
             market_number?: string;

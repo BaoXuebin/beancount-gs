@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -21,7 +22,7 @@ func (s *Service) AiRecord(ctx context.Context, l db.Ledger, text string) (Trans
 	if s.AI == nil || !s.AI.Enabled() {
 		return Transaction{}, "", ai.ErrNotConfigured
 	}
-	system := "你是 beancount 记账助手。把用户自然语言转换为交易 JSON，严格使用字段：" +
+	system := "你是 beancount 记账助手。把用户自然语言转换为 json 交易对象，严格使用字段：" +
 		"date(YYYY-MM-DD，未给则用今天)、payee、narration、postings（数组，每项 account 和 units{number,currency}）。" +
 		"借贷必须平衡，number 是字符串，账户以 Assets:/Liabilities:/Income:/Expenses:/Equity: 开头。"
 	var draft struct {
@@ -60,6 +61,50 @@ func (s *Service) AiRecord(ctx context.Context, l db.Ledger, text string) (Trans
 		return Transaction{}, "", errors.New("AI 生成的交易缺少完整分录")
 	}
 	return txn, "AI 生成草稿，请确认后调用创建接口", nil
+}
+
+type AccountSuggestion struct {
+	Account  string `json:"account"`
+	Currency string `json:"currency,omitempty"`
+}
+
+// AiAccounts 自然语言 → 建议账户列表（AI 不直接写账，由调用方确认后批量开户）。
+func (s *Service) AiAccounts(ctx context.Context, l db.Ledger, text string) ([]AccountSuggestion, string, error) {
+	if s.AI == nil || !s.AI.Enabled() {
+		return nil, "", ai.ErrNotConfigured
+	}
+	existing, err := s.ListAccounts(ctx, l, true)
+	if err != nil {
+		return nil, "", err
+	}
+	names := make([]string, 0, len(existing))
+	for _, a := range existing {
+		names = append(names, a.Name)
+	}
+	sort.Strings(names)
+	system := "你是 beancount 账户设计助手。根据用户描述整理成不重复的 beancount 账户列表。" +
+		"账户名必须以 Assets:/Liabilities:/Income:/Expenses:/Equity: 开头且至少两级（如 Assets:Bank:招商银行）。" +
+		"多币种账户在 currency 字段注明（逗号分隔多个币种），普通账户省略 currency。" +
+		"只输出 json 对象，不要输出任何其他文字、解释或 Markdown。示例：{\"accounts\":[{\"account\":\"Assets:Bank:招商银行\",\"currency\":\"CNY\"}],\"notes\":\"...\"}"
+	prompt := fmt.Sprintf("现有账户：%s\n用户需求：%s", strings.Join(names, ", "), text)
+	var out struct {
+		Accounts []AccountSuggestion `json:"accounts"`
+		Notes    string              `json:"notes,omitempty"`
+	}
+	if err := s.AI.ChatJSON(ctx, system, prompt, &out); err != nil {
+		return nil, "", err
+	}
+	// 过滤空账户名
+	filtered := out.Accounts[:0]
+	for _, a := range out.Accounts {
+		if strings.TrimSpace(a.Account) != "" {
+			filtered = append(filtered, a)
+		}
+	}
+	if len(filtered) == 0 {
+		return nil, "", errors.New("AI 未返回有效账户，请调整描述后重试")
+	}
+	return filtered, out.Notes, nil
 }
 
 // AiSummarize 生成月度财务总结。

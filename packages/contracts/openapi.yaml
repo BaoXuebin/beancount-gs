@@ -360,6 +360,24 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Account" }
         "409": { $ref: "#/components/responses/Conflict" }
+  /ledgers/{ledger_id}/accounts/batch:
+    post:
+      tags: [accounts]
+      summary: 批量开户（一次写入多个 open 指令）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountOpenBatch" }
+      responses:
+        "201":
+          description: 批量开户结果（含跳过项）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountOpenBatchResult" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /ledgers/{ledger_id}/accounts/{account}:
     get:
       tags: [accounts]
@@ -394,6 +412,28 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Account" }
+    put:
+      tags: [accounts]
+      summary: 重新开户（close 后追加 open 指令恢复使用）
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+        - { $ref: "#/components/parameters/AccountParam" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [opened_on]
+              properties:
+                opened_on: { type: string, format: date }
+      responses:
+        "200":
+          description: 已重新开户
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /ledgers/{ledger_id}/accounts/{account}/balance:
     post:
       tags: [accounts]
@@ -977,6 +1017,28 @@ paths:
                       properties:
                         type: { type: string, enum: [duplicate, large_expense, trend_change] }
                         message: { type: string }
+  /ledgers/{ledger_id}/ai/accounts:
+    post:
+      tags: [ai]
+      summary: AI 批量设计账户（生成待确认账户列表）
+      description: AI 不直接写账；返回建议账户列表，由调用方确认后调用批量开户接口。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, example: "我需要这些账户：招商银行储蓄卡、日常餐饮、工资收入" }
+      responses:
+        "200":
+          description: 建议账户列表
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiAccountsResult" }
   /api-keys:
     get:
       tags: [integrations]
@@ -1276,6 +1338,42 @@ components:
         opened_on: { type: string, format: date }
         currency: { type: string, description: 多币种用逗号分隔 }
         booking: { type: string, enum: [fifo, average, none], default: none }
+    AccountOpenBatch:
+      type: object
+      required: [accounts]
+      properties:
+        accounts:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/AccountOpen" }
+    AccountOpenBatchResult:
+      type: object
+      required: [created]
+      properties:
+        created:
+          type: array
+          items: { $ref: "#/components/schemas/Account" }
+        skipped:
+          type: array
+          items:
+            type: object
+            required: [account, reason]
+            properties:
+              account: { type: string }
+              reason: { type: string }
+    AiAccountsResult:
+      type: object
+      required: [accounts]
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            required: [account]
+            properties:
+              account: { type: string, example: "Assets:Bank:招商银行" }
+              currency: { type: string, description: 多币种用逗号分隔 }
+        notes: { type: string }
     AccountDetail:
       allOf:
         - { $ref: "#/components/schemas/Account" }

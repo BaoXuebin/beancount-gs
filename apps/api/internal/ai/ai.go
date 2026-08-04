@@ -14,6 +14,9 @@ import (
 
 var ErrNotConfigured = errors.New("AI 未配置：请设置 AI_PROVIDER / AI_API_KEY / AI_MODEL")
 
+// ErrEmptyResponse 模型返回了空内容（DeepSeek json_object 模式已知偶发问题）。
+var ErrEmptyResponse = errors.New("AI 模型返回为空，请重试或调整输入")
+
 type Config struct {
 	Provider   string // openai | compatible | ollama | deepseek
 	APIKey     string
@@ -67,15 +70,33 @@ type chatMessage struct {
 }
 
 // ChatJSON 调用 OpenAI 兼容的 /chat/completions，要求模型返回 JSON。
+// DeepSeek 的 json_object 模式存在偶发返回空内容的问题，首次失败会自动去掉
+// response_format 重试一次（仅靠 prompt 引导输出 JSON，兼容更多模型 / 网关）。
 func (c *Client) ChatJSON(ctx context.Context, system, user string, out any) error {
+	err := c.chatJSONOnce(ctx, system, user, out, true)
+	if err == nil {
+		return nil
+	}
+	// 空内容 / JSON 解析失败时才重试，避免重复无意义的网络请求
+	if errors.Is(err, ErrEmptyResponse) || isJSONParseError(err) {
+		if retryErr := c.chatJSONOnce(ctx, system, user, out, false); retryErr == nil {
+			return nil
+		}
+	}
+	return err
+}
+
+func (c *Client) chatJSONOnce(ctx context.Context, system, user string, out any, useJSONMode bool) error {
 	payload := map[string]any{
 		"model": c.cfg.Model,
 		"messages": []chatMessage{
 			{Role: "system", Content: system},
 			{Role: "user", Content: user},
 		},
-		"temperature":     0.2,
-		"response_format": map[string]string{"type": "json_object"},
+		"temperature": 0.2,
+	}
+	if useJSONMode {
+		payload["response_format"] = map[string]string{"type": "json_object"}
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -115,5 +136,16 @@ func (c *Client) ChatJSON(ctx context.Context, system, user string, out any) err
 	content = strings.TrimPrefix(content, "```json")
 	content = strings.TrimPrefix(content, "```")
 	content = strings.TrimSuffix(content, "```")
+	if strings.TrimSpace(content) == "" {
+		return ErrEmptyResponse
+	}
 	return json.Unmarshal([]byte(content), out)
+}
+
+func isJSONParseError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var syntaxErr *json.SyntaxError
+	return errors.As(err, &syntaxErr) || strings.Contains(err.Error(), "unexpected end of JSON input")
 }

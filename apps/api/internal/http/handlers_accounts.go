@@ -87,6 +87,48 @@ func (h *AccountHandlers) Open(c *gin.Context) {
 	c.JSON(http.StatusCreated, toGenAccount(*account))
 }
 
+func (h *AccountHandlers) BatchOpen(c *gin.Context) {
+	l, ok := requireLedger(c, h.Store, "editor")
+	if !ok {
+		return
+	}
+	revision, err := parseRevisionHeader(c)
+	if err != nil {
+		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "缺少或非法的 If-Revision-Match 头", nil)
+		return
+	}
+	var form gen.AccountOpenBatch
+	if err := c.ShouldBindJSON(&form); err != nil {
+		BadRequest(c, "参数错误："+err.Error())
+		return
+	}
+	opens := make([]ledger.OpenAccount, 0, len(form.Accounts))
+	for _, a := range form.Accounts {
+		booking := ""
+		if a.Booking != nil {
+			booking = string(*a.Booking)
+		}
+		currency := ""
+		if a.Currency != nil {
+			currency = *a.Currency
+		}
+		opens = append(opens, ledger.OpenAccount{
+			Account: a.Account, OpenedOn: a.OpenedOn.String(),
+			Currency: currency, Booking: booking,
+		})
+	}
+	user := CurrentUser(c)
+	result, err := h.Service.BatchOpenAccounts(c.Request.Context(), *l, opens, revision, ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
+	if err != nil {
+		h.writeAccountError(c, *l, err)
+		return
+	}
+	created := make([]gen.Account, 0, len(result.Created))
+	for _, a := range result.Created {
+		created = append(created, toGenAccount(a))
+	}
+	c.JSON(http.StatusCreated, gin.H{"created": created, "skipped": result.Skipped})
+}
 func (h *AccountHandlers) Close(c *gin.Context) {
 	l, ok := requireLedger(c, h.Store, "editor")
 	if !ok {
@@ -106,6 +148,33 @@ func (h *AccountHandlers) Close(c *gin.Context) {
 	}
 	user := CurrentUser(c)
 	account, err := h.Service.CloseAccount(c.Request.Context(), *l, c.Param("account"), form.ClosedOn,
+		revision, ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
+	if err != nil {
+		h.writeAccountError(c, *l, err)
+		return
+	}
+	c.JSON(http.StatusOK, toGenAccount(*account))
+}
+
+func (h *AccountHandlers) Reopen(c *gin.Context) {
+	l, ok := requireLedger(c, h.Store, "editor")
+	if !ok {
+		return
+	}
+	revision, err := parseRevisionHeader(c)
+	if err != nil {
+		Error(c, http.StatusUnprocessableEntity, "VALIDATION", "缺少或非法的 If-Revision-Match 头", nil)
+		return
+	}
+	var form struct {
+		OpenedOn string `json:"opened_on" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		BadRequest(c, "参数错误："+err.Error())
+		return
+	}
+	user := CurrentUser(c)
+	account, err := h.Service.ReopenAccount(c.Request.Context(), *l, c.Param("account"), form.OpenedOn,
 		revision, ledger.Actor{UserID: user.ID, Login: user.GitHubLogin})
 	if err != nil {
 		h.writeAccountError(c, *l, err)
@@ -190,7 +259,7 @@ func (h *AccountHandlers) writeAccountError(c *gin.Context, l db.Ledger, err err
 		Error(c, http.StatusConflict, "LEDGER_STALE", "账本已被他人修改", map[string]any{"current_revision": l.Revision})
 	case errors.Is(err, ledger.ErrDuplicateAccount):
 		Error(c, http.StatusConflict, "DUPLICATE_ACCOUNT", "账户已存在", nil)
-	case errors.Is(err, ledger.ErrInvalidDate):
+	case errors.Is(err, ledger.ErrInvalidDate), errors.Is(err, ledger.ErrAccountNotClosed):
 		Error(c, http.StatusUnprocessableEntity, "VALIDATION", err.Error(), nil)
 	default:
 		slog.Error("account write failed", "err", err)

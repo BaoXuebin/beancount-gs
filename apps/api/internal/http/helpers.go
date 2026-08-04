@@ -10,8 +10,6 @@ import (
 
 func strPtr(s string) *string { return &s }
 
-func boolPtr(b bool) *bool { return &b }
-
 func intPtr(i int) *int { return &i }
 
 func parseTime(s string) *time.Time {
@@ -55,3 +53,5 @@ func toGenLedger(l db.Ledger) gen.Ledger {
 		CreatedAt:         parseTime(l.CreatedAt),
 	}
 }
+
+func boolPtr(b bool) *bool { return &b }

@@ -165,3 +165,25 @@ func toGenAccount(a ledger.Account) gen.Account {
 		MarketCurrency: optionalStr(a.MarketCurrency),
 	}
 }
+
+
+func toGenCurrencies(items []ledger.Currency) []gen.Currency {
+	out := make([]gen.Currency, 0, len(items))
+	for _, c := range items {
+		gc := gen.Currency{Currency: c.Code, Name: c.Name}
+		if c.IsOperating {
+			gc.IsOperating = boolPtr(true)
+		}
+		if c.Symbol != "" {
+			gc.Symbol = strPtr(c.Symbol)
+		}
+		if c.Price != "" {
+			gc.Price = strPtr(c.Price)
+			if d, err := time.Parse("2006-01-02", c.PriceDate); err == nil {
+				gc.PriceDate = &types.Date{Time: d}
+			}
+		}
+		out = append(out, gc)
+	}
+	return out
+}
