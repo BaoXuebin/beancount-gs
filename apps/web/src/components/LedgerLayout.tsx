@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useParams } from 'react-router-dom'
 import {
   BarChart3,
@@ -5,6 +6,8 @@ import {
   FileCode,
   LayoutDashboard,
   ListOrdered,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   Sparkles,
   Upload,
@@ -29,15 +32,38 @@ const navItems = [
   { to: 'settings', label: '设置', desc: '账本与成员', icon: Settings },
 ]
 
+const sidebarCollapsedKey = 'beancount-gs.sidebar.collapsed'
+
+function initialSidebarCollapsed(): boolean {
+  try {
+    return localStorage.getItem(sidebarCollapsedKey) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function LedgerLayout() {
   const { ledgerId = '' } = useParams()
   const ledger = useFetch<Ledger>(`/ledgers/${ledgerId}`)
+  const [collapsed, setCollapsed] = useState(initialSidebarCollapsed)
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(sidebarCollapsedKey, next ? '1' : '0')
+      } catch {
+        // 忽略存储失败（如隐私模式）
+      }
+      return next
+    })
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
       {/* 顶部栏：左侧账本信息 + 返回账本列表，右侧用户 */}
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
+        <div className="flex w-full items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-2">
             <Breadcrumb
               items={[
@@ -58,17 +84,35 @@ export function LedgerLayout() {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 lg:flex-row">
-        <aside className="w-full shrink-0 lg:w-52">
-          <nav className="flex flex-wrap gap-1 lg:flex-col">
+      <div className="flex w-full flex-1 flex-col gap-6 px-4 py-6 lg:min-h-0 lg:flex-row lg:overflow-hidden">
+        <aside className={cn('w-full shrink-0', collapsed ? 'lg:w-14' : 'lg:w-52')}>
+          <div className={cn('hidden lg:flex', collapsed ? 'justify-center' : 'justify-end')}>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={collapsed ? '展开侧栏' : '折叠侧栏'}
+              title={collapsed ? '展开侧栏' : '折叠侧栏'}
+              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+            </button>
+          </div>
+          <nav
+            className={cn(
+              'flex flex-wrap gap-1 lg:flex-col',
+              !collapsed && 'lg:pr-1',
+            )}
+          >
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={`/ledgers/${ledgerId}/${item.to}`}
+                title={`${item.label} · ${item.desc}`}
                 className={({ isActive }) =>
                   cn(
                     'relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
                     isActive && 'bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary',
+                    collapsed && 'lg:justify-center lg:px-0',
                   )
                 }
               >
@@ -81,19 +125,21 @@ export function LedgerLayout() {
                       )}
                     />
                     <item.icon className="size-4 shrink-0" />
-                    <span className="flex flex-col">
-                      <span>{item.label}</span>
-                      <span className="hidden text-[10px] text-muted-foreground/70 lg:inline">
-                        {item.desc}
+                    {!collapsed && (
+                      <span className="flex flex-col">
+                        <span>{item.label}</span>
+                        <span className="hidden text-[10px] text-muted-foreground/70 lg:inline">
+                          {item.desc}
+                        </span>
                       </span>
-                    </span>
+                    )}
                   </>
                 )}
               </NavLink>
             ))}
           </nav>
         </aside>
-        <main className="min-w-0 flex-1">
+        <main className="min-w-0 flex-1 lg:overflow-y-auto lg:pr-1">
           <Outlet />
         </main>
       </div>

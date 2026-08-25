@@ -89,7 +89,7 @@ export function LedgersPage() {
           { label: '账本' },
         ]}
       />
-      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <div className="w-full flex-1 px-4 py-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">账本</h1>

@@ -173,6 +173,7 @@ func main() {
 	aiHandlers := &httpapi.AIHandlers{Store: store, Service: ledgerService}
 	authed.POST("/ledgers/:ledger_id/ai/record", aiHandlers.Record)
 	authed.POST("/ledgers/:ledger_id/ai/record/batch", aiHandlers.RecordBatch)
+	authed.POST("/ledgers/:ledger_id/ai/record/chat", aiHandlers.Chat)
 	authed.POST("/ledgers/:ledger_id/ai/accounts", aiHandlers.Accounts)
 	authed.POST("/ledgers/:ledger_id/ai/summarize", aiHandlers.Summarize)
 	authed.GET("/ledgers/:ledger_id/ai/insights", aiHandlers.Insights)

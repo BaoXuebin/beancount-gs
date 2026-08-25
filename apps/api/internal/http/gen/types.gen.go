@@ -51,6 +51,12 @@ const (
 	None    AccountOpenBooking = "none"
 )
 
+// Defines values for AiRecordChatRequestMessagesRole.
+const (
+	AiRecordChatRequestMessagesRoleAssistant AiRecordChatRequestMessagesRole = "assistant"
+	AiRecordChatRequestMessagesRoleUser      AiRecordChatRequestMessagesRole = "user"
+)
+
 // Defines values for AiRecordResultDraftFlag.
 const (
 	AiRecordResultDraftFlagAsterisk AiRecordResultDraftFlag = "*"
@@ -246,6 +252,18 @@ type AiRecordBatchResult struct {
 	Drafts []Transaction `json:"drafts"`
 	Notes  *string       `json:"notes,omitempty"`
 }
+
+// AiRecordChatRequest defines model for AiRecordChatRequest.
+type AiRecordChatRequest struct {
+	Drafts   *[]Transaction `json:"drafts,omitempty"`
+	Messages []struct {
+		Content string                          `json:"content"`
+		Role    AiRecordChatRequestMessagesRole `json:"role"`
+	} `json:"messages"`
+}
+
+// AiRecordChatRequestMessagesRole defines model for AiRecordChatRequest.Messages.Role.
+type AiRecordChatRequestMessagesRole string
 
 // AiRecordResult defines model for AiRecordResult.
 type AiRecordResult struct {
@@ -844,6 +862,9 @@ type PostLedgersLedgerIdAiRecordJSONRequestBody PostLedgersLedgerIdAiRecordJSONB
 
 // PostLedgersLedgerIdAiRecordBatchJSONRequestBody defines body for PostLedgersLedgerIdAiRecordBatch for application/json ContentType.
 type PostLedgersLedgerIdAiRecordBatchJSONRequestBody PostLedgersLedgerIdAiRecordBatchJSONBody
+
+// PostLedgersLedgerIdAiRecordChatJSONRequestBody defines body for PostLedgersLedgerIdAiRecordChat for application/json ContentType.
+type PostLedgersLedgerIdAiRecordChatJSONRequestBody = AiRecordChatRequest
 
 // PostLedgersLedgerIdCurrenciesJSONRequestBody defines body for PostLedgersLedgerIdCurrencies for application/json ContentType.
 type PostLedgersLedgerIdCurrenciesJSONRequestBody PostLedgersLedgerIdCurrenciesJSONBody

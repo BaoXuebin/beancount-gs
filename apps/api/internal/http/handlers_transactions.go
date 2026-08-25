@@ -25,14 +25,18 @@ func (h *TransactionHandlers) List(c *gin.Context) {
 	if !ok {
 		return
 	}
+	limit, offset := parseListPaging(c)
 	f := ledger.Filters{
-		From:    c.Query("from"),
-		To:      c.Query("to"),
-		Month:   c.Query("month"),
-		Account: c.Query("account"),
-		Tag:     c.Query("tag"),
-		Q:       c.Query("q"),
-		Order:   c.Query("order"),
+		From:        c.Query("from"),
+		To:          c.Query("to"),
+		Month:       c.Query("month"),
+		Account:     c.Query("account"),
+		AccountType: c.Query("account_type"),
+		Tag:         c.Query("tag"),
+		Q:           c.Query("q"),
+		Order:       c.Query("order"),
+		Limit:       limit,
+		Offset:      offset,
 	}
 	txns, err := h.Service.List(c.Request.Context(), *l, f)
 	if err != nil {
@@ -197,6 +201,23 @@ func (h *TransactionHandlers) writeCreateError(c *gin.Context, l db.Ledger, err 
 		slog.Error("transaction write failed", "err", err)
 		Error(c, http.StatusInternalServerError, "INTERNAL", "操作失败："+err.Error(), nil)
 	}
+}
+
+func parseListPaging(c *gin.Context) (limit, offset int) {
+	limit, offset = 50, 0
+	if n, err := strconv.Atoi(c.Query("limit")); err == nil {
+		limit = n
+	}
+	if n, err := strconv.Atoi(c.Query("offset")); err == nil && n > 0 {
+		offset = n
+	}
+	if limit < 1 {
+		limit = 1
+	}
+	if limit > 10000 {
+		limit = 10000
+	}
+	return limit, offset
 }
 
 func requireLedger(c *gin.Context, store *db.Store, minRole string) (*db.Ledger, bool) {

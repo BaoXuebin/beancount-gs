@@ -61,6 +61,68 @@ func (h *AIHandlers) RecordBatch(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"drafts": drafts, "notes": notes})
 }
 
+func (h *AIHandlers) Chat(c *gin.Context) {
+	l, ok := requireLedger(c, h.Store, "editor")
+	if !ok {
+		return
+	}
+	var form struct {
+		Messages []struct {
+			Role    string `json:"role"`
+			Content string `json:"content"`
+		} `json:"messages"`
+		Drafts []gen.Transaction `json:"drafts"`
+	}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		BadRequest(c, "参数错误："+err.Error())
+		return
+	}
+	messages := make([]ledger.ChatMessage, 0, len(form.Messages))
+	for _, m := range form.Messages {
+		if m.Content == "" {
+			continue
+		}
+		messages = append(messages, ledger.ChatMessage{Role: m.Role, Content: m.Content})
+	}
+	if len(messages) == 0 {
+		BadRequest(c, "对话内容不能为空")
+		return
+	}
+	drafts := make([]ledger.Transaction, 0, len(form.Drafts))
+	for _, d := range form.Drafts {
+		drafts = append(drafts, fromGenDraft(d))
+	}
+	txns, notes, err := h.Service.AiRecordChat(c.Request.Context(), *l, messages, drafts)
+	if err != nil {
+		h.writeAIError(c, err)
+		return
+	}
+	out := make([]gen.Transaction, 0, len(txns))
+	for _, t := range txns {
+		out = append(out, toGenTransaction(t))
+	}
+	c.JSON(http.StatusOK, gin.H{"drafts": out, "notes": notes})
+}
+
+// fromGenDraft 把 gen 草稿转换回内部模型（用于多轮调整时把当前草稿回传给 AI）。
+func fromGenDraft(t gen.Transaction) ledger.Transaction {
+	out := ledger.Transaction{Date: t.Date.String()}
+	if t.Payee != nil {
+		out.Payee = *t.Payee
+	}
+	if t.Narration != nil {
+		out.Narration = *t.Narration
+	}
+	for _, p := range t.Postings {
+		lp := ledger.Posting{Account: p.Account}
+		if p.Units != nil {
+			lp.Units = &ledger.Amount{Number: p.Units.Number, Currency: p.Units.Currency}
+		}
+		out.Postings = append(out.Postings, lp)
+	}
+	return out
+}
+
 func (h *AIHandlers) Accounts(c *gin.Context) {
 	l, ok := requireLedger(c, h.Store, "editor")
 	if !ok {

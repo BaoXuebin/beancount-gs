@@ -40,13 +40,16 @@ type Transaction struct {
 }
 
 type Filters struct {
-	From    string
-	To      string
-	Month   string
-	Account string
-	Tag     string
-	Q       string
-	Order   string // asc | desc
+	From        string
+	To          string
+	Month       string
+	Account     string
+	AccountType string // 账户根类型前缀匹配：Assets/Liabilities/Income/Expenses/Equity
+	Tag         string
+	Q           string
+	Order       string // asc | desc
+	Limit       int    // 按交易数限制；<=0 表示不限
+	Offset      int
 }
 
 type Actor struct {

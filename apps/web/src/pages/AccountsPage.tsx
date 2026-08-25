@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Archive, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Archive, ArrowUp, Plus, Sparkles, Square, Trash2 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -33,7 +33,6 @@ import { ACCOUNT_TYPE_META, formatNumber } from '@/lib/accountMeta'
 import type { AccountType } from '@/lib/accountMeta'
 import { AccountDetailDialog } from '@/components/AccountDetailDialog'
 import { CurrenciesDialog } from '@/components/CurrenciesDialog'
-import { LoadingHint } from '@/components/LoadingHint'
 import { cn } from '@/lib/utils'
 
 const typeTabs = [
@@ -86,15 +85,26 @@ export function AccountsPage() {
     booking: 'none',
   })
 
-  // AI 批量开户
-  const [aiOpen, setAiOpen] = useState(false)
-  const [aiText, setAiText] = useState('')
-  const [aiBusy, setAiBusy] = useState(false)
-  const [aiError, setAiError] = useState<string | null>(null)
-  const [aiNotes, setAiNotes] = useState<string | null>(null)
-  const [suggestions, setSuggestions] = useState<SuggestionRow[]>([])
-  const [createBusy, setCreateBusy] = useState(false)
-  const [result, setResult] = useState<AccountOpenBatchResult | null>(null)
+// AI 批量开户
+interface AiMsg {
+  role: 'user' | 'assistant'
+  content: string
+}
+const [aiOpen, setAiOpen] = useState(false)
+const [aiMessages, setAiMessages] = useState<AiMsg[]>([])
+const [aiText, setAiText] = useState('')
+const [aiBusy, setAiBusy] = useState(false)
+const [aiError, setAiError] = useState<string | null>(null)
+const [createError, setCreateError] = useState<string | null>(null)
+const [suggestions, setSuggestions] = useState<SuggestionRow[]>([])
+const [createBusy, setCreateBusy] = useState(false)
+const [result, setResult] = useState<AccountOpenBatchResult | null>(null)
+const aiAbortRef = useRef<AbortController | null>(null)
+
+// 关闭弹窗时中断在途 AI 请求
+useEffect(() => {
+  if (!aiOpen) aiAbortRef.current?.abort()
+}, [aiOpen])
 
   const allAccounts = accounts.data ?? []
   const byType = allAccounts.filter((a) => a.type === tab)
@@ -142,35 +152,70 @@ export function AccountsPage() {
   }
 
   const generateAccounts = async () => {
-    if (!aiText.trim()) return
+    const text = aiText.trim()
+    if (!text || aiBusy) return
+    setAiMessages((prev) => [...prev, { role: 'user', content: text }])
+    setAiText('')
     setAiBusy(true)
     setAiError(null)
     setResult(null)
-    setAiNotes(null)
+    const controller = new AbortController()
+    aiAbortRef.current = controller
     try {
       const res = await request<AiAccountsResult>(`/ledgers/${ledgerId}/ai/accounts`, {
         method: 'POST',
-        body: JSON.stringify({ text: aiText }),
+        body: JSON.stringify({ text }),
+        signal: controller.signal,
       })
       setSuggestions((res.accounts ?? []).map((a) => ({ account: a.account, currency: a.currency ?? '' })))
-      setAiNotes(res.notes ?? null)
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content:
+            res.notes?.trim() ||
+            `已生成 ${res.accounts?.length ?? 0} 个账户建议，请在右侧确认后批量创建`,
+        },
+      ])
     } catch (err) {
+      if (controller.signal.aborted) {
+        // 用户取消：还原消息与输入
+        setAiMessages(aiMessages)
+        setAiText(text)
+        return
+      }
       if (err instanceof ApiError && err.code === 'AI_NOT_CONFIGURED') {
-        setAiError('AI 未配置；已改为从文本解析，每行一个账户名（如 Assets:Bank:招商银行）')
-        setSuggestions(parseAccountText(aiText))
+        setSuggestions(parseAccountText(text))
+        setAiMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'AI 未配置：已直接按行解析文本，每行一个账户名（如 Assets:Bank:招商银行）',
+          },
+        ])
       } else {
         setAiError(err instanceof Error ? err.message : String(err))
       }
     } finally {
       setAiBusy(false)
+      aiAbortRef.current = null
     }
   }
 
   const parseLines = () => {
+    const text = aiText.trim()
+    if (!text) return
+    const rows = parseAccountText(text)
     setAiError(null)
+    setCreateError(null)
     setResult(null)
-    setAiNotes(null)
-    setSuggestions(parseAccountText(aiText))
+    setAiMessages((prev) => [
+      ...prev,
+      { role: 'user', content: text },
+      { role: 'assistant', content: `已按行解析出 ${rows.length} 个账户` },
+    ])
+    setAiText('')
+    setSuggestions(rows)
   }
 
   const updateSuggestion = (index: number, patch: Partial<SuggestionRow>) => {
@@ -182,11 +227,11 @@ export function AccountsPage() {
       .map((s) => ({ account: s.account.trim(), currency: s.currency.trim() }))
       .filter((s) => s.account)
     if (rows.length === 0) {
-      setAiError('请至少填写一个账户')
+      setCreateError('请至少填写一个账户')
       return
     }
     setCreateBusy(true)
-    setAiError(null)
+    setCreateError(null)
     setResult(null)
     try {
       const rev = await request<{ revision: number }>(`/ledgers/${ledgerId}/revision`)
@@ -207,9 +252,9 @@ export function AccountsPage() {
       accounts.refetch()
     } catch (err) {
       if (err instanceof ApiError && err.code === 'LEDGER_STALE') {
-        setAiError('账本已被他人修改（409），请刷新后重试')
+        setCreateError('账本已被他人修改（409），请刷新后重试')
       } else {
-        setAiError(err instanceof Error ? err.message : String(err))
+        setCreateError(err instanceof Error ? err.message : String(err))
       }
     } finally {
       setCreateBusy(false)
@@ -252,7 +297,9 @@ export function AccountsPage() {
             className={buttonVariants({ variant: 'outline' })}
             onClick={() => {
               setAiError(null)
+              setCreateError(null)
               setResult(null)
+              setAiMessages([])
               setAiText('')
               setSuggestions([])
               setAiOpen(true)
@@ -265,12 +312,6 @@ export function AccountsPage() {
           </button>
         </div>
       </div>
-
-      {accounts.loading && accounts.data == null && (
-        <div className="mt-3">
-          <LoadingHint />
-        </div>
-      )}
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
         {typeTabs.map((t) => {
@@ -413,98 +454,165 @@ export function AccountsPage() {
       </Dialog>
 
       <Dialog open={aiOpen} onOpenChange={(o) => !o && setAiOpen(false)}>
-        <DialogContent className="flex max-h-[85vh] flex-col gap-4 overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="flex max-h-[85vh] flex-col gap-4 overflow-y-auto sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle>AI 批量开户</DialogTitle>
             <DialogDescription>
-              用自然语言描述账户，AI 生成 beancount 账户列表；确认后一次批量写入 open 指令
+              左侧描述账户需求（可多轮调整），右侧确认待创建账户列表，确认后一次批量写入 open 指令
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-1.5">
-            <Label>账户描述</Label>
-            <textarea
-              value={aiText}
-              onChange={(e) => setAiText(e.target.value)}
-              rows={3}
-              placeholder={'例如：我需要这些账户：招商银行储蓄卡、美团外卖、水电费、工资收入\n也可以直接输入账户名，每行一个'}
-              className="w-full resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={buttonVariants()}
-              disabled={aiBusy || !aiText.trim()}
-              onClick={generateAccounts}
-            >
-              <Sparkles /> {aiBusy ? '生成中…' : 'AI 生成账户'}
-            </button>
-            <button
-              type="button"
-              className={buttonVariants({ variant: 'outline' })}
-              disabled={!aiText.trim()}
-              onClick={parseLines}
-            >
-              从文本解析
-            </button>
-          </div>
-
-          {aiError && <p className="text-sm text-destructive">{aiError}</p>}
-          {aiNotes && <p className="text-sm text-muted-foreground">AI 提示：{aiNotes}</p>}
-
-          {suggestions.length > 0 && (
-            <div className="grid gap-2">
-              <Label>待创建账户（可编辑）</Label>
-              <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
-                {suggestions.map((s, i) => (
-                  <div key={i} className="col-span-3 grid grid-cols-[1fr_6rem_auto] items-center gap-2">
-                    <Input
-                      value={s.account}
-                      onChange={(e) => updateSuggestion(i, { account: e.target.value })}
-                      placeholder="Assets:Bank:招商银行"
-                      className="font-mono"
-                    />
-                    <Input
-                      value={s.currency}
-                      onChange={(e) => updateSuggestion(i, { currency: e.target.value })}
-                      placeholder="CNY"
-                      className="font-mono"
-                    />
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-destructive"
-                      title="移除"
-                      onClick={() => setSuggestions((prev) => prev.filter((_, j) => j !== i))}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+          <div className="flex min-h-[55vh] flex-col gap-4 sm:flex-row">
+            {/* 左：对话 */}
+            <div className="flex w-full shrink-0 flex-col rounded-lg border sm:w-80">
+              <div className="max-h-72 flex-1 space-y-3 overflow-y-auto p-3 sm:max-h-[46vh]">
+                {aiMessages.length === 0 && (
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    用自然语言描述需要的账户，如「我需要招商银行储蓄卡、美团外卖、水电费、工资收入」；
+                    也可以每行一个直接输入账户名。
+                  </p>
+                )}
+                {aiMessages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'max-w-[95%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm',
+                      m.role === 'user' ? 'ml-auto bg-primary/10' : 'bg-muted',
+                    )}
+                  >
+                    {m.content}
                   </div>
                 ))}
+                {aiBusy && <div className="text-xs text-muted-foreground">AI 思考中…</div>}
+                {aiError && <p className="text-xs text-destructive">{aiError}</p>}
               </div>
-              <div>
+              <div className="border-t p-2">
+                {/* 聊天式输入框：textarea 在上，底部工具行左侧放辅助操作、右侧为圆形发送按钮 */}
+                <div className="rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30">
+                  <textarea
+                    value={aiText}
+                    onChange={(e) => setAiText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                        e.preventDefault()
+                        generateAccounts()
+                      }
+                    }}
+                    rows={3}
+                    placeholder="输入消息，Enter 发送，Shift+Enter 换行"
+                    className="w-full resize-none bg-transparent px-2.5 pt-2 pb-1 text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                  <div className="flex items-center justify-between gap-2 px-1.5 pb-1.5">
+                    <button
+                      type="button"
+                      className={buttonVariants({ variant: 'ghost', size: 'xs' })}
+                      disabled={!aiText.trim()}
+                      onClick={parseLines}
+                    >
+                      不用 AI，直接按行解析
+                    </button>
+                    {aiBusy ? (
+                      <button
+                        type="button"
+                        className={cn(buttonVariants({ variant: 'destructive', size: 'icon-sm' }), 'rounded-full')}
+                        onClick={() => aiAbortRef.current?.abort()}
+                        title="取消"
+                      >
+                        <Square className="size-3" fill="currentColor" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={cn(buttonVariants({ size: 'icon-sm' }), 'rounded-full')}
+                        disabled={!aiText.trim()}
+                        onClick={generateAccounts}
+                        title="发送"
+                      >
+                        <ArrowUp className="size-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 右：待创建账户操作面板 */}
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-primary" />
+                  <span className="text-sm font-medium">待创建账户（可编辑）</span>
+                  {suggestions.length > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      有效 {validSuggestionCount} / {suggestions.length}
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
-                  className={buttonVariants({ variant: 'outline', size: 'sm' })}
-                  onClick={() => setSuggestions((prev) => [...prev, { account: '', currency: '' }])}
+                  className={buttonVariants({ size: 'sm' })}
+                  disabled={createBusy || validSuggestionCount === 0}
+                  onClick={createBatch}
                 >
-                  <Plus /> 添加一行
+                  {createBusy ? '创建中…' : `批量创建（${validSuggestionCount}）`}
                 </button>
               </div>
-            </div>
-          )}
 
-          {result && (
-            <div className="rounded-lg border border-emerald-600/30 bg-emerald-600/5 px-4 py-3 text-sm">
-              <p className="text-emerald-600">
-                已创建 {result.created.length} 个账户
-                {result.skipped && result.skipped.length > 0
-                  ? `，跳过 ${result.skipped.length} 个（${result.skipped.map((s) => s.account).join('、')}）`
-                  : ''}
-              </p>
+              {createError && <p className="mb-2 text-sm text-destructive">{createError}</p>}
+              {result && (
+                <div className="mb-2 rounded-lg border border-emerald-600/30 bg-emerald-600/5 px-4 py-3 text-sm">
+                  <p className="text-emerald-600">
+                    已创建 {result.created.length} 个账户
+                    {result.skipped && result.skipped.length > 0
+                      ? `，跳过 ${result.skipped.length} 个（${result.skipped.map((s) => s.account).join('、')}）`
+                      : ''}
+                  </p>
+                </div>
+              )}
+
+              {suggestions.length === 0 ? (
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
+                  在左侧描述或解析后，待创建的账户会出现在这里
+                </div>
+              ) : (
+                <div className="flex-1 space-y-2 overflow-y-auto pr-1 sm:max-h-[52vh]">
+                  {suggestions.map((s, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_6rem_auto] items-center gap-2">
+                      <Input
+                        value={s.account}
+                        onChange={(e) => updateSuggestion(i, { account: e.target.value })}
+                        placeholder="Assets:Bank:招商银行"
+                        className="font-mono"
+                      />
+                      <Input
+                        value={s.currency}
+                        onChange={(e) => updateSuggestion(i, { currency: e.target.value })}
+                        placeholder="CNY"
+                        className="font-mono"
+                      />
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-destructive"
+                        title="移除"
+                        onClick={() => setSuggestions((prev) => prev.filter((_, j) => j !== i))}
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <div>
+                    <button
+                      type="button"
+                      className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                      onClick={() => setSuggestions((prev) => [...prev, { account: '', currency: '' }])}
+                    >
+                      <Plus /> 添加一行
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           <DialogFooter>
             <button
@@ -513,14 +621,6 @@ export function AccountsPage() {
               onClick={() => setAiOpen(false)}
             >
               关闭
-            </button>
-            <button
-              type="button"
-              className={buttonVariants()}
-              disabled={createBusy || validSuggestionCount === 0}
-              onClick={createBatch}
-            >
-              {createBusy ? '创建中…' : `批量创建（${validSuggestionCount}）`}
             </button>
           </DialogFooter>
         </DialogContent>

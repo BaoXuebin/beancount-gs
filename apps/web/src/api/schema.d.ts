@@ -2074,6 +2074,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledgers/{ledger_id}/ai/record/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 对话式批量记账（多轮生成 / 调整草稿）
+         * @description 传入对话历史与当前草稿，AI 返回调整后的完整草稿数组；前端勾选后逐笔创建。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ledger_id: components["parameters"]["LedgerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AiRecordChatRequest"];
+                };
+            };
+            responses: {
+                /** @description 待确认交易草稿数组 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AiRecordBatchResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ledgers/{ledger_id}/ai/summarize": {
         parameters: {
             query?: never;
@@ -2671,6 +2716,14 @@ export interface components {
             date?: string;
             amount?: string;
             operating_currency?: string;
+        };
+        AiRecordChatRequest: {
+            messages: {
+                /** @enum {string} */
+                role: "user" | "assistant";
+                content: string;
+            }[];
+            drafts?: components["schemas"]["Transaction"][];
         };
         AiRecordBatchResult: {
             drafts: components["schemas"]["Transaction"][];

@@ -3,6 +3,7 @@ package ledger
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/beancount-gs/api/internal/beancount"
@@ -12,16 +13,24 @@ import (
 func TestAiInsightsDuplicate(t *testing.T) {
 	ctx := context.Background()
 	rows := []beancount.Row{
+		// 同日两笔同收款方同金额：疑似重复扣款
 		{"id": "t1", "date": "2026-08-01", "payee": "盒马鲜生", "narration": "a",
 			"account": "Expenses:Food", "number": "-120.00", "currency": "CNY",
 			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
 		{"id": "t1", "date": "2026-08-01", "payee": "盒马鲜生", "narration": "a",
 			"account": "Assets:Cash", "number": "120.00", "currency": "CNY",
 			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
-		{"id": "t2", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "a",
+		{"id": "t2", "date": "2026-08-01", "payee": "盒马鲜生", "narration": "a",
 			"account": "Expenses:Food", "number": "-120.00", "currency": "CNY",
 			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
-		{"id": "t2", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "a",
+		{"id": "t2", "date": "2026-08-01", "payee": "盒马鲜生", "narration": "a",
+			"account": "Assets:Cash", "number": "120.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+		// 不同日期同金额：正常重复消费，不应报告
+		{"id": "t3", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "a",
+			"account": "Expenses:Food", "number": "-120.00", "currency": "CNY",
+			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
+		{"id": "t3", "date": "2026-08-02", "payee": "盒马鲜生", "narration": "a",
 			"account": "Assets:Cash", "number": "120.00", "currency": "CNY",
 			"cost_number": "", "cost_currency": "", "cost_date": "", "price": ""},
 	}
@@ -33,5 +42,8 @@ func TestAiInsightsDuplicate(t *testing.T) {
 	}
 	if len(insights) != 1 || insights[0].Type != "duplicate" {
 		t.Fatalf("unexpected insights: %+v", insights)
+	}
+	if !strings.Contains(insights[0].Message, "2026-08-01") || strings.Contains(insights[0].Message, "2026-08-02") {
+		t.Fatalf("message should only cover 2026-08-01: %s", insights[0].Message)
 	}
 }

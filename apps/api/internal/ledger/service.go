@@ -30,7 +30,18 @@ func (s *Service) List(ctx context.Context, l db.Ledger, f Filters) ([]Transacti
 	if err != nil {
 		return nil, err
 	}
-	return groupTransactions(rows), nil
+	txns := groupTransactions(rows)
+	// 行级查询无法按交易截断（一笔交易含多行分录），分组后再按交易数分页
+	if f.Offset > 0 {
+		if f.Offset >= len(txns) {
+			return []Transaction{}, nil
+		}
+		txns = txns[f.Offset:]
+	}
+	if f.Limit > 0 && len(txns) > f.Limit {
+		txns = txns[:f.Limit]
+	}
+	return txns, nil
 }
 
 func (s *Service) Get(ctx context.Context, l db.Ledger, id string) (*Transaction, error) {
@@ -259,6 +270,9 @@ func buildWhere(f Filters) string {
 	}
 	if f.Account != "" {
 		wheres = append(wheres, "account = '"+f.Account+"'")
+	}
+	if f.AccountType != "" {
+		wheres = append(wheres, "account ~ '^"+strings.ReplaceAll(f.AccountType, "'", "")+"'")
 	}
 	if f.Tag != "" {
 		wheres = append(wheres, "'"+f.Tag+"' in tags")

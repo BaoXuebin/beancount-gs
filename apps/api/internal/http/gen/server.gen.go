@@ -88,6 +88,9 @@ type ServerInterface interface {
 	// 自然语言批量记账（一次生成多条待确认交易草稿）
 	// (POST /ledgers/{ledger_id}/ai/record/batch)
 	PostLedgersLedgerIdAiRecordBatch(c *gin.Context, ledgerId LedgerId)
+	// 对话式批量记账（多轮生成 / 调整草稿）
+	// (POST /ledgers/{ledger_id}/ai/record/chat)
+	PostLedgersLedgerIdAiRecordChat(c *gin.Context, ledgerId LedgerId)
 	// 生成账本总结
 	// (POST /ledgers/{ledger_id}/ai/summarize)
 	PostLedgersLedgerIdAiSummarize(c *gin.Context, ledgerId LedgerId, params PostLedgersLedgerIdAiSummarizeParams)
@@ -943,6 +946,34 @@ func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAiRecordBatch(c *gin.Conte
 	}
 
 	siw.Handler.PostLedgersLedgerIdAiRecordBatch(c, ledgerId)
+}
+
+// PostLedgersLedgerIdAiRecordChat operation middleware
+func (siw *ServerInterfaceWrapper) PostLedgersLedgerIdAiRecordChat(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "ledger_id" -------------
+	var ledgerId LedgerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ledger_id", c.Param("ledger_id"), &ledgerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ledger_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PostLedgersLedgerIdAiRecordChat(c, ledgerId)
 }
 
 // PostLedgersLedgerIdAiSummarize operation middleware
@@ -2627,6 +2658,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/ai/insights", wrapper.GetLedgersLedgerIdAiInsights)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/record", wrapper.PostLedgersLedgerIdAiRecord)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/record/batch", wrapper.PostLedgersLedgerIdAiRecordBatch)
+	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/record/chat", wrapper.PostLedgersLedgerIdAiRecordChat)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/ai/summarize", wrapper.PostLedgersLedgerIdAiSummarize)
 	router.GET(options.BaseURL+"/ledgers/:ledger_id/currencies", wrapper.GetLedgersLedgerIdCurrencies)
 	router.POST(options.BaseURL+"/ledgers/:ledger_id/currencies", wrapper.PostLedgersLedgerIdCurrencies)

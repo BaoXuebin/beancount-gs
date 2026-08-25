@@ -90,7 +90,7 @@ export function TransactionViewDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="flex max-h-[85vh] flex-col gap-4 overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="flex max-h-[85vh] flex-col gap-4 overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>交易详情</DialogTitle>
           <DialogDescription>

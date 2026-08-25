@@ -5,4 +5,4 @@ bindata.go
 *.exe
 beancount-gs
 gin.log
-config.json
+config.jsonapps/web/tsconfig.tsbuildinfo

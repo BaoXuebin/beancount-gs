@@ -52,7 +52,7 @@ export function WorkspacesPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <BrandBar crumbs={[{ label: '工作区' }]} />
-      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <div className="w-full flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold">工作区</h1>

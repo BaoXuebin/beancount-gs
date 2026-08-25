@@ -502,6 +502,10 @@ paths:
           in: query
           schema: { type: string }
           description: 账户精确匹配
+        - name: account_type
+          in: query
+          schema: { type: string, enum: [Assets, Liabilities, Income, Expenses, Equity] }
+          description: 账户根类型前缀匹配
         - name: q
           in: query
           schema: { type: string }
@@ -511,7 +515,7 @@ paths:
           schema: { type: string }
         - name: limit
           in: query
-          schema: { type: integer, minimum: 1, maximum: 500, default: 50 }
+          schema: { type: integer, minimum: 1, maximum: 10000, default: 50 }
         - name: offset
           in: query
           schema: { type: integer, minimum: 0, default: 0 }
@@ -993,6 +997,24 @@ paths:
               required: [text]
               properties:
                 text: { type: string, example: "昨天星巴克 38 元\n前天打车 120 元" }
+      responses:
+        "200":
+          description: 待确认交易草稿数组
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiRecordBatchResult" }
+  /ledgers/{ledger_id}/ai/record/chat:
+    post:
+      tags: [ai]
+      summary: 对话式批量记账（多轮生成 / 调整草稿）
+      description: 传入对话历史与当前草稿，AI 返回调整后的完整草稿数组；前端勾选后逐笔创建。
+      parameters:
+        - { $ref: "#/components/parameters/LedgerId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AiRecordChatRequest" }
       responses:
         "200":
           description: 待确认交易草稿数组
@@ -1521,6 +1543,21 @@ components:
         date: { type: string }
         amount: { type: string }
         operating_currency: { type: string }
+    AiRecordChatRequest:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            required: [role, content]
+            properties:
+              role: { type: string, enum: [user, assistant] }
+              content: { type: string }
+        drafts:
+          type: array
+          items: { $ref: "#/components/schemas/Transaction" }
     AiRecordBatchResult:
       type: object
       required: [drafts]

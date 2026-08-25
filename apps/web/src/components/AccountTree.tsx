@@ -317,12 +317,12 @@ export function AccountTree({ accounts, onSelect, onAddChild }: AccountTreeProps
           </div>
 
           {showAmounts && amount && (
-            <div className="shrink-0 whitespace-nowrap pt-0.5 font-mono text-xs tabular-nums text-muted-foreground">
+            <div className="shrink-0 self-center whitespace-nowrap font-mono text-xs tabular-nums text-muted-foreground">
               {amount}
             </div>
           )}
 
-          <div className="hidden shrink-0 items-center gap-0.5 pt-0.5 group-hover:flex">
+          <div className="hidden shrink-0 items-center gap-0.5 self-center group-hover:flex">
             {head.account && (
               <button
                 type="button"

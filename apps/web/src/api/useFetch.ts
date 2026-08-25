@@ -10,7 +10,11 @@ export interface FetchState<T> {
   refetch: () => void
 }
 
-export function useFetch<T>(path: string, opts: RequestOptions = {}, reloadKey?: unknown): FetchState<T> {
+export function useFetch<T>(
+  path: string | null,
+  opts: RequestOptions = {},
+  reloadKey?: unknown,
+): FetchState<T> {
   const [data, setData] = useState<T | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [errorStatus, setErrorStatus] = useState<number | null>(null)
@@ -20,6 +24,7 @@ export function useFetch<T>(path: string, opts: RequestOptions = {}, reloadKey?:
   optsRef.current = opts
 
   const refetch = useCallback(() => {
+    if (path == null) return
     setLoading(true)
     setError(null)
     setErrorStatus(null)
