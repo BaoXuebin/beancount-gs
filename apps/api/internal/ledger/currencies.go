@@ -258,13 +258,17 @@ func readLatestPrices(dataPath, operating string) (map[string]struct{ Price, Pri
 }
 
 // defaultFetchRates 从公开汇率接口拉取以 base 为本位币的汇率：
-// 优先 open.er-api.com（覆盖面广），失败时回退 api.frankfurter.app（ECB）。
+// 优先 open.er-api.com（覆盖面广），失败时回退 api.frankfurter.app（ECB），
+// 再失败时回退 allratestoday.com（ECB 实时镜像，免密钥）。
 func defaultFetchRates(ctx context.Context, base string) (map[string]float64, error) {
 	client := &http.Client{Timeout: 15 * time.Second}
 	if rates, err := fetchERAPI(ctx, client, base); err == nil {
 		return rates, nil
 	}
-	return fetchFrankfurter(ctx, client, base)
+	if rates, err := fetchFrankfurter(ctx, client, base); err == nil {
+		return rates, nil
+	}
+	return fetchAllRatesToday(ctx, client, base)
 }
 
 func fetchERAPI(ctx context.Context, client *http.Client, base string) (map[string]float64, error) {
@@ -309,6 +313,32 @@ func fetchFrankfurter(ctx context.Context, client *http.Client, base string) (ma
 	}
 	if len(body.Rates) == 0 {
 		return nil, errors.New("frankfurter: unexpected response")
+	}
+	return body.Rates, nil
+}
+
+// fetchAllRatesToday 从 allratestoday.com 公开接口拉取 ECB 汇率（免密钥，服务端按 base 换算）。
+// 响应结构与 er-api 相同：{"result":"success","rates":{...}}。
+func fetchAllRatesToday(ctx context.Context, client *http.Client, base string) (map[string]float64, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		"https://allratestoday.com/api/open/latest/"+base, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var body struct {
+		Result string             `json:"result"`
+		Rates  map[string]float64 `json:"rates"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	if body.Result != "success" || len(body.Rates) == 0 {
+		return nil, errors.New("allratestoday: unexpected response")
 	}
 	return body.Rates, nil
 }
